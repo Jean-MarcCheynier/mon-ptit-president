@@ -1,0 +1,14 @@
+{
+  "extends": "@presidency-bingo/config/tsconfig.node.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
+    "removeComments": true,
+    "incremental": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "types": ["vitest/globals", "node"]
+  },
+  "include": ["src", "test", "vitest.config*.ts"]
+}
