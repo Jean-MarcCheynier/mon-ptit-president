@@ -7,7 +7,6 @@ coverage
 .env.*
 !.env.example
 !.env.prod.example
-apps/web/src/routeTree.gen.ts
 apps/api/src/generated
 playwright-report
 test-results
