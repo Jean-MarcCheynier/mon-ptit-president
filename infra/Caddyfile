@@ -1,0 +1,27 @@
+# DOMAIN=app.example.com → automatic HTTPS (Let's Encrypt).
+# DOMAIN=:80             → plain HTTP, e.g. to try it on a server's IP.
+{$DOMAIN::80} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy api:3000
+	}
+
+	handle {
+		root * /srv
+		# Hashed assets never change.
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		# SPA: unknown paths render index.html, the router takes over.
+		try_files {path} /index.html
+		file_server
+	}
+}
