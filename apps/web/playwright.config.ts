@@ -16,7 +16,8 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], locale: 'fr-FR' } }],
   webServer: [
     {
-      command: 'pnpm --filter @presidency-bingo/api dev',
+      command:
+        'pnpm --filter @presidency-bingo/api generate && pnpm --filter @presidency-bingo/api dev',
       url: 'http://localhost:3000/api/health',
       env: { RATE_LIMIT_ENABLED: 'false' },
       reuseExistingServer: !process.env.CI,

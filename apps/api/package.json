@@ -9,10 +9,11 @@
     "prisma.config.ts"
   ],
   "scripts": {
-    "build": "prisma generate && nest build",
-    "dev": "prisma generate && nest start --watch",
+    "generate": "prisma generate",
+    "build": "nest build",
+    "dev": "nest start --watch",
     "start": "node dist/main.js",
-    "typecheck": "prisma generate && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "db:migrate": "prisma migrate dev",
