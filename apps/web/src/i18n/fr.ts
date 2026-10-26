@@ -59,7 +59,18 @@ export const fr = {
   nav: { home: 'Accueil', settings: 'Paramètres', logout: 'Déconnexion' },
   home: {
     title: 'Bienvenue, {{name}} !',
-    description: 'Tu es connecté. C’est ici que commence ton application.',
+    description: 'Parie sur la présidentielle et marque des points selon tes pronostics.',
+  },
+  election: {
+    rounds: '1er tour le {{first}}, 2nd tour le {{second}}',
+    closesIn: 'Fin des pronostics dans',
+    closed: 'Les pronostics sont clos.',
+    countdown: '{{days}} j {{hours}} h {{minutes}} min',
+    pool_one: '{{count}} candidat potentiel',
+    pool_other: '{{count}} candidats potentiels',
+    predict: 'Fais ton pronostic',
+    comingSoon: 'Le pronostic arrive très bientôt.',
+    none: 'Aucune élection à venir pour le moment.',
   },
   settings: {
     title: 'Paramètres',

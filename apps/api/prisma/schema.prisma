@@ -79,3 +79,61 @@ model VerificationToken {
   @@index([userId, type])
   @@map("verification_tokens")
 }
+
+model Election {
+  id                String   @id @default(uuid(7)) @db.Uuid
+  slug              String   @unique
+  name              String
+  firstRoundAt      DateTime @map("first_round_at")
+  secondRoundAt     DateTime @map("second_round_at")
+  // After this instant, predictions are read-only.
+  predictionsLockAt DateTime @map("predictions_lock_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  candidates ElectionCandidate[]
+
+  @@map("elections")
+}
+
+// The person, independent of any election.
+model Politician {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  // Stable key used by the seed.
+  slug        String   @unique
+  name        String
+  photoUrl    String?  @map("photo_url")
+  photoCredit String?  @map("photo_credit")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  candidacies ElectionCandidate[]
+
+  @@map("politicians")
+}
+
+enum CandidateStatus {
+  POTENTIAL
+  DECLARED
+  QUALIFIED
+  NOT_QUALIFIED
+  WITHDRAWN
+}
+
+// A politician's situation in a given election.
+model ElectionCandidate {
+  id           String          @id @default(uuid(7)) @db.Uuid
+  electionId   String          @map("election_id") @db.Uuid
+  politicianId String          @map("politician_id") @db.Uuid
+  status       CandidateStatus @default(POTENTIAL)
+  partyLabel   String          @map("party_label")
+  tagline      String
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  election   Election   @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  politician Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+
+  @@unique([electionId, politicianId])
+  @@map("election_candidates")
+}

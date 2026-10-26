@@ -1,7 +1,5 @@
 import { ErrorCode } from '@presidency-bingo/shared';
-import { cookieValue, createTestApp, type TestApp, tokenFromEmail } from './test-app.js';
-
-const ada = { name: 'Ada', email: 'ada@example.com', password: 'correct horse battery' };
+import { ada, cookieValue, createTestApp, type TestApp, tokenFromEmail } from './test-app.js';
 
 describe('Auth (e2e)', () => {
   let t: TestApp;
@@ -11,15 +9,6 @@ describe('Auth (e2e)', () => {
   });
   afterAll(() => t.app.close());
   beforeEach(() => t.reset());
-
-  /** Registers and verifies Ada; returns a signed-in agent. */
-  async function signUpVerified() {
-    await t.http().post('/api/auth/register').send(ada).expect(202);
-    const agent = t.agent();
-    const token = tokenFromEmail(t.mail.lastTo(ada.email)?.text);
-    await agent.post('/api/auth/verify-email').send({ token }).expect(200);
-    return agent;
-  }
 
   describe('register + email verification', () => {
     it('sends a verification email, blocks login until verified, then signs in', async () => {
@@ -82,7 +71,7 @@ describe('Auth (e2e)', () => {
 
   describe('account enumeration', () => {
     it('answers a duplicate sign-up like a new one and warns the owner by email', async () => {
-      await signUpVerified();
+      await t.signUp();
       t.mail.clear();
 
       const res = await t.http().post('/api/auth/register').send(ada).expect(202);
@@ -91,7 +80,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('gives the same login error for unknown emails and wrong passwords', async () => {
-      await signUpVerified();
+      await t.signUp();
       const unknown = await t
         .http()
         .post('/api/auth/login')
@@ -117,7 +106,7 @@ describe('Auth (e2e)', () => {
 
   describe('sessions', () => {
     it('rotates the refresh token and revokes the family when a rotated token is reused', async () => {
-      await signUpVerified();
+      await t.signUp();
       const login = await t
         .http()
         .post('/api/auth/login')
@@ -149,7 +138,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('tolerates a concurrent refresh within the grace window without revoking the family', async () => {
-      await signUpVerified();
+      await t.signUp();
       const login = await t
         .http()
         .post('/api/auth/login')
@@ -174,14 +163,14 @@ describe('Auth (e2e)', () => {
     });
 
     it('logout revokes the session', async () => {
-      const agent = await signUpVerified();
+      const agent = await t.signUp();
       await agent.post('/api/auth/logout').expect(204);
       await agent.get('/api/me').expect(401);
       await agent.post('/api/auth/refresh').expect(401);
     });
 
     it('logout-all revokes every session', async () => {
-      const first = await signUpVerified();
+      const first = await t.signUp();
       const second = t.agent();
       await second
         .post('/api/auth/login')
@@ -205,7 +194,7 @@ describe('Auth (e2e)', () => {
 
   describe('passwords', () => {
     it('reset password signs out every session', async () => {
-      const agent = await signUpVerified();
+      const agent = await t.signUp();
       await t.http().post('/api/auth/forgot-password').send({ email: ada.email }).expect(202);
       const token = tokenFromEmail(t.mail.lastTo(ada.email)?.text);
 
@@ -224,7 +213,7 @@ describe('Auth (e2e)', () => {
     });
 
     it('change password requires the current one and keeps the current session', async () => {
-      const agent = await signUpVerified();
+      const agent = await t.signUp();
       const other = t.agent();
       await other.post('/api/auth/login').send({ email: ada.email, password: ada.password });
 

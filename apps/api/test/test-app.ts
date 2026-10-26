@@ -15,7 +15,21 @@ export interface TestApp {
   agent: () => ReturnType<typeof request.agent>;
   http: () => ReturnType<typeof request>;
   reset: () => Promise<void>;
+  /** Registers and verifies a user; returns an agent signed in as them. */
+  signUp: (user?: Partial<TestUser>) => Promise<ReturnType<typeof request.agent>>;
 }
+
+export interface TestUser {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export const ada: TestUser = {
+  name: 'Ada',
+  email: 'ada@example.com',
+  password: 'correct horse battery',
+};
 
 export async function createTestApp(): Promise<TestApp> {
   const mail = new InMemoryMailTransport();
@@ -29,8 +43,18 @@ export async function createTestApp(): Promise<TestApp> {
   await app.init();
   const prisma = app.get(PrismaService);
 
+  const signUp = async (overrides: Partial<TestUser> = {}) => {
+    const user = { ...ada, ...overrides };
+    await request(app.getHttpServer()).post('/api/auth/register').send(user).expect(202);
+    const agent = request.agent(app.getHttpServer());
+    const token = tokenFromEmail(mail.lastTo(user.email)?.text);
+    await agent.post('/api/auth/verify-email').send({ token }).expect(200);
+    return agent;
+  };
+
   return {
     app,
+    signUp,
     mail,
     prisma,
     agent: () => request.agent(app.getHttpServer()),
@@ -38,7 +62,7 @@ export async function createTestApp(): Promise<TestApp> {
     reset: async () => {
       mail.clear();
       await prisma.$executeRawUnsafe(
-        'TRUNCATE users, accounts, refresh_tokens, verification_tokens CASCADE',
+        'TRUNCATE users, accounts, refresh_tokens, verification_tokens, elections, politicians, election_candidates CASCADE',
       );
     },
   };

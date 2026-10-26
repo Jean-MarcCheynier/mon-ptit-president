@@ -1,0 +1,72 @@
+{
+  "$comment": "Provisional pool: dates and candidates are placeholders until the researched list (issue #2).",
+  "election": {
+    "slug": "presidentielle-2027",
+    "name": "Présidentielle 2027",
+    "firstRoundAt": "2027-04-11T06:00:00Z",
+    "secondRoundAt": "2027-04-25T06:00:00Z",
+    "predictionsLockAt": "2027-03-07T22:59:59Z"
+  },
+  "candidates": [
+    {
+      "slug": "edouard-philippe",
+      "name": "Édouard Philippe",
+      "photoUrl": null,
+      "photoCredit": null,
+      "partyLabel": "Horizons",
+      "tagline": "Maire du Havre, ancien Premier ministre",
+      "status": "DECLARED",
+      "source": "Candidature annoncée en septembre 2024 (Le Point) — à revérifier dans #2"
+    },
+    {
+      "slug": "jordan-bardella",
+      "name": "Jordan Bardella",
+      "photoUrl": null,
+      "photoCredit": null,
+      "partyLabel": "Rassemblement national",
+      "tagline": "Président du Rassemblement national",
+      "status": "POTENTIAL",
+      "source": "Placeholder — à sourcer dans #2"
+    },
+    {
+      "slug": "jean-luc-melenchon",
+      "name": "Jean-Luc Mélenchon",
+      "photoUrl": null,
+      "photoCredit": null,
+      "partyLabel": "La France insoumise",
+      "tagline": "Fondateur de La France insoumise",
+      "status": "POTENTIAL",
+      "source": "Placeholder — à sourcer dans #2"
+    },
+    {
+      "slug": "gabriel-attal",
+      "name": "Gabriel Attal",
+      "photoUrl": null,
+      "photoCredit": null,
+      "partyLabel": "Renaissance",
+      "tagline": "Secrétaire général de Renaissance, ancien Premier ministre",
+      "status": "POTENTIAL",
+      "source": "Placeholder — à sourcer dans #2"
+    },
+    {
+      "slug": "bruno-retailleau",
+      "name": "Bruno Retailleau",
+      "photoUrl": null,
+      "photoCredit": null,
+      "partyLabel": "Les Républicains",
+      "tagline": "Président des Républicains",
+      "status": "POTENTIAL",
+      "source": "Placeholder — à sourcer dans #2"
+    },
+    {
+      "slug": "raphael-glucksmann",
+      "name": "Raphaël Glucksmann",
+      "photoUrl": null,
+      "photoCredit": null,
+      "partyLabel": "Place publique",
+      "tagline": "Député européen, coprésident de Place publique",
+      "status": "POTENTIAL",
+      "source": "Placeholder — à sourcer dans #2"
+    }
+  ]
+}

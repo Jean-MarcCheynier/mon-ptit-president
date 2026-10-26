@@ -63,7 +63,18 @@ export const en: Messages<typeof fr> = {
   nav: { home: 'Home', settings: 'Settings', logout: 'Sign out' },
   home: {
     title: 'Welcome, {{name}}!',
-    description: 'You are signed in. This is where your app starts.',
+    description: 'Bet on the presidential election and score points with your predictions.',
+  },
+  election: {
+    rounds: 'First round on {{first}}, second round on {{second}}',
+    closesIn: 'Predictions close in',
+    closed: 'Predictions are closed.',
+    countdown: '{{days}}d {{hours}}h {{minutes}}m',
+    pool_one: '{{count}} potential candidate',
+    pool_other: '{{count}} potential candidates',
+    predict: 'Make your prediction',
+    comingSoon: 'Predictions are coming very soon.',
+    none: 'No upcoming election for now.',
   },
   settings: {
     title: 'Settings',
