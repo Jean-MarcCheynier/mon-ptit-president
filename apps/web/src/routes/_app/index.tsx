@@ -8,7 +8,7 @@ import { currentElectionQuery } from '@/lib/elections';
 import { errorMessage } from '@/lib/errors';
 
 export const Route = createFileRoute('/_app/')({
-  loader: ({ context }) => context.queryClient.prefetchQuery(currentElectionQuery),
+  loader: ({ context }) => context.queryClient.query(currentElectionQuery),
   component: HomePage,
 });
 
