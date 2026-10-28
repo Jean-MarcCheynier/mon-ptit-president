@@ -6,7 +6,10 @@ import { meQuery } from '@/lib/auth';
 /** Pages for signed-out users; signed-in users are sent to the app. */
 export const Route = createFileRoute('/_guest')({
   beforeLoad: async ({ context }) => {
-    const user = await context.queryClient.ensureQueryData(meQuery);
+    const user = await context.queryClient.query({
+      ...meQuery,
+      staleTime: 'static',
+    });
     if (user) throw redirect({ to: '/' });
   },
   component: GuestLayout,

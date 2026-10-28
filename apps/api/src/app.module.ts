@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { throttlers } from './common/throttle.js';
 import { AppConfig } from './config/app-config.service.js';
 import { ConfigModule } from './config/config.module.js';
+import { ElectionsModule } from './elections/elections.module.js';
 import { HealthController } from './health/health.controller.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { UsersModule } from './users/users.module.js';
@@ -22,6 +23,7 @@ import { UsersModule } from './users/users.module.js';
     }),
     AuthModule,
     UsersModule,
+    ElectionsModule,
   ],
   controllers: [HealthController],
   // Registered before AuthModule's JwtAuthGuard, so rate limiting runs first.

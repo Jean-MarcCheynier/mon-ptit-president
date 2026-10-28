@@ -10,7 +10,10 @@ import { meQuery, useLogout } from '@/lib/auth';
 /** Signed-in area: anonymous visitors are sent to /login and brought back afterwards. */
 export const Route = createFileRoute('/_app')({
   beforeLoad: async ({ context, location }) => {
-    const user = await context.queryClient.ensureQueryData(meQuery);
+    const user = await context.queryClient.query({
+      ...meQuery,
+      staleTime: 'static',
+    });
     if (!user) throw redirect({ to: '/login', search: { redirect: location.href } });
   },
   component: AppLayout,

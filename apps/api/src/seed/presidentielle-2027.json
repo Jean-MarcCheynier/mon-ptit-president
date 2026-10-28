@@ -1,0 +1,72 @@
+{
+  "$comment": "Provisional pool: dates and candidates are placeholders until the researched list (issue #2).",
+  "election": {
+    "slug": "presidentielle-2027",
+    "name": "Présidentielle 2027",
+    "firstRoundAt": "2027-04-11T06:00:00Z",
+    "secondRoundAt": "2027-04-25T06:00:00Z",
+    "predictionsLockAt": "2027-03-07T22:59:59Z"
+  },
+  "candidates": [
+    {
+      "slug": "edouard-philippe",
+      "name": "Édouard Philippe",
+      "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/%C3%89douard_Philippe_2019_%28cropped%29.jpg/330px-%C3%89douard_Philippe_2019_%28cropped%29.jpg",
+      "photoCredit": "Jacques Paquier, CC BY 2.0, via Wikimedia Commons",
+      "partyLabel": "Horizons",
+      "tagline": "Maire du Havre, ancien Premier ministre",
+      "status": "DECLARED",
+      "source": "Candidature annoncée en septembre 2024 (Le Point) — à revérifier dans #2"
+    },
+    {
+      "slug": "jordan-bardella",
+      "name": "Jordan Bardella",
+      "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/ff/Jordan_Bardella_December_2022_%28cropped%29.jpg/330px-Jordan_Bardella_December_2022_%28cropped%29.jpg",
+      "photoCredit": "European Parliament, CC BY 2.0, via Wikimedia Commons",
+      "partyLabel": "Rassemblement national",
+      "tagline": "Président du Rassemblement national",
+      "status": "POTENTIAL",
+      "source": "Placeholder — à sourcer dans #2"
+    },
+    {
+      "slug": "jean-luc-melenchon",
+      "name": "Jean-Luc Mélenchon",
+      "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/M%C3%A9lenchon_2027_-_55262255527_%28cropped_3-4%29.png/330px-M%C3%A9lenchon_2027_-_55262255527_%28cropped_3-4%29.png",
+      "photoCredit": "jlm2017.fr, CC BY 4.0, via Wikimedia Commons",
+      "partyLabel": "La France insoumise",
+      "tagline": "Fondateur de La France insoumise",
+      "status": "POTENTIAL",
+      "source": "Placeholder — à sourcer dans #2"
+    },
+    {
+      "slug": "gabriel-attal",
+      "name": "Gabriel Attal",
+      "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Gabriel_Attal_2025_%28close_crop%29.jpg/330px-Gabriel_Attal_2025_%28close_crop%29.jpg",
+      "photoCredit": "Ismail Aissoub, CC BY 4.0, via Wikimedia Commons",
+      "partyLabel": "Renaissance",
+      "tagline": "Secrétaire général de Renaissance, ancien Premier ministre",
+      "status": "POTENTIAL",
+      "source": "Placeholder — à sourcer dans #2"
+    },
+    {
+      "slug": "bruno-retailleau",
+      "name": "Bruno Retailleau",
+      "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Bruno_Retailleau_-_Ministre_de_l%27Int%C3%A9rieur_fran%C3%A7ais_%28cropped%29.jpg/330px-Bruno_Retailleau_-_Ministre_de_l%27Int%C3%A9rieur_fran%C3%A7ais_%28cropped%29.jpg",
+      "photoCredit": "Anthonymontardyfr, CC BY 4.0, via Wikimedia Commons",
+      "partyLabel": "Les Républicains",
+      "tagline": "Président des Républicains",
+      "status": "POTENTIAL",
+      "source": "Placeholder — à sourcer dans #2"
+    },
+    {
+      "slug": "raphael-glucksmann",
+      "name": "Raphaël Glucksmann",
+      "photoUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/2024-03-03_-_Congr%C3%A8s_du_PSE-_105_-_Raphael_Glucksmann.jpg/330px-2024-03-03_-_Congr%C3%A8s_du_PSE-_105_-_Raphael_Glucksmann.jpg",
+      "photoCredit": "Mathieu Delmestre, public domain, via Wikimedia Commons",
+      "partyLabel": "Place publique",
+      "tagline": "Député européen, coprésident de Place publique",
+      "status": "POTENTIAL",
+      "source": "Placeholder — à sourcer dans #2"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+# yaml-language-server: $schema=https://loccy.dev/schemas/config.schema.json
+
+# Single config for Loccy i18n tools
+# https://loccy.dev
+
+modules:
+  default:
+    framework: react-i18next
+    translations:
+      glob: "apps/web/src/i18n/locales/*.json"
+      layout: "{locale}.json"
+    usages:
+      include:
+        - "apps/web/src/**/*.{ts,tsx}"
+
+styleguide:
+  product: |
+    Presidency Bingo: a web game where friends predict the outcome of the French
+    presidential election (2027) and score points based on their predictions.
+    Used on mobile and desktop, casually, between friends.
+  voice: |
+    Friendly, light and playful, but never mocking. Short, direct sentences.
+    Strictly politically neutral: never favour, judge or joke about a candidate,
+    party or political position.
+    No marketing filler, no fake urgency.
+  mechanics: |
+    Buttons and labels: max ~25 characters, start with a verb when it is an action.
+    Keep i18next placeholders exactly as they are ({{name}}, {{count}}, ...).
+    Plurals use i18next suffixes (_one, _other): provide every form the locale needs.
+    No emoji.
+  localeRules:
+    fr: |
+      Always address the user with "tu" (tutoiement), never "vous".
+      Use the typographic apostrophe ’ instead of '.
+      Put a space before ? ! : ; as in French typography.
+      Use the ellipsis character … instead of three dots.
+      Sentence case for titles and buttons.
+    en: |
+      Sentence case for headings and buttons ("Create my account", not "Create My Account").
+      Contractions are fine.
+  doNotTranslate:
+    - term: Presidency Bingo
+      definition: App name
+      caseSensitive: true
+    - term: Google
+      definition: Sign-in provider
+      caseSensitive: true
+  glossary:
+    - definition: A player's guess about the election outcome (the core action of the game)
+      terms:
+        fr: pronostic
+        en: prediction
+    - definition: Person running, or likely to run, for president
+      terms:
+        fr: candidat
+        en: candidate
+    - definition: One voting stage of the presidential election (first or second)
+      terms:
+        fr: tour
+        en: round
+    - definition: Points a player earns from correct predictions
+      terms:
+        fr: points
+        en: points
+  keys: |
+    Group keys by page or feature, then by element, in camelCase
+    ("settings.password.submit", "election.closesIn").
+    Shared generic words go under "common".
+    Form validation messages go under "validation.<field>.<rule>".

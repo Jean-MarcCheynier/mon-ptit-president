@@ -36,6 +36,7 @@ pnpm install
 cp apps/api/.env.example apps/api/.env
 pnpm db:up            # Postgres + Mailpit
 pnpm db:migrate       # applique les migrations Prisma
+pnpm db:seed          # charge l'élection et son pool de candidats (idempotent)
 pnpm dev              # API :3000 + front :5173
 ```
 
@@ -143,7 +144,8 @@ cp .env.prod.example .env.prod   # remplir : DOMAIN, APP_URL, secrets, SMTP…
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 ```
 
-- Les migrations Prisma s'appliquent au démarrage de l'API.
+- Les migrations Prisma s'appliquent au démarrage de l'API. Pour charger ou mettre à jour le pool de candidats :
+  `docker compose -f docker-compose.prod.yml --env-file .env.prod exec api node dist/seed/run.js`.
 - Avec `DOMAIN=mon-domaine.com` (enregistrement DNS A vers le serveur), Caddy obtient le certificat tout seul.
 - Sans domaine, pour essayer sur l'IP du serveur : `DOMAIN=:80`, `APP_URL=http://<ip>`,
   `COOKIE_SECURE=false`. Pas de HTTPS dans ce cas, donc pas de connexion Google.

@@ -1,0 +1,142 @@
+{
+  "app": {
+    "name": "Presidency Bingo"
+  },
+  "common": {
+    "or": "or",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "language": "Language",
+    "save": "Save",
+    "saved": "Changes saved.",
+    "backToLogin": "Back to sign in"
+  },
+  "languages": {
+    "fr": "Français",
+    "en": "English"
+  },
+  "login": {
+    "title": "Sign in",
+    "description": "Welcome back!",
+    "submit": "Sign in",
+    "forgot": "Forgot password?",
+    "noAccount": "No account yet?",
+    "register": "Create an account",
+    "resend": "Resend the confirmation email"
+  },
+  "google": {
+    "continue": "Continue with Google"
+  },
+  "register": {
+    "title": "Create an account",
+    "description": "Sign up in seconds.",
+    "submit": "Create my account",
+    "hasAccount": "Already have an account?",
+    "login": "Sign in",
+    "passwordHint": "At least 8 characters."
+  },
+  "checkEmail": {
+    "title": "Check your inbox",
+    "description": "If {{email}} is a valid address, you will receive an email with a link to continue.",
+    "descriptionNoEmail": "You will receive an email with a link to continue.",
+    "spam": "Nothing? Check your spam folder.",
+    "resend": "Resend the email",
+    "resent": "Email sent again."
+  },
+  "verifyEmail": {
+    "title": "Confirming your email",
+    "pending": "Verifying…",
+    "failed": "This link is invalid or has expired.",
+    "retry": "Get a new link"
+  },
+  "forgotPassword": {
+    "title": "Forgot password",
+    "description": "Enter your email and we will send you a link to choose a new password.",
+    "submit": "Send the link"
+  },
+  "resetPassword": {
+    "title": "New password",
+    "description": "Choose your new password.",
+    "submit": "Save",
+    "success": "Password changed. You can now sign in.",
+    "missingToken": "Incomplete link. Request a new reset email."
+  },
+  "nav": {
+    "home": "Home",
+    "settings": "Settings",
+    "logout": "Sign out"
+  },
+  "home": {
+    "title": "Welcome, {{name}}!",
+    "description": "Bet on the presidential election and score points with your predictions."
+  },
+  "election": {
+    "rounds": "First round on {{first}}, second round on {{second}}",
+    "closesIn": "Predictions close in",
+    "closed": "Predictions are closed.",
+    "countdown": "{{days}}d {{hours}}h {{minutes}}m",
+    "pool_one": "{{count}} potential candidate",
+    "pool_other": "{{count}} potential candidates",
+    "predict": "Make your prediction",
+    "comingSoon": "Predictions are coming very soon.",
+    "none": "No upcoming election for now."
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": {
+      "title": "Profile",
+      "description": "Your name and language."
+    },
+    "password": {
+      "title": "Password",
+      "descriptionChange": "Your other sessions will be signed out.",
+      "descriptionSet": "Your account uses Google. You can also set a password.",
+      "current": "Current password",
+      "new": "New password",
+      "submit": "Change password",
+      "success": "Password changed."
+    },
+    "accounts": {
+      "title": "Sign-in methods",
+      "description": "Ways to sign in to your account.",
+      "password": "Email and password",
+      "google": "Google",
+      "linked": "Linked",
+      "notLinked": "Not linked",
+      "googleHint": "Sign in with Google using the same email address to link it."
+    },
+    "sessions": {
+      "title": "Sessions",
+      "description": "Sign out of every device, including this one.",
+      "logoutAll": "Sign out everywhere"
+    }
+  },
+  "validation": {
+    "email": {
+      "invalid": "Invalid email address."
+    },
+    "password": {
+      "min": "At least 8 characters.",
+      "max": "128 characters maximum.",
+      "required": "Password required."
+    },
+    "name": {
+      "required": "Name required.",
+      "max": "100 characters maximum."
+    },
+    "token": {
+      "required": "Incomplete link."
+    }
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "INVALID_CREDENTIALS": "Incorrect email or password.",
+    "EMAIL_NOT_VERIFIED": "Confirm your email address before signing in.",
+    "INVALID_TOKEN": "This link is invalid or has expired.",
+    "INVALID_CURRENT_PASSWORD": "Current password is incorrect.",
+    "TOO_MANY_REQUESTS": "Too many attempts. Wait a moment before trying again.",
+    "OAUTH_FAILED": "Signing in with Google failed.",
+    "VALIDATION_FAILED": "Some fields are invalid."
+  }
+}
