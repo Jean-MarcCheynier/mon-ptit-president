@@ -1,4 +1,5 @@
 import type { CurrentElectionDto } from '@presidency-bingo/shared';
+import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { PoliticianAvatar } from '@/components/politician-avatar';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,13 @@ import { timeUntil, useNow } from '@/lib/time';
 
 const PREVIEW_SIZE = 8;
 
-export function ElectionCard({ election }: { election: CurrentElectionDto }) {
+interface ElectionCardProps {
+  election: CurrentElectionDto;
+  /** Candidates already decided in the user's draft. */
+  decided: number;
+}
+
+export function ElectionCard({ election, decided }: ElectionCardProps) {
   const { t, i18n } = useTranslation();
   const now = useNow();
   const remaining = timeUntil(new Date(election.predictionsLockAt), now);
@@ -65,14 +72,14 @@ export function ElectionCard({ election }: { election: CurrentElectionDto }) {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2">
-        {/* Enabled once the swipe page exists (issue #3). */}
-        <Button disabled aria-describedby="predict-soon">
-          {t('election.predict')}
+      <CardFooter>
+        <Button asChild>
+          <Link to="/predict">
+            {decided > 0
+              ? t('election.resume', { decided, total: election.candidates.length })
+              : t('election.predict')}
+          </Link>
         </Button>
-        <p id="predict-soon" className="text-xs text-muted-foreground">
-          {t('election.comingSoon')}
-        </p>
       </CardFooter>
     </Card>
   );

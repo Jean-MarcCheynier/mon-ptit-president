@@ -62,7 +62,7 @@ export async function createTestApp(): Promise<TestApp> {
     reset: async () => {
       mail.clear();
       await prisma.$executeRawUnsafe(
-        'TRUNCATE users, accounts, refresh_tokens, verification_tokens, elections, politicians, election_candidates CASCADE',
+        'TRUNCATE users, accounts, refresh_tokens, verification_tokens, elections, politicians, election_candidates, ballots, ballot_entries CASCADE',
       );
     },
   };

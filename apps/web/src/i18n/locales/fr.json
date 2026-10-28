@@ -65,7 +65,8 @@
   "nav": {
     "home": "Accueil",
     "settings": "Paramètres",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "predict": "Mon pronostic"
   },
   "home": {
     "title": "Bienvenue, {{name}} !",
@@ -79,8 +80,8 @@
     "pool_one": "{{count}} candidat potentiel",
     "pool_other": "{{count}} candidats potentiels",
     "predict": "Fais ton pronostic",
-    "comingSoon": "Le pronostic arrive très bientôt.",
-    "none": "Aucune élection à venir pour le moment."
+    "none": "Aucune élection à venir pour le moment.",
+    "resume": "Reprendre ton brouillon ({{decided}}/{{total}})"
   },
   "settings": {
     "title": "Paramètres",
@@ -137,6 +138,23 @@
     "INVALID_CURRENT_PASSWORD": "Mot de passe actuel incorrect.",
     "TOO_MANY_REQUESTS": "Trop de tentatives. Patiente un peu avant de réessayer.",
     "OAUTH_FAILED": "La connexion avec Google a échoué.",
-    "VALIDATION_FAILED": "Certains champs sont invalides."
+    "VALIDATION_FAILED": "Certains champs sont invalides.",
+    "UNKNOWN_CANDIDATE": "Ce candidat ne fait plus partie du pool. Recharge la page."
+  },
+  "predict": {
+    "title": "Mon pronostic",
+    "question": "Sur la ligne de départ du 1er tour ?",
+    "progressLabel": "Candidats tranchés",
+    "progress": "{{decided}} / {{total}}",
+    "yes": "Qualifié",
+    "no": "Recalé",
+    "undo": "Annuler",
+    "shortcuts": "Clavier : ← recalé, → qualifié, Retour arrière pour annuler.",
+    "photoCredit": "Photo : {{credit}}",
+    "doneTitle": "Tous les candidats sont tranchés !",
+    "doneDescription_one": "Tu as tranché le seul candidat du pool.",
+    "doneDescription_other": "Tu as tranché les {{count}} candidats du pool.",
+    "review": "Passer à la revue",
+    "reviewSoon": "La revue et la validation arrivent très bientôt."
   }
 }

@@ -47,6 +47,9 @@ function AppLayout() {
             >
               {t('nav.home')}
             </Link>
+            <Link to="/predict" className="hover:text-foreground [&.active]:text-foreground">
+              {t('nav.predict')}
+            </Link>
             <Link to="/settings" className="hover:text-foreground [&.active]:text-foreground">
               {t('nav.settings')}
             </Link>

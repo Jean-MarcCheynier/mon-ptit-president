@@ -24,6 +24,7 @@ model User {
   accounts           Account[]
   refreshTokens      RefreshToken[]
   verificationTokens VerificationToken[]
+  ballots            Ballot[]
 
   @@map("users")
 }
@@ -92,6 +93,7 @@ model Election {
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   candidates ElectionCandidate[]
+  ballots    Ballot[]
 
   @@map("elections")
 }
@@ -107,7 +109,8 @@ model Politician {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  candidacies ElectionCandidate[]
+  candidacies   ElectionCandidate[]
+  ballotEntries BallotEntry[]
 
   @@map("politicians")
 }
@@ -136,4 +139,47 @@ model ElectionCandidate {
 
   @@unique([electionId, politicianId])
   @@map("election_candidates")
+}
+
+enum BallotStatus {
+  DRAFT
+  VALIDATED
+}
+
+// A user's prediction for an election. At most one DRAFT per user and election, enforced by
+// the partial unique index "ballots_one_draft_per_user" (raw SQL in the migration).
+model Ballot {
+  id          String       @id @default(uuid(7)) @db.Uuid
+  userId      String       @map("user_id") @db.Uuid
+  electionId  String       @map("election_id") @db.Uuid
+  status      BallotStatus @default(DRAFT)
+  validatedAt DateTime?    @map("validated_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  election Election      @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  entries  BallotEntry[]
+
+  @@index([userId, electionId])
+  @@map("ballots")
+}
+
+// One decision of a ballot: will this politician be on the first-round ballot paper?
+model BallotEntry {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  ballotId         String   @map("ballot_id") @db.Uuid
+  politicianId     String   @map("politician_id") @db.Uuid
+  isCandidate      Boolean  @map("is_candidate")
+  // Predicted vote shares in percent; not used yet.
+  scoreFirstRound  Float?   @map("score_first_round")
+  scoreSecondRound Float?   @map("score_second_round")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  ballot     Ballot     @relation(fields: [ballotId], references: [id], onDelete: Cascade)
+  politician Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+
+  @@unique([ballotId, politicianId])
+  @@map("ballot_entries")
 }

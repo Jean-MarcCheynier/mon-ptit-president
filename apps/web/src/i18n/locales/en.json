@@ -65,7 +65,8 @@
   "nav": {
     "home": "Home",
     "settings": "Settings",
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "predict": "My prediction"
   },
   "home": {
     "title": "Welcome, {{name}}!",
@@ -79,8 +80,8 @@
     "pool_one": "{{count}} potential candidate",
     "pool_other": "{{count}} potential candidates",
     "predict": "Make your prediction",
-    "comingSoon": "Predictions are coming very soon.",
-    "none": "No upcoming election for now."
+    "none": "No upcoming election for now.",
+    "resume": "Resume your draft ({{decided}}/{{total}})"
   },
   "settings": {
     "title": "Settings",
@@ -137,6 +138,23 @@
     "INVALID_CURRENT_PASSWORD": "Current password is incorrect.",
     "TOO_MANY_REQUESTS": "Too many attempts. Wait a moment before trying again.",
     "OAUTH_FAILED": "Signing in with Google failed.",
-    "VALIDATION_FAILED": "Some fields are invalid."
+    "VALIDATION_FAILED": "Some fields are invalid.",
+    "UNKNOWN_CANDIDATE": "This candidate is no longer in the pool. Reload the page."
+  },
+  "predict": {
+    "title": "My prediction",
+    "question": "On the first-round ballot?",
+    "progressLabel": "Candidates decided",
+    "progress": "{{decided}} / {{total}}",
+    "yes": "Qualified",
+    "no": "Out",
+    "undo": "Undo",
+    "shortcuts": "Keyboard: ← out, → qualified, Backspace to undo.",
+    "photoCredit": "Photo: {{credit}}",
+    "doneTitle": "All candidates decided!",
+    "doneDescription_one": "You decided on the only candidate in the pool.",
+    "doneDescription_other": "You decided on all {{count}} candidates in the pool.",
+    "review": "Go to review",
+    "reviewSoon": "Review and validation are coming very soon."
   }
 }
