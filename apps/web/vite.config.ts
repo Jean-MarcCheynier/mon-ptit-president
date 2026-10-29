@@ -8,6 +8,8 @@ export default defineConfig({
   resolve: { tsconfigPaths: true },
   server: {
     port: 5173,
+    // Set by `pnpm dev:lan` to listen on every interface.
+    host: process.env.DEV_HOST,
     // Same origin as in production (Caddy): the browser only ever talks to :5173.
     proxy: { '/api': 'http://localhost:3000' },
   },
