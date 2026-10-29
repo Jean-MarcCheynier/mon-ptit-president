@@ -9,12 +9,15 @@ import { currentBallotQuery, draftQuery } from '@/lib/ballot';
 import { currentElectionQuery } from '@/lib/elections';
 import { errorMessage } from '@/lib/errors';
 
+const ignore = () => {};
+
+/** Home stays up when the prediction API fails: errors are shown in place of the election card. */
 export const Route = createFileRoute('/_app/')({
   loader: ({ context }) =>
     Promise.all([
-      context.queryClient.query(currentElectionQuery),
-      context.queryClient.query(draftQuery),
-      context.queryClient.query(currentBallotQuery),
+      context.queryClient.query(currentElectionQuery).catch(ignore),
+      context.queryClient.query(draftQuery).catch(ignore),
+      context.queryClient.query(currentBallotQuery).catch(ignore),
     ]),
   component: HomePage,
 });
@@ -25,6 +28,8 @@ function HomePage() {
   const election = useQuery(currentElectionQuery);
   const draft = useQuery(draftQuery);
   const ballot = useQuery(currentBallotQuery);
+  // Without the draft or the bet, the card would offer the wrong action.
+  const error = election.error ?? draft.error ?? ballot.error;
 
   return (
     <div className="grid gap-6">
@@ -32,9 +37,9 @@ function HomePage() {
         <h1 className="text-2xl font-semibold">{t('home.title', { name: user?.name })}</h1>
         <p className="text-muted-foreground">{t('home.description')}</p>
       </div>
-      {election.error ? (
-        <FormAlert variant="error">{errorMessage(t, election.error)}</FormAlert>
-      ) : election.data ? (
+      {error ? (
+        <FormAlert variant="error">{errorMessage(t, error)}</FormAlert>
+      ) : election.data && draft.data && ballot.data !== undefined ? (
         <ElectionCard
           election={election.data}
           decided={decidedIn(election.data, draft.data)}
@@ -48,7 +53,7 @@ function HomePage() {
 }
 
 /** Draft entries that still match the active pool (withdrawn candidates don't count). */
-function decidedIn(election: CurrentElectionDto, draft: DraftBallotDto | undefined): number {
+function decidedIn(election: CurrentElectionDto, draft: DraftBallotDto): number {
   const pool = new Set(election.candidates.map((c) => c.politicianId));
-  return draft?.entries.filter((e) => pool.has(e.politicianId)).length ?? 0;
+  return draft.entries.filter((e) => pool.has(e.politicianId)).length;
 }
