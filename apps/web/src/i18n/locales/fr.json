@@ -139,7 +139,9 @@
     "TOO_MANY_REQUESTS": "Trop de tentatives. Patiente un peu avant de réessayer.",
     "OAUTH_FAILED": "La connexion avec Google a échoué.",
     "VALIDATION_FAILED": "Certains champs sont invalides.",
-    "UNKNOWN_CANDIDATE": "Ce candidat ne fait plus partie du pool. Recharge la page."
+    "UNKNOWN_CANDIDATE": "Ce candidat ne fait plus partie du pool. Recharge la page.",
+    "BALLOT_INCOMPLETE": "Tranche tous les candidats avant de valider.",
+    "TOO_FEW_CANDIDATES": "Retiens au moins 2 candidats qualifiés pour valider."
   },
   "predict": {
     "title": "Mon pronostic",
@@ -155,6 +157,25 @@
     "doneDescription_one": "Tu as tranché le seul candidat du pool.",
     "doneDescription_other": "Tu as tranché les {{count}} candidats du pool.",
     "review": "Passer à la revue",
-    "reviewSoon": "La revue et la validation arrivent très bientôt."
+    "validatedTitle": "Ton pronostic est validé"
+  },
+  "ballot": {
+    "validatedOn": "Pronostic validé le {{date}}",
+    "edit": "Modifier",
+    "resumeEdit": "Reprendre ta modification"
+  },
+  "review": {
+    "title": "Revue de ton pronostic",
+    "description": "Clique sur un candidat pour le changer de colonne, puis valide.",
+    "currentBet": "Ton pari reste celui validé le {{date}} tant que tu ne valides pas cette modification.",
+    "kept": "Qualifiés ({{count}})",
+    "dropped": "Recalés ({{count}})",
+    "empty": "Personne pour l’instant.",
+    "moveToKept": "Passer {{name}} en qualifié",
+    "moveToDropped": "Passer {{name}} en recalé",
+    "undecided_one": "{{count}} candidat reste à trancher.",
+    "undecided_other": "{{count}} candidats restent à trancher.",
+    "continue": "Continuer le swipe",
+    "validate": "Valider mon pronostic"
   }
 }

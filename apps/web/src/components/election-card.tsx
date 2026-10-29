@@ -1,6 +1,7 @@
 import type { CurrentElectionDto } from '@presidency-bingo/shared';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
+import { EditBallotButton } from '@/components/edit-ballot-button';
 import { PoliticianAvatar } from '@/components/politician-avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { timeUntil, useNow } from '@/lib/time';
+import { formatDateTime, timeUntil, useNow } from '@/lib/time';
 
 const PREVIEW_SIZE = 8;
 
@@ -19,9 +20,11 @@ interface ElectionCardProps {
   election: CurrentElectionDto;
   /** Candidates already decided in the user's draft. */
   decided: number;
+  /** When the user's current bet was validated; null if they never validated one. */
+  validatedAt: string | null;
 }
 
-export function ElectionCard({ election, decided }: ElectionCardProps) {
+export function ElectionCard({ election, decided, validatedAt }: ElectionCardProps) {
   const { t, i18n } = useTranslation();
   const now = useNow();
   const remaining = timeUntil(new Date(election.predictionsLockAt), now);
@@ -72,14 +75,31 @@ export function ElectionCard({ election, decided }: ElectionCardProps) {
           </div>
         </div>
       </CardContent>
-      <CardFooter>
-        <Button asChild>
-          <Link to="/predict">
-            {decided > 0
-              ? t('election.resume', { decided, total: election.candidates.length })
-              : t('election.predict')}
-          </Link>
-        </Button>
+      <CardFooter className="flex-wrap gap-3">
+        {validatedAt ? (
+          <>
+            <p className="w-full text-sm font-medium">
+              {t('ballot.validatedOn', {
+                date: formatDateTime(validatedAt, i18n.resolvedLanguage),
+              })}
+            </p>
+            {decided > 0 ? (
+              <Button asChild>
+                <Link to="/review">{t('ballot.resumeEdit')}</Link>
+              </Button>
+            ) : (
+              <EditBallotButton />
+            )}
+          </>
+        ) : (
+          <Button asChild>
+            <Link to="/predict">
+              {decided > 0
+                ? t('election.resume', { decided, total: election.candidates.length })
+                : t('election.predict')}
+            </Link>
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
