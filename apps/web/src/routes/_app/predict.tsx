@@ -1,14 +1,17 @@
-import type { ElectionCandidateDto, ValidatedBallotDto } from '@presidency-bingo/shared';
+import type {
+  BallotEntryDto,
+  ElectionCandidateDto,
+  ValidatedBallotDto,
+} from '@presidency-bingo/shared';
 import { useSuspenseQueries } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Check, Undo2, X } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BallotColumn } from '@/components/ballot-column';
 import { EditBallotButton } from '@/components/edit-ballot-button';
 import { FormAlert } from '@/components/form-alert';
-import { initials } from '@/components/politician-avatar';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SwipeCard, type SwipeCardHandle } from '@/components/swipe-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { meQuery } from '@/lib/auth';
@@ -79,12 +82,19 @@ function Swipe({
     [candidates, seed],
   );
   const { current, decided, total, previous } = deckState(deck, draft.entries);
+  const card = useRef<SwipeCardHandle>(null);
+  // The undone decision: its card flies back from the side it left.
+  const [undone, setUndone] = useState<BallotEntryDto | null>(null);
 
-  const decide = (isCandidate: boolean) => {
+  // Buttons and keys throw the card out like a drag; the decision is saved once it's gone.
+  const decide = (isCandidate: boolean) => card.current?.swipe(isCandidate);
+  const save = (isCandidate: boolean) => {
     if (current) setEntry.mutate({ politicianId: current.politicianId, isCandidate });
   };
   const undo = () => {
-    if (previous) removeEntry.mutate(previous.politicianId);
+    if (!previous) return;
+    setUndone(draft.entries.find((e) => e.politicianId === previous.politicianId) ?? null);
+    removeEntry.mutate(previous.politicianId);
   };
 
   // Arrow keys decide, Backspace undoes. Buttons stay reachable with Tab.
@@ -120,7 +130,17 @@ function Swipe({
         />
       </div>
 
-      {current ? <CandidateCard candidate={current} /> : <DoneCard total={total} />}
+      {current ? (
+        <SwipeCard
+          key={current.politicianId}
+          ref={card}
+          candidate={current}
+          onDecide={save}
+          enterFrom={undone?.politicianId === current.politicianId ? undone.isCandidate : null}
+        />
+      ) : (
+        <DoneCard total={total} />
+      )}
 
       {current ? (
         <div className="grid grid-cols-2 gap-3">
@@ -145,37 +165,6 @@ function Swipe({
 
       {error ? <FormAlert variant="error">{errorMessage(t, error)}</FormAlert> : null}
     </div>
-  );
-}
-
-function CandidateCard({ candidate }: { candidate: ElectionCandidateDto }) {
-  const { t } = useTranslation();
-  return (
-    <Card aria-live="polite">
-      <CardContent className="grid justify-items-center gap-4 text-center">
-        <figure className="grid justify-items-center gap-1">
-          <Avatar className="size-48 rounded-2xl">
-            {candidate.photoUrl ? (
-              <AvatarImage src={candidate.photoUrl} alt={candidate.name} className="object-cover" />
-            ) : null}
-            <AvatarFallback className="rounded-2xl text-5xl font-medium">
-              {initials(candidate.name)}
-            </AvatarFallback>
-          </Avatar>
-          {candidate.photoCredit ? (
-            <figcaption className="max-w-48 text-[10px] leading-tight text-muted-foreground">
-              {t('predict.photoCredit', { credit: candidate.photoCredit })}
-            </figcaption>
-          ) : null}
-        </figure>
-        <div className="grid gap-1">
-          <h2 className="text-xl font-semibold">{candidate.name}</h2>
-          <p className="text-sm font-medium">{candidate.partyLabel}</p>
-          <p className="text-sm text-muted-foreground">{candidate.tagline}</p>
-        </div>
-        <p className="font-medium">{t('predict.question')}</p>
-      </CardContent>
-    </Card>
   );
 }
 

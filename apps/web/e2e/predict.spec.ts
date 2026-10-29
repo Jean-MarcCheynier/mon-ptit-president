@@ -17,6 +17,18 @@ async function signUp(page: Page) {
 
 const progress = (page: Page) => page.getByText(/^\d+ \/ \d+$/);
 
+/** Drags the card horizontally with the mouse and releases it. */
+async function dragCard(page: Page, dx: number) {
+  const box = await page.getByTestId('swipe-card').boundingBox();
+  if (!box) throw new Error('No card to drag');
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + dx, y, { steps: 15 });
+  await page.mouse.up();
+}
+
 /** Makes the API report the predictions as locked, as after the deadline. */
 async function lockPredictions(page: Page) {
   await page.route('**/api/elections/current', async (route) => {
@@ -28,7 +40,9 @@ async function lockPredictions(page: Page) {
   });
 }
 
-test('swipe with the keyboard, survive a reload, undo, resume from home', async ({ page }) => {
+test('swipe with the keyboard and the mouse, survive a reload, undo, resume from home', async ({
+  page,
+}) => {
   await signUp(page);
   await page.getByRole('link', { name: 'Fais ton pronostic' }).click();
   await expect(page.getByRole('heading', { name: 'Mon pronostic' })).toBeVisible();
@@ -51,9 +65,29 @@ test('swipe with the keyboard, survive a reload, undo, resume from home', async 
   await expect(page.getByRole('heading', { level: 2 })).toHaveText(first ?? '');
   await page.keyboard.press('ArrowRight');
 
+  await expect(progress(page)).toHaveText(/^1 \//);
+
+  // Dragging: a short drag springs back, a long one decides.
+  const card = await page.getByRole('heading', { level: 2 }).textContent();
+  await dragCard(page, 40);
+  await page.waitForTimeout(500); // nothing should happen: give it the time to
+  await expect(page.getByRole('heading', { level: 2 })).toHaveText(card ?? '');
+  await expect(progress(page)).toHaveText(/^1 \//);
+  await dragCard(page, 200);
+  await expect(progress(page)).toHaveText(/^2 \//);
+  await dragCard(page, -200);
+  await expect(progress(page)).toHaveText(/^3 \//);
+
+  // Without animations, keys and drags decide at once.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.keyboard.press('ArrowLeft');
+  await expect(progress(page)).toHaveText(/^4 \//);
+  await dragCard(page, 200);
+  await expect(progress(page)).toHaveText(/^5 \//);
+
   await page.getByRole('link', { name: 'Accueil' }).click();
   await expect(
-    page.getByRole('link', { name: /Reprendre ton brouillon \(1\/\d+\)/ }),
+    page.getByRole('link', { name: /Reprendre ton brouillon \(5\/\d+\)/ }),
   ).toBeVisible();
 });
 
