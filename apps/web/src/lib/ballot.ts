@@ -1,13 +1,17 @@
 import {
   type BallotEntryDto,
+  type CurrentBallotDto,
   type DraftBallotDto,
   type ElectionCandidateDto,
   ErrorCode,
+  MIN_CANDIDATES,
+  type ValidatedBallotDto,
 } from '@presidency-bingo/shared';
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiRequestError, api } from './api';
 
 const DRAFT = '/elections/current/draft';
+const BALLOT = '/elections/current/ballot';
 const entryPath = (politicianId: string) => `${DRAFT}/entries/${politicianId}`;
 
 /** The user's draft for the current election; empty when there is none. */
@@ -24,6 +28,42 @@ export const draftQuery = queryOptions({
     }
   },
 });
+
+/** The user's current bet (latest validated ballot); null if they never validated one. */
+export const currentBallotQuery = queryOptions({
+  queryKey: ['elections', 'current', 'ballot'],
+  queryFn: async (): Promise<ValidatedBallotDto | null> => {
+    try {
+      return (await api<CurrentBallotDto>(BALLOT)).ballot;
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.code === ErrorCode.NO_CURRENT_ELECTION) {
+        return null;
+      }
+      throw error;
+    }
+  },
+});
+
+/** Opens a draft pre-filled from the current bet (or returns the existing one). */
+export function useStartDraft() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<DraftBallotDto>(DRAFT, { method: 'POST' }),
+    onSuccess: (draft) => queryClient.setQueryData(draftQuery.queryKey, draft),
+  });
+}
+
+/** Freezes the draft into the current bet. */
+export function useValidate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<ValidatedBallotDto>(`${DRAFT}/validate`, { method: 'POST' }),
+    onSuccess: (ballot) => {
+      queryClient.setQueryData(currentBallotQuery.queryKey, ballot);
+      queryClient.setQueryData(draftQuery.queryKey, { entries: [] });
+    },
+  });
+}
 
 const draftMutationKey = ['draft'];
 
@@ -89,4 +129,27 @@ export function deckState(deck: ElectionCandidateDto[], entries: BallotEntryDto[
     total: deck.length,
     previous: before.findLast(isDecided) ?? null,
   };
+}
+
+export interface Review {
+  kept: ElectionCandidateDto[];
+  dropped: ElectionCandidateDto[];
+  undecided: number;
+  /** Why the draft can't be validated yet (same codes as the API); null when it can. */
+  blocker: typeof ErrorCode.BALLOT_INCOMPLETE | typeof ErrorCode.TOO_FEW_CANDIDATES | null;
+}
+
+/** The draft split into kept and dropped candidates of the active pool, and whether it can be validated. */
+export function reviewState(candidates: ElectionCandidateDto[], entries: BallotEntryDto[]): Review {
+  const decisions = new Map(entries.map((e) => [e.politicianId, e.isCandidate]));
+  const kept = candidates.filter((c) => decisions.get(c.politicianId) === true);
+  const dropped = candidates.filter((c) => decisions.get(c.politicianId) === false);
+  const undecided = candidates.length - kept.length - dropped.length;
+  const blocker =
+    undecided > 0
+      ? ErrorCode.BALLOT_INCOMPLETE
+      : kept.length < MIN_CANDIDATES
+        ? ErrorCode.TOO_FEW_CANDIDATES
+        : null;
+  return { kept, dropped, undecided, blocker };
 }

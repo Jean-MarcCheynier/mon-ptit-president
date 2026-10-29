@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ElectionCard } from '@/components/election-card';
 import { FormAlert } from '@/components/form-alert';
 import { meQuery } from '@/lib/auth';
-import { draftQuery } from '@/lib/ballot';
+import { currentBallotQuery, draftQuery } from '@/lib/ballot';
 import { currentElectionQuery } from '@/lib/elections';
 import { errorMessage } from '@/lib/errors';
 
@@ -14,6 +14,7 @@ export const Route = createFileRoute('/_app/')({
     Promise.all([
       context.queryClient.query(currentElectionQuery),
       context.queryClient.query(draftQuery),
+      context.queryClient.query(currentBallotQuery),
     ]),
   component: HomePage,
 });
@@ -23,6 +24,7 @@ function HomePage() {
   const { data: user } = useSuspenseQuery(meQuery);
   const election = useQuery(currentElectionQuery);
   const draft = useQuery(draftQuery);
+  const ballot = useQuery(currentBallotQuery);
 
   return (
     <div className="grid gap-6">
@@ -33,7 +35,11 @@ function HomePage() {
       {election.error ? (
         <FormAlert variant="error">{errorMessage(t, election.error)}</FormAlert>
       ) : election.data ? (
-        <ElectionCard election={election.data} decided={decidedIn(election.data, draft.data)} />
+        <ElectionCard
+          election={election.data}
+          decided={decidedIn(election.data, draft.data)}
+          validatedAt={ballot.data?.validatedAt ?? null}
+        />
       ) : election.data === null ? (
         <p className="text-muted-foreground">{t('election.none')}</p>
       ) : null}

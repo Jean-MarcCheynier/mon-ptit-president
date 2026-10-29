@@ -27,3 +27,10 @@ export function useNow(intervalMs = 60_000): Date {
   }, [intervalMs]);
   return now;
 }
+
+/** Date and time, e.g. "29 octobre 2026 à 19:35". */
+export function formatDateTime(iso: string, locale: string | undefined): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short' }).format(
+    new Date(iso),
+  );
+}

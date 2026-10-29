@@ -14,6 +14,7 @@ import { Route as GuestRouteImport } from './routes/_guest'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppPredictRouteImport } from './routes/_app/predict'
+import { Route as AppReviewRouteImport } from './routes/_app/review'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as GuestCheckEmailRouteImport } from './routes/_guest/check-email'
 import { Route as GuestForgotPasswordRouteImport } from './routes/_guest/forgot-password'
@@ -42,6 +43,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppPredictRoute = AppPredictRouteImport.update({
   id: '/predict',
   path: '/predict',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReviewRoute = AppReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/verify-email': typeof VerifyEmailRoute
   '/predict': typeof AppPredictRoute
+  '/review': typeof AppReviewRoute
   '/settings': typeof AppSettingsRoute
   '/check-email': typeof GuestCheckEmailRoute
   '/forgot-password': typeof GuestForgotPasswordRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/verify-email': typeof VerifyEmailRoute
   '/predict': typeof AppPredictRoute
+  '/review': typeof AppReviewRoute
   '/settings': typeof AppSettingsRoute
   '/check-email': typeof GuestCheckEmailRoute
   '/forgot-password': typeof GuestForgotPasswordRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/_guest': typeof GuestRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
   '/_app/predict': typeof AppPredictRoute
+  '/_app/review': typeof AppReviewRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_guest/check-email': typeof GuestCheckEmailRoute
   '/_guest/forgot-password': typeof GuestForgotPasswordRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/verify-email'
     | '/predict'
+    | '/review'
     | '/settings'
     | '/check-email'
     | '/forgot-password'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/verify-email'
     | '/predict'
+    | '/review'
     | '/settings'
     | '/check-email'
     | '/forgot-password'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/_guest'
     | '/verify-email'
     | '/_app/predict'
+    | '/_app/review'
     | '/_app/settings'
     | '/_guest/check-email'
     | '/_guest/forgot-password'
@@ -192,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPredictRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/review': {
+      id: '/_app/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof AppReviewRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
@@ -239,12 +258,14 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppPredictRoute: typeof AppPredictRoute
+  AppReviewRoute: typeof AppReviewRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppPredictRoute: AppPredictRoute,
+  AppReviewRoute: AppReviewRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
 }

@@ -90,6 +90,8 @@ export const ErrorCode = {
   OAUTH_FAILED: 'OAUTH_FAILED',
   NO_CURRENT_ELECTION: 'NO_CURRENT_ELECTION',
   UNKNOWN_CANDIDATE: 'UNKNOWN_CANDIDATE',
+  BALLOT_INCOMPLETE: 'BALLOT_INCOMPLETE',
+  TOO_FEW_CANDIDATES: 'TOO_FEW_CANDIDATES',
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 

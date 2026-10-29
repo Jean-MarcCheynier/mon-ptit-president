@@ -139,7 +139,9 @@
     "TOO_MANY_REQUESTS": "Too many attempts. Wait a moment before trying again.",
     "OAUTH_FAILED": "Signing in with Google failed.",
     "VALIDATION_FAILED": "Some fields are invalid.",
-    "UNKNOWN_CANDIDATE": "This candidate is no longer in the pool. Reload the page."
+    "UNKNOWN_CANDIDATE": "This candidate is no longer in the pool. Reload the page.",
+    "BALLOT_INCOMPLETE": "Decide on every candidate before validating.",
+    "TOO_FEW_CANDIDATES": "Keep at least 2 qualified candidates to validate."
   },
   "predict": {
     "title": "My prediction",
@@ -155,6 +157,25 @@
     "doneDescription_one": "You decided on the only candidate in the pool.",
     "doneDescription_other": "You decided on all {{count}} candidates in the pool.",
     "review": "Go to review",
-    "reviewSoon": "Review and validation are coming very soon."
+    "validatedTitle": "Your prediction is validated"
+  },
+  "ballot": {
+    "validatedOn": "Prediction validated on {{date}}",
+    "edit": "Edit",
+    "resumeEdit": "Resume your edit"
+  },
+  "review": {
+    "title": "Review your prediction",
+    "description": "Click a candidate to move them to the other column, then validate.",
+    "currentBet": "Your bet stays the one validated on {{date}} until you validate this edit.",
+    "kept": "Qualified ({{count}})",
+    "dropped": "Out ({{count}})",
+    "empty": "Nobody yet.",
+    "moveToKept": "Move {{name}} to qualified",
+    "moveToDropped": "Move {{name}} to out",
+    "undecided_one": "{{count}} candidate left to decide.",
+    "undecided_other": "{{count}} candidates left to decide.",
+    "continue": "Keep swiping",
+    "validate": "Validate my prediction"
   }
 }

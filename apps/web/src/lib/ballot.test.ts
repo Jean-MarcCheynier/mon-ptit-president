@@ -1,6 +1,6 @@
-import type { ElectionCandidateDto } from '@presidency-bingo/shared';
+import { type ElectionCandidateDto, ErrorCode } from '@presidency-bingo/shared';
 import { describe, expect, it } from 'vitest';
-import { deckState } from './ballot';
+import { deckState, reviewState } from './ballot';
 
 const card = (politicianId: string): ElectionCandidateDto => ({
   politicianId,
@@ -43,5 +43,34 @@ describe('deckState', () => {
 
   it('ignores entries for politicians no longer in the deck', () => {
     expect(deckState(deck, decided('a', 'gone'))).toMatchObject({ current: deck[1], decided: 1 });
+  });
+});
+
+describe('reviewState', () => {
+  const entry = (politicianId: string, isCandidate: boolean) => ({ politicianId, isCandidate });
+
+  it('splits decided candidates and keeps the pool order', () => {
+    const review = reviewState(deck, [entry('c', true), entry('b', false), entry('a', true)]);
+    expect(review).toEqual({
+      kept: [deck[0], deck[2]],
+      dropped: [deck[1]],
+      undecided: 0,
+      blocker: null,
+    });
+  });
+
+  it('is incomplete while a candidate is undecided', () => {
+    const review = reviewState(deck, [entry('a', true), entry('b', true)]);
+    expect(review).toMatchObject({ undecided: 1, blocker: ErrorCode.BALLOT_INCOMPLETE });
+  });
+
+  it('needs at least two kept candidates', () => {
+    const review = reviewState(deck, [entry('a', true), entry('b', false), entry('c', false)]);
+    expect(review.blocker).toBe(ErrorCode.TOO_FEW_CANDIDATES);
+  });
+
+  it('ignores decisions outside the pool', () => {
+    const review = reviewState(deck, [entry('a', true), entry('b', true), entry('x', true)]);
+    expect(review).toMatchObject({ kept: [deck[0], deck[1]], undecided: 1 });
   });
 });

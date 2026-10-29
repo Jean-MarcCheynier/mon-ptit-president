@@ -1,25 +1,34 @@
 import type { ElectionCandidateDto } from '@presidency-bingo/shared';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { Check, Undo2, X } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { EditBallotButton } from '@/components/edit-ballot-button';
 import { FormAlert } from '@/components/form-alert';
 import { initials } from '@/components/politician-avatar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { meQuery } from '@/lib/auth';
-import { deckState, draftQuery, useRemoveEntry, useSetEntry } from '@/lib/ballot';
+import {
+  currentBallotQuery,
+  deckState,
+  draftQuery,
+  useRemoveEntry,
+  useSetEntry,
+} from '@/lib/ballot';
 import { currentElectionQuery } from '@/lib/elections';
 import { errorMessage } from '@/lib/errors';
 import { stableShuffle } from '@/lib/shuffle';
+import { formatDateTime } from '@/lib/time';
 
 export const Route = createFileRoute('/_app/predict')({
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.query(currentElectionQuery),
       context.queryClient.query(draftQuery),
+      context.queryClient.query(currentBallotQuery),
     ]),
   component: PredictPage,
 });
@@ -27,11 +36,15 @@ export const Route = createFileRoute('/_app/predict')({
 function PredictPage() {
   const { t } = useTranslation();
   const { data: election } = useSuspenseQuery(currentElectionQuery);
+  const { data: draft } = useSuspenseQuery(draftQuery);
+  const { data: ballot } = useSuspenseQuery(currentBallotQuery);
 
   return (
     <div className="mx-auto grid max-w-sm gap-6">
       <h1 className="text-2xl font-semibold">{t('predict.title')}</h1>
-      {election ? (
+      {election && ballot && draft.entries.length === 0 ? (
+        <ValidatedCard validatedAt={ballot.validatedAt} />
+      ) : election ? (
         <Swipe electionId={election.id} candidates={election.candidates} />
       ) : (
         <p className="text-muted-foreground">{t('election.none')}</p>
@@ -167,14 +180,28 @@ function DoneCard({ total }: { total: number }) {
         <CardTitle>{t('predict.doneTitle')}</CardTitle>
         <CardDescription>{t('predict.doneDescription', { count: total })}</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-2">
-        {/* Enabled once the review step exists (issue #5). */}
-        <Button disabled aria-describedby="review-soon">
-          {t('predict.review')}
+      <CardContent className="grid">
+        <Button asChild>
+          <Link to="/review">{t('predict.review')}</Link>
         </Button>
-        <p id="review-soon" className="text-xs text-muted-foreground">
-          {t('predict.reviewSoon')}
-        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** The current bet with no edit in progress. */
+function ValidatedCard({ validatedAt }: { validatedAt: string }) {
+  const { t, i18n } = useTranslation();
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('predict.validatedTitle')}</CardTitle>
+        <CardDescription>
+          {t('ballot.validatedOn', { date: formatDateTime(validatedAt, i18n.resolvedLanguage) })}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid">
+        <EditBallotButton />
       </CardContent>
     </Card>
   );
