@@ -1,6 +1,6 @@
 import { type ElectionCandidateDto, ErrorCode } from '@presidency-bingo/shared';
 import { describe, expect, it } from 'vitest';
-import { deckState, reviewState } from './ballot';
+import { deckState, newProfiles, reviewState } from './ballot';
 
 const card = (politicianId: string): ElectionCandidateDto => ({
   politicianId,
@@ -34,9 +34,21 @@ describe('deckState', () => {
   });
 
   it('has no current card once every card is decided', () => {
-    expect(deckState(deck, decided('c', 'a', 'b'))).toMatchObject({
+    expect(deckState(deck, decided('a', 'b', 'c'))).toMatchObject({
       current: null,
       decided: 3,
+      previous: deck[2],
+    });
+  });
+
+  it('undoes the latest decision, wherever it is in the deck', () => {
+    // Pre-filled from the bet: 'a' and 'c' were decided before the new card 'b'.
+    expect(deckState(deck, decided('a', 'c', 'b'))).toMatchObject({
+      current: null,
+      previous: deck[1],
+    });
+    expect(deckState(deck, decided('c', 'gone'))).toMatchObject({
+      current: deck[0],
       previous: deck[2],
     });
   });
@@ -72,5 +84,20 @@ describe('reviewState', () => {
   it('ignores decisions outside the pool', () => {
     const review = reviewState(deck, [entry('a', true), entry('b', true), entry('x', true)]);
     expect(review).toMatchObject({ kept: [deck[0], deck[1]], undecided: 1 });
+  });
+});
+
+describe('newProfiles', () => {
+  it('lists pool candidates the bet does not decide on', () => {
+    const ballot = {
+      validatedAt: '2026-10-30T10:00:00.000Z',
+      entries: [
+        { politicianId: 'a', isCandidate: true },
+        { politicianId: 'gone', isCandidate: true },
+        { politicianId: 'c', isCandidate: false },
+      ],
+    };
+    expect(newProfiles(deck, ballot)).toEqual([deck[1]]);
+    expect(newProfiles(deck.slice(0, 1), ballot)).toEqual([]);
   });
 });

@@ -49,7 +49,7 @@ function PredictPage() {
         // Any unvalidated draft is ignored: only the validated bet counts.
         <LockedBallot candidates={election.candidates} ballot={ballot} />
       ) : election && ballot && draft.entries.length === 0 ? (
-        <ValidatedCard validatedAt={ballot.validatedAt} />
+        <ValidatedCard candidates={election.candidates} ballot={ballot} />
       ) : election ? (
         <Swipe electionId={election.id} candidates={election.candidates} />
       ) : (
@@ -197,18 +197,26 @@ function DoneCard({ total }: { total: number }) {
 }
 
 /** The current bet with no edit in progress. */
-function ValidatedCard({ validatedAt }: { validatedAt: string }) {
+function ValidatedCard({
+  candidates,
+  ballot,
+}: {
+  candidates: ElectionCandidateDto[];
+  ballot: ValidatedBallotDto;
+}) {
   const { t, i18n } = useTranslation();
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t('predict.validatedTitle')}</CardTitle>
         <CardDescription>
-          {t('ballot.validatedOn', { date: formatDateTime(validatedAt, i18n.resolvedLanguage) })}
+          {t('ballot.validatedOn', {
+            date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage),
+          })}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid">
-        <EditBallotButton />
+        <EditBallotButton candidates={candidates} ballot={ballot} />
       </CardContent>
     </Card>
   );

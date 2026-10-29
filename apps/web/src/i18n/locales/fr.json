@@ -166,7 +166,9 @@
     "validatedOn": "Pronostic validé le {{date}}",
     "edit": "Modifier",
     "resumeEdit": "Reprendre ta modification",
-    "view": "Voir mon pronostic"
+    "view": "Voir mon pronostic",
+    "newProfiles_one": "{{count}} nouveau profil à trancher",
+    "newProfiles_other": "{{count}} nouveaux profils à trancher"
   },
   "review": {
     "title": "Revue de ton pronostic",

@@ -41,7 +41,7 @@ function HomePage() {
         <ElectionCard
           election={election.data}
           decided={decidedIn(election.data, draft.data)}
-          validatedAt={ballot.data?.validatedAt ?? null}
+          ballot={ballot.data}
         />
       ) : election.data === null ? (
         <p className="text-muted-foreground">{t('election.none')}</p>

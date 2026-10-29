@@ -113,7 +113,10 @@ export interface Deck {
   current: ElectionCandidateDto | null;
   decided: number;
   total: number;
-  /** The card "Undo" takes back: the last decided one before the current card. */
+  /**
+   * The card "Undo" takes back: the latest decision (entries are in decision order). Not the
+   * last decided card of the deck: a draft pre-filled from the bet has decisions all over it.
+   */
   previous: ElectionCandidateDto | null;
 }
 
@@ -122,13 +125,23 @@ export function deckState(deck: ElectionCandidateDto[], entries: BallotEntryDto[
   const decidedIds = new Set(entries.map((e) => e.politicianId));
   const isDecided = (c: ElectionCandidateDto) => decidedIds.has(c.politicianId);
   const index = deck.findIndex((c) => !isDecided(c));
-  const before = index === -1 ? deck : deck.slice(0, index);
+  const byId = new Map(deck.map((c) => [c.politicianId, c]));
+  const latest = entries.findLast((e) => byId.has(e.politicianId));
   return {
     current: deck[index] ?? null,
     decided: deck.filter(isDecided).length,
     total: deck.length,
-    previous: before.findLast(isDecided) ?? null,
+    previous: (latest && byId.get(latest.politicianId)) ?? null,
   };
+}
+
+/** Candidates of the active pool the bet doesn't decide on: added to the pool after validation. */
+export function newProfiles(
+  candidates: ElectionCandidateDto[],
+  ballot: ValidatedBallotDto,
+): ElectionCandidateDto[] {
+  const decided = new Set(ballot.entries.map((e) => e.politicianId));
+  return candidates.filter((c) => !decided.has(c.politicianId));
 }
 
 export interface Review {
