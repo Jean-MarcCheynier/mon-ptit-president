@@ -416,4 +416,94 @@ describe('Ballots (e2e)', () => {
       await agent.put(entry('not-a-uuid')).send({ isCandidate: true }).expect(404);
     });
   });
+
+  describe('pool changes', () => {
+    type Agent = Awaited<ReturnType<TestApp['signUp']>>;
+    const decide = async (agent: Agent, decisions: Record<string, boolean>) => {
+      for (const [slug, isCandidate] of Object.entries(decisions)) {
+        await agent.put(entry(slug)).send({ isCandidate }).expect(200);
+      }
+    };
+    const bet = { anne: true, bruno: true, chloe: false, david: false, emma: true };
+    const asEntries = (decisions: Record<string, boolean>) =>
+      Object.entries(decisions)
+        .map(([slug, isCandidate]) => ({ politicianId: id(slug), isCandidate }))
+        .sort((a, b) => a.politicianId.localeCompare(b.politicianId));
+    const sortedEntries = (entries: { politicianId: string; isCandidate: boolean }[]) =>
+      entries
+        .map(({ politicianId, isCandidate }) => ({ politicianId, isCandidate }))
+        .sort((a, b) => a.politicianId.localeCompare(b.politicianId));
+
+    /** Re-runs the seed, as when the versioned pool file changes. */
+    const reseed = async (candidates: typeof fixture.candidates) => {
+      await seedElection(t.prisma, { ...fixture, candidates });
+      const politicians = await t.prisma.politician.findMany();
+      ids = new Map(politicians.map((p) => [p.slug, p.id]));
+    };
+
+    it('keeps the bet and asks to decide on a newly added candidate only', async () => {
+      const agent = await t.signUp();
+      await decide(agent, bet);
+      await agent.post(VALIDATE).expect(200);
+
+      await reseed([...fixture.candidates, candidate('fanny')]);
+
+      // The bet is unchanged: Fanny is simply undecided.
+      const current = await agent.get(BALLOT).expect(200);
+      expect(sortedEntries(current.body.ballot.entries)).toEqual(asEntries(bet));
+
+      // The new draft carries every previous decision; only Fanny is left.
+      const draft = await agent.post(DRAFT).expect(200);
+      expect(sortedEntries(draft.body.entries)).toEqual(asEntries(bet));
+      const res = await agent.post(VALIDATE).expect(422);
+      expect(res.body.code).toBe(ErrorCode.BALLOT_INCOMPLETE);
+
+      await decide(agent, { fanny: true });
+      const validated = await agent.post(VALIDATE).expect(200);
+      expect(sortedEntries(validated.body.entries)).toEqual(asEntries({ ...bet, fanny: true }));
+      expect(await t.prisma.ballot.count({ where: { status: 'VALIDATED' } })).toBe(2);
+    });
+
+    it('takes a withdrawn candidate out of new drafts and keeps them in past ballots', async () => {
+      const agent = await t.signUp();
+      await decide(agent, bet);
+      const first = await agent.post(VALIDATE).expect(200);
+
+      await reseed(
+        fixture.candidates.map((c) => (c.slug === 'anne' ? { ...c, status: 'WITHDRAWN' } : c)),
+      );
+
+      // Out of the pool: gone from the election, the swipe and the new draft.
+      const election = await agent.get('/api/elections/current').expect(200);
+      expect(
+        election.body.candidates.map((c: { politicianId: string }) => c.politicianId),
+      ).not.toContain(id('anne'));
+      const draft = await agent.post(DRAFT).expect(200);
+      const { anne: _, ...rest } = bet;
+      expect(sortedEntries(draft.body.entries)).toEqual(asEntries(rest));
+      const res = await agent.put(entry('anne')).send({ isCandidate: true }).expect(404);
+      expect(res.body.code).toBe(ErrorCode.UNKNOWN_CANDIDATE);
+
+      // Validation no longer needs a decision on Anne.
+      const second = await agent.post(VALIDATE).expect(200);
+      expect(sortedEntries(second.body.entries)).toEqual(asEntries(rest));
+
+      const firstBallot = await t.prisma.ballot.findFirstOrThrow({
+        where: { validatedAt: new Date(first.body.validatedAt) },
+        include: { entries: true },
+      });
+      expect(sortedEntries(firstBallot.entries)).toEqual(asEntries(bet));
+    });
+
+    it('does not count a withdrawn candidate as kept', async () => {
+      const agent = await t.signUp();
+      await decide(agent, { anne: true, bruno: true, chloe: false, david: false, emma: false });
+      await reseed(
+        fixture.candidates.map((c) => (c.slug === 'anne' ? { ...c, status: 'WITHDRAWN' } : c)),
+      );
+
+      const res = await agent.post(VALIDATE).expect(422);
+      expect(res.body.code).toBe(ErrorCode.TOO_FEW_CANDIDATES);
+    });
+  });
 });

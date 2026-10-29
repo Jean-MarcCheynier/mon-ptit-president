@@ -1,4 +1,4 @@
-import type { CurrentElectionDto } from '@presidency-bingo/shared';
+import type { CurrentElectionDto, ValidatedBallotDto } from '@presidency-bingo/shared';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { EditBallotButton } from '@/components/edit-ballot-button';
@@ -21,11 +21,11 @@ interface ElectionCardProps {
   election: CurrentElectionDto;
   /** Candidates already decided in the user's draft. */
   decided: number;
-  /** When the user's current bet was validated; null if they never validated one. */
-  validatedAt: string | null;
+  /** The user's current bet; null if they never validated one. */
+  ballot: ValidatedBallotDto | null;
 }
 
-export function ElectionCard({ election, decided, validatedAt }: ElectionCardProps) {
+export function ElectionCard({ election, decided, ballot }: ElectionCardProps) {
   const { t, i18n } = useTranslation();
   const now = useNow();
   const locked = usePredictionsLocked(election);
@@ -78,11 +78,11 @@ export function ElectionCard({ election, decided, validatedAt }: ElectionCardPro
         </div>
       </CardContent>
       <CardFooter className="flex-wrap gap-3">
-        {validatedAt ? (
+        {ballot ? (
           <>
             <p className="w-full text-sm font-medium">
               {t('ballot.validatedOn', {
-                date: formatDateTime(validatedAt, i18n.resolvedLanguage),
+                date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage),
               })}
             </p>
             {locked ? (
@@ -94,7 +94,7 @@ export function ElectionCard({ election, decided, validatedAt }: ElectionCardPro
                 <Link to="/review">{t('ballot.resumeEdit')}</Link>
               </Button>
             ) : (
-              <EditBallotButton />
+              <EditBallotButton candidates={election.candidates} ballot={ballot} />
             )}
           </>
         ) : locked ? (

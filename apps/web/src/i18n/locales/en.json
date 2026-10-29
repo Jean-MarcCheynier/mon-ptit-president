@@ -166,7 +166,9 @@
     "validatedOn": "Prediction validated on {{date}}",
     "edit": "Edit",
     "resumeEdit": "Resume your edit",
-    "view": "See my prediction"
+    "view": "See my prediction",
+    "newProfiles_one": "{{count}} new profile to decide on",
+    "newProfiles_other": "{{count}} new profiles to decide on"
   },
   "review": {
     "title": "Review your prediction",
