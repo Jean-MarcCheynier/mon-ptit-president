@@ -1,9 +1,10 @@
-import type { ElectionCandidateDto } from '@presidency-bingo/shared';
+import type { ElectionCandidateDto, ValidatedBallotDto } from '@presidency-bingo/shared';
 import { useSuspenseQueries } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Check, Undo2, X } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { BallotColumn } from '@/components/ballot-column';
 import { EditBallotButton } from '@/components/edit-ballot-button';
 import { FormAlert } from '@/components/form-alert';
 import { initials } from '@/components/politician-avatar';
@@ -15,10 +16,11 @@ import {
   currentBallotQuery,
   deckState,
   draftQuery,
+  reviewState,
   useRemoveEntry,
   useSetEntry,
 } from '@/lib/ballot';
-import { currentElectionQuery } from '@/lib/elections';
+import { currentElectionQuery, usePredictionsLocked } from '@/lib/elections';
 import { errorMessage } from '@/lib/errors';
 import { stableShuffle } from '@/lib/shuffle';
 import { formatDateTime } from '@/lib/time';
@@ -38,11 +40,15 @@ function PredictPage() {
   const [{ data: election }, { data: draft }, { data: ballot }] = useSuspenseQueries({
     queries: [currentElectionQuery, draftQuery, currentBallotQuery],
   });
+  const locked = usePredictionsLocked(election);
 
   return (
-    <div className="mx-auto grid max-w-sm gap-6">
+    <div className={`mx-auto grid gap-6 ${locked ? 'max-w-3xl' : 'max-w-sm'}`}>
       <h1 className="text-2xl font-semibold">{t('predict.title')}</h1>
-      {election && ballot && draft.entries.length === 0 ? (
+      {election && locked ? (
+        // Any unvalidated draft is ignored: only the validated bet counts.
+        <LockedBallot candidates={election.candidates} ballot={ballot} />
+      ) : election && ballot && draft.entries.length === 0 ? (
         <ValidatedCard validatedAt={ballot.validatedAt} />
       ) : election ? (
         <Swipe electionId={election.id} candidates={election.candidates} />
@@ -205,5 +211,30 @@ function ValidatedCard({ validatedAt }: { validatedAt: string }) {
         <EditBallotButton />
       </CardContent>
     </Card>
+  );
+}
+
+/** Predictions are closed: the validated bet, read-only. */
+function LockedBallot({
+  candidates,
+  ballot,
+}: {
+  candidates: ElectionCandidateDto[];
+  ballot: ValidatedBallotDto | null;
+}) {
+  const { t, i18n } = useTranslation();
+  if (!ballot) return <p className="text-muted-foreground">{t('election.notParticipated')}</p>;
+
+  const { kept, dropped } = reviewState(candidates, ballot.entries);
+  return (
+    <div className="grid gap-4">
+      <p className="text-muted-foreground">
+        {t('predict.locked', { date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage) })}
+      </p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <BallotColumn title={t('review.kept', { count: kept.length })} candidates={kept} />
+        <BallotColumn title={t('review.dropped', { count: dropped.length })} candidates={dropped} />
+      </div>
+    </div>
   );
 }

@@ -24,6 +24,8 @@ export interface CurrentElectionDto {
   firstRoundAt: string;
   secondRoundAt: string;
   predictionsLockAt: string;
+  /** Past predictionsLockAt, by the server's clock: no more writes are accepted. */
+  predictionsLocked: boolean;
   /** Active pool: every candidate except WITHDRAWN. */
   candidates: ElectionCandidateDto[];
 }
