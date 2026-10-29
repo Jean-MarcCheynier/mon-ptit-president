@@ -34,3 +34,24 @@ export function formatDateTime(iso: string, locale: string | undefined): string 
     new Date(iso),
   );
 }
+
+// setTimeout overflows past ~24.8 days: longer waits are done in steps.
+const MAX_TIMEOUT_MS = 2 ** 31 - 1;
+
+/** Whether `iso` has passed; flips exactly at that moment while the component is mounted. */
+export function useIsPast(iso: string | undefined): boolean {
+  const target = iso ? new Date(iso).getTime() : Number.NaN;
+  const [past, setPast] = useState(() => Date.now() >= target);
+  useEffect(() => {
+    if (Number.isNaN(target)) return;
+    let id: ReturnType<typeof setTimeout>;
+    const check = () => {
+      const ms = target - Date.now();
+      setPast(ms <= 0);
+      if (ms > 0) id = setTimeout(check, Math.min(ms, MAX_TIMEOUT_MS));
+    };
+    check();
+    return () => clearTimeout(id);
+  }, [target]);
+  return past;
+}

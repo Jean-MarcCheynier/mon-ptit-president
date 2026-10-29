@@ -20,7 +20,8 @@ const entriesSelect = { select: entrySelect, orderBy: { createdAt: 'asc' } } as 
 /**
  * The user's ballots for the current election: at most one draft, plus the validated history.
  * Validated ballots are immutable: entry writes and validation lock the draft row, so an entry
- * can never land in a ballot that is being validated.
+ * can never land in a ballot that is being validated. Every write is refused once predictions
+ * are locked.
  */
 @Injectable()
 export class BallotsService {
@@ -47,7 +48,7 @@ export class BallotsService {
 
   /** Opens a draft to change the current bet, pre-filled from it. Returns the existing draft if any. */
   async startDraft(userId: string): Promise<DraftBallotDto> {
-    const electionId = await this.elections.getCurrentId();
+    const electionId = await this.elections.getOpenId();
     await this.findOrCreateDraft(userId, electionId);
     return this.getDraft(userId);
   }
@@ -58,7 +59,7 @@ export class BallotsService {
     politicianId: string,
     isCandidate: boolean,
   ): Promise<BallotEntryDto> {
-    const electionId = await this.elections.getCurrentId();
+    const electionId = await this.elections.getOpenId();
     const pool = await this.activePool(electionId);
     if (!pool.has(politicianId)) throw unknownCandidate();
 
@@ -80,7 +81,7 @@ export class BallotsService {
 
   /** Undoes a decision. Idempotent: removing a missing entry is a no-op. */
   async removeEntry(userId: string, politicianId: string): Promise<void> {
-    const electionId = await this.elections.getCurrentId();
+    const electionId = await this.elections.getOpenId();
     await this.prisma.$transaction(async (tx) => {
       const ballotId = await lockUserDraft(tx, userId, electionId, 'SHARE');
       if (ballotId) await tx.ballotEntry.deleteMany({ where: { ballotId, politicianId } });
@@ -92,7 +93,7 @@ export class BallotsService {
    * at least MIN_CANDIDATES kept; decisions on withdrawn politicians are dropped.
    */
   async validate(userId: string): Promise<ValidatedBallotDto> {
-    const electionId = await this.elections.getCurrentId();
+    const electionId = await this.elections.getOpenId();
     const pool = await this.activePool(electionId);
 
     return this.prisma.$transaction(async (tx) => {

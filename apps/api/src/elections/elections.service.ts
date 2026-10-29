@@ -8,19 +8,30 @@ export class ElectionsService {
   constructor(private readonly prisma: PrismaService) {}
 
   /** Id of the current election (see `getCurrent`). */
-  async getCurrentId(now = new Date()): Promise<string> {
+  async getCurrentId(): Promise<string> {
     const election = await this.prisma.election.findFirst({
-      ...currentElection(now),
+      ...currentElection(),
       select: { id: true },
     });
     if (!election) throw noCurrentElection();
     return election.id;
   }
 
-  /** The next election whose second round hasn't passed yet. */
-  async getCurrent(now = new Date()): Promise<CurrentElectionDto> {
+  /** Id of the current election, if its predictions are still open; 403 once they are locked. */
+  async getOpenId(): Promise<string> {
     const election = await this.prisma.election.findFirst({
-      ...currentElection(now),
+      ...currentElection(),
+      select: { id: true, predictionsLockAt: true },
+    });
+    if (!election) throw noCurrentElection();
+    if (isLocked(election.predictionsLockAt)) throw predictionsLocked();
+    return election.id;
+  }
+
+  /** The next election whose second round hasn't passed yet. */
+  async getCurrent(): Promise<CurrentElectionDto> {
+    const election = await this.prisma.election.findFirst({
+      ...currentElection(),
       include: {
         candidates: {
           where: { status: { not: 'WITHDRAWN' } },
@@ -38,6 +49,7 @@ export class ElectionsService {
       firstRoundAt: election.firstRoundAt.toISOString(),
       secondRoundAt: election.secondRoundAt.toISOString(),
       predictionsLockAt: election.predictionsLockAt.toISOString(),
+      predictionsLocked: isLocked(election.predictionsLockAt),
       candidates: election.candidates.map(({ politician, ...candidate }) => ({
         politicianId: politician.id,
         name: politician.name,
@@ -51,11 +63,20 @@ export class ElectionsService {
   }
 }
 
-const currentElection = (now: Date) =>
+const currentElection = (now = new Date()) =>
   ({
     where: { secondRoundAt: { gte: now } },
     orderBy: { firstRoundAt: 'asc' },
   }) as const;
+
+const isLocked = (lockAt: Date, now = new Date()) => now >= lockAt;
+
+const predictionsLocked = () =>
+  new ApiException(
+    HttpStatus.FORBIDDEN,
+    ErrorCode.PREDICTIONS_LOCKED,
+    'Predictions are locked for this election',
+  );
 
 const noCurrentElection = () =>
   new ApiException(HttpStatus.NOT_FOUND, ErrorCode.NO_CURRENT_ELECTION, 'No upcoming election');

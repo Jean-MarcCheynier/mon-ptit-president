@@ -75,13 +75,14 @@
   "election": {
     "rounds": "First round on {{first}}, second round on {{second}}",
     "closesIn": "Predictions close in",
-    "closed": "Predictions are closed.",
+    "closed": "Predictions closed",
     "countdown": "{{days}}d {{hours}}h {{minutes}}m",
     "pool_one": "{{count}} potential candidate",
     "pool_other": "{{count}} potential candidates",
     "predict": "Make your prediction",
     "none": "No upcoming election for now.",
-    "resume": "Resume your draft ({{decided}}/{{total}})"
+    "resume": "Resume your draft ({{decided}}/{{total}})",
+    "notParticipated": "Predictions are closed, you didn’t take part."
   },
   "settings": {
     "title": "Settings",
@@ -141,7 +142,8 @@
     "VALIDATION_FAILED": "Some fields are invalid.",
     "UNKNOWN_CANDIDATE": "This candidate is no longer in the pool. Reload the page.",
     "BALLOT_INCOMPLETE": "Decide on every candidate before validating.",
-    "TOO_FEW_CANDIDATES": "Keep at least 2 qualified candidates to validate."
+    "TOO_FEW_CANDIDATES": "Keep at least 2 qualified candidates to validate.",
+    "PREDICTIONS_LOCKED": "Predictions are closed."
   },
   "predict": {
     "title": "My prediction",
@@ -157,12 +159,14 @@
     "doneDescription_one": "You decided on the only candidate in the pool.",
     "doneDescription_other": "You decided on all {{count}} candidates in the pool.",
     "review": "Go to review",
-    "validatedTitle": "Your prediction is validated"
+    "validatedTitle": "Your prediction is validated",
+    "locked": "Predictions are closed. Here is your prediction, validated on {{date}}."
   },
   "ballot": {
     "validatedOn": "Prediction validated on {{date}}",
     "edit": "Edit",
-    "resumeEdit": "Resume your edit"
+    "resumeEdit": "Resume your edit",
+    "view": "See my prediction"
   },
   "review": {
     "title": "Review your prediction",

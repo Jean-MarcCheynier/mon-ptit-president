@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { usePredictionsLocked } from '@/lib/elections';
 import { formatDateTime, timeUntil, useNow } from '@/lib/time';
 
 const PREVIEW_SIZE = 8;
@@ -27,7 +28,8 @@ interface ElectionCardProps {
 export function ElectionCard({ election, decided, validatedAt }: ElectionCardProps) {
   const { t, i18n } = useTranslation();
   const now = useNow();
-  const remaining = timeUntil(new Date(election.predictionsLockAt), now);
+  const locked = usePredictionsLocked(election);
+  const remaining = locked ? null : timeUntil(new Date(election.predictionsLockAt), now);
   const formatDate = (iso: string) =>
     new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' }).format(new Date(iso));
 
@@ -83,7 +85,11 @@ export function ElectionCard({ election, decided, validatedAt }: ElectionCardPro
                 date: formatDateTime(validatedAt, i18n.resolvedLanguage),
               })}
             </p>
-            {decided > 0 ? (
+            {locked ? (
+              <Button asChild variant="outline">
+                <Link to="/predict">{t('ballot.view')}</Link>
+              </Button>
+            ) : decided > 0 ? (
               <Button asChild>
                 <Link to="/review">{t('ballot.resumeEdit')}</Link>
               </Button>
@@ -91,6 +97,8 @@ export function ElectionCard({ election, decided, validatedAt }: ElectionCardPro
               <EditBallotButton />
             )}
           </>
+        ) : locked ? (
+          <p className="text-sm text-muted-foreground">{t('election.notParticipated')}</p>
         ) : (
           <Button asChild>
             <Link to="/predict">

@@ -87,6 +87,7 @@ describe('Elections (e2e)', () => {
       expect(res.body).toMatchObject({
         slug: 'presidentielle-test',
         predictionsLockAt: fixture.election.predictionsLockAt,
+        predictionsLocked: false,
       });
       expect(res.body.candidates.map((c: { name: string }) => c.name)).toEqual([
         'Alain Alpha',

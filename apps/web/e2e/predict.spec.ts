@@ -17,6 +17,17 @@ async function signUp(page: Page) {
 
 const progress = (page: Page) => page.getByText(/^\d+ \/ \d+$/);
 
+/** Makes the API report the predictions as locked, as after the deadline. */
+async function lockPredictions(page: Page) {
+  await page.route('**/api/elections/current', async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      json: { ...(await response.json()), predictionsLocked: true },
+    });
+  });
+}
+
 test('swipe with the keyboard, survive a reload, undo, resume from home', async ({ page }) => {
   await signUp(page);
   await page.getByRole('link', { name: 'Fais ton pronostic' }).click();
@@ -92,4 +103,47 @@ test('swipe everything, review, validate, then edit the bet', async ({ page }) =
 
   await page.getByRole('link', { name: 'Mon pronostic' }).click();
   await expect(page.getByText('Ton pronostic est validé')).toBeVisible();
+
+  // After the deadline, the bet is read-only.
+  await lockPredictions(page);
+  await page.goto('/');
+  await expect(page.getByText('Pronostics clos', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Modifier' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Voir mon pronostic' }).click();
+  await expect(page.getByText(/^Pronostics clos\. Voici ton pronostic/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Qualifiés (3)' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Passer .* en / })).toHaveCount(0);
+  await page.goto('/review');
+  await expect(page).toHaveURL(/\/predict$/);
+});
+
+test('after the deadline, a user who never validated cannot take part', async ({ page }) => {
+  await signUp(page);
+  await lockPredictions(page);
+  await page.reload();
+  await expect(page.getByText('Pronostics clos, tu n’as pas participé.')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Fais ton pronostic' })).toHaveCount(0);
+
+  await page.getByRole('link', { name: 'Mon pronostic' }).click();
+  await expect(page.getByText('Pronostics clos, tu n’as pas participé.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Qualifié' })).toHaveCount(0);
+});
+
+test('a page opened before the deadline turns read-only on the next action', async ({ page }) => {
+  await signUp(page);
+  await page.getByRole('link', { name: 'Fais ton pronostic' }).click();
+  await expect(page.getByRole('button', { name: 'Qualifié' })).toBeVisible();
+
+  // The deadline passes while the page is open (as seen by the server).
+  await lockPredictions(page);
+  await page.route('**/api/elections/current/draft/entries/*', (route) =>
+    route.fulfill({
+      status: 403,
+      json: { statusCode: 403, code: 'PREDICTIONS_LOCKED', message: 'Locked' },
+    }),
+  );
+  await page.keyboard.press('ArrowRight');
+
+  await expect(page.getByText('Pronostics clos, tu n’as pas participé.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Qualifié' })).toHaveCount(0);
 });

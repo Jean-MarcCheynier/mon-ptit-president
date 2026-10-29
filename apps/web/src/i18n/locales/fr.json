@@ -75,13 +75,14 @@
   "election": {
     "rounds": "1er tour le {{first}}, 2nd tour le {{second}}",
     "closesIn": "Fin des pronostics dans",
-    "closed": "Les pronostics sont clos.",
+    "closed": "Pronostics clos",
     "countdown": "{{days}} j {{hours}} h {{minutes}} min",
     "pool_one": "{{count}} candidat potentiel",
     "pool_other": "{{count}} candidats potentiels",
     "predict": "Fais ton pronostic",
     "none": "Aucune élection à venir pour le moment.",
-    "resume": "Reprendre ton brouillon ({{decided}}/{{total}})"
+    "resume": "Reprendre ton brouillon ({{decided}}/{{total}})",
+    "notParticipated": "Pronostics clos, tu n’as pas participé."
   },
   "settings": {
     "title": "Paramètres",
@@ -141,7 +142,8 @@
     "VALIDATION_FAILED": "Certains champs sont invalides.",
     "UNKNOWN_CANDIDATE": "Ce candidat ne fait plus partie du pool. Recharge la page.",
     "BALLOT_INCOMPLETE": "Tranche tous les candidats avant de valider.",
-    "TOO_FEW_CANDIDATES": "Retiens au moins 2 candidats qualifiés pour valider."
+    "TOO_FEW_CANDIDATES": "Retiens au moins 2 candidats qualifiés pour valider.",
+    "PREDICTIONS_LOCKED": "Les pronostics sont clos."
   },
   "predict": {
     "title": "Mon pronostic",
@@ -157,12 +159,14 @@
     "doneDescription_one": "Tu as tranché le seul candidat du pool.",
     "doneDescription_other": "Tu as tranché les {{count}} candidats du pool.",
     "review": "Passer à la revue",
-    "validatedTitle": "Ton pronostic est validé"
+    "validatedTitle": "Ton pronostic est validé",
+    "locked": "Pronostics clos. Voici ton pronostic, validé le {{date}}."
   },
   "ballot": {
     "validatedOn": "Pronostic validé le {{date}}",
     "edit": "Modifier",
-    "resumeEdit": "Reprendre ta modification"
+    "resumeEdit": "Reprendre ta modification",
+    "view": "Voir mon pronostic"
   },
   "review": {
     "title": "Revue de ton pronostic",

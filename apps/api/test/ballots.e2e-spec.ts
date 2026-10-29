@@ -340,4 +340,80 @@ describe('Ballots (e2e)', () => {
       await bob.post(VALIDATE).expect(422);
     });
   });
+
+  describe('predictions lock', () => {
+    const SECOND = 1000;
+    const lockIn = (ms: number) =>
+      t.prisma.election.updateMany({ data: { predictionsLockAt: new Date(Date.now() + ms) } });
+
+    /** Every write route, as the user would send it. */
+    const writes = (agent: Awaited<ReturnType<TestApp['signUp']>>) => [
+      agent.put(entry('anne')).send({ isCandidate: false }),
+      agent.delete(entry('bruno')),
+      agent.post(DRAFT),
+      agent.post(VALIDATE),
+    ];
+
+    it('accepts writes until the deadline', async () => {
+      await lockIn(5 * SECOND);
+      const agent = await t.signUp();
+      for (const slug of ['anne', 'bruno', 'chloe', 'david', 'emma']) {
+        await agent.put(entry(slug)).send({ isCandidate: true }).expect(200);
+      }
+      await agent.delete(entry('emma')).expect(204);
+      await agent.put(entry('emma')).send({ isCandidate: false }).expect(200);
+      await agent.post(VALIDATE).expect(200);
+      await agent.post(DRAFT).expect(200);
+
+      const election = await agent.get('/api/elections/current').expect(200);
+      expect(election.body.predictionsLocked).toBe(false);
+    });
+
+    it('refuses every write after the deadline and keeps the bet readable', async () => {
+      const agent = await t.signUp();
+      for (const slug of ['anne', 'bruno', 'chloe', 'david', 'emma']) {
+        await agent
+          .put(entry(slug))
+          .send({ isCandidate: slug !== 'emma' })
+          .expect(200);
+      }
+      await agent.post(VALIDATE).expect(200);
+      await agent.put(entry('anne')).send({ isCandidate: false }).expect(200);
+      await lockIn(-SECOND);
+
+      for (const res of await Promise.all(writes(agent))) {
+        expect(res.status).toBe(403);
+        expect(res.body.code).toBe(ErrorCode.PREDICTIONS_LOCKED);
+      }
+
+      const current = await agent.get(BALLOT).expect(200);
+      expect(current.body.ballot.entries).toHaveLength(5);
+      const election = await agent.get('/api/elections/current').expect(200);
+      expect(election.body.predictionsLocked).toBe(true);
+      // The pending edit is left untouched (and ignored by the UI).
+      const draft = await t.prisma.ballot.findFirstOrThrow({
+        where: { status: 'DRAFT' },
+        include: { entries: { where: { politicianId: id('anne') } } },
+      });
+      expect(draft.entries[0]?.isCandidate).toBe(false);
+      expect(await t.prisma.ballot.count({ where: { status: 'VALIDATED' } })).toBe(1);
+    });
+
+    it('refuses writes from users who never took part', async () => {
+      await lockIn(-SECOND);
+      const agent = await t.signUp();
+      for (const res of await Promise.all(writes(agent))) {
+        expect(res.status).toBe(403);
+        expect(res.body.code).toBe(ErrorCode.PREDICTIONS_LOCKED);
+      }
+      expect((await agent.get(BALLOT).expect(200)).body).toEqual({ ballot: null });
+      expect(await t.prisma.ballot.count()).toBe(0);
+    });
+
+    it('still reports unknown candidates as such', async () => {
+      await lockIn(-SECOND);
+      const agent = await t.signUp();
+      await agent.put(entry('not-a-uuid')).send({ isCandidate: true }).expect(404);
+    });
+  });
 });
