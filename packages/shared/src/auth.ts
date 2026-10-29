@@ -89,6 +89,7 @@ export const ErrorCode = {
   TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
   OAUTH_FAILED: 'OAUTH_FAILED',
   NO_CURRENT_ELECTION: 'NO_CURRENT_ELECTION',
+  UNKNOWN_CANDIDATE: 'UNKNOWN_CANDIDATE',
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 

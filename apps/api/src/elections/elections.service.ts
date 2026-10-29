@@ -7,11 +7,20 @@ import { PrismaService } from '../prisma/prisma.service.js';
 export class ElectionsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Id of the current election (see `getCurrent`). */
+  async getCurrentId(now = new Date()): Promise<string> {
+    const election = await this.prisma.election.findFirst({
+      ...currentElection(now),
+      select: { id: true },
+    });
+    if (!election) throw noCurrentElection();
+    return election.id;
+  }
+
   /** The next election whose second round hasn't passed yet. */
   async getCurrent(now = new Date()): Promise<CurrentElectionDto> {
     const election = await this.prisma.election.findFirst({
-      where: { secondRoundAt: { gte: now } },
-      orderBy: { firstRoundAt: 'asc' },
+      ...currentElection(now),
       include: {
         candidates: {
           where: { status: { not: 'WITHDRAWN' } },
@@ -20,13 +29,7 @@ export class ElectionsService {
         },
       },
     });
-    if (!election) {
-      throw new ApiException(
-        HttpStatus.NOT_FOUND,
-        ErrorCode.NO_CURRENT_ELECTION,
-        'No upcoming election',
-      );
-    }
+    if (!election) throw noCurrentElection();
 
     return {
       id: election.id,
@@ -47,3 +50,12 @@ export class ElectionsService {
     };
   }
 }
+
+const currentElection = (now: Date) =>
+  ({
+    where: { secondRoundAt: { gte: now } },
+    orderBy: { firstRoundAt: 'asc' },
+  }) as const;
+
+const noCurrentElection = () =>
+  new ApiException(HttpStatus.NOT_FOUND, ErrorCode.NO_CURRENT_ELECTION, 'No upcoming election');
