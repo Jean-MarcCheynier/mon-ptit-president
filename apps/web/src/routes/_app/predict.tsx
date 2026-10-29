@@ -1,5 +1,5 @@
 import type { ElectionCandidateDto } from '@presidency-bingo/shared';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useSuspenseQueries } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Check, Undo2, X } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
@@ -35,9 +35,9 @@ export const Route = createFileRoute('/_app/predict')({
 
 function PredictPage() {
   const { t } = useTranslation();
-  const { data: election } = useSuspenseQuery(currentElectionQuery);
-  const { data: draft } = useSuspenseQuery(draftQuery);
-  const { data: ballot } = useSuspenseQuery(currentBallotQuery);
+  const [{ data: election }, { data: draft }, { data: ballot }] = useSuspenseQueries({
+    queries: [currentElectionQuery, draftQuery, currentBallotQuery],
+  });
 
   return (
     <div className="mx-auto grid max-w-sm gap-6">
@@ -61,8 +61,9 @@ function Swipe({
   candidates: ElectionCandidateDto[];
 }) {
   const { t } = useTranslation();
-  const { data: user } = useSuspenseQuery(meQuery);
-  const { data: draft } = useSuspenseQuery(draftQuery);
+  const [{ data: user }, { data: draft }] = useSuspenseQueries({
+    queries: [meQuery, draftQuery],
+  });
   const setEntry = useSetEntry();
   const removeEntry = useRemoveEntry();
 

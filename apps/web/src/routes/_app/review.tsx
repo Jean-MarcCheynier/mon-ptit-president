@@ -1,5 +1,5 @@
 import type { ElectionCandidateDto } from '@presidency-bingo/shared';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useSuspenseQueries } from '@tanstack/react-query';
 import { createFileRoute, Link, Navigate, useNavigate } from '@tanstack/react-router';
 import { ArrowLeftRight, CircleCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -31,9 +31,9 @@ export const Route = createFileRoute('/_app/review')({
 function ReviewPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { data: election } = useSuspenseQuery(currentElectionQuery);
-  const { data: draft } = useSuspenseQuery(draftQuery);
-  const { data: ballot } = useSuspenseQuery(currentBallotQuery);
+  const [{ data: election }, { data: draft }, { data: ballot }] = useSuspenseQueries({
+    queries: [currentElectionQuery, draftQuery, currentBallotQuery],
+  });
   const setEntry = useSetEntry();
   const validate = useValidate();
 
