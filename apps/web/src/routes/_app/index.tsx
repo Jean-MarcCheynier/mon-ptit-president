@@ -1,5 +1,5 @@
 import type { CurrentElectionDto, DraftBallotDto } from '@presidency-bingo/shared';
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { noop, useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { ElectionCard } from '@/components/election-card';
@@ -9,15 +9,13 @@ import { currentBallotQuery, draftQuery } from '@/lib/ballot';
 import { currentElectionQuery } from '@/lib/elections';
 import { errorMessage } from '@/lib/errors';
 
-const ignore = () => {};
-
 /** Home stays up when the prediction API fails: errors are shown in place of the election card. */
 export const Route = createFileRoute('/_app/')({
   loader: ({ context }) =>
     Promise.all([
-      context.queryClient.query(currentElectionQuery).catch(ignore),
-      context.queryClient.query(draftQuery).catch(ignore),
-      context.queryClient.query(currentBallotQuery).catch(ignore),
+      context.queryClient.query(currentElectionQuery).catch(noop),
+      context.queryClient.query(draftQuery).catch(noop),
+      context.queryClient.query(currentBallotQuery).catch(noop),
     ]),
   component: HomePage,
 });
