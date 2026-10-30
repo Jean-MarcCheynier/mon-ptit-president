@@ -2,12 +2,19 @@ import type { ElectionCandidateDto, ValidatedBallotDto } from '@presidency-bingo
 import { useSuspenseQueries } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Check, Undo2, X } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BallotColumn } from '@/components/ballot-column';
 import { EditBallotButton } from '@/components/edit-ballot-button';
 import { FormAlert } from '@/components/form-alert';
 import { initials } from '@/components/politician-avatar';
+import {
+  SwipeCard,
+  SwipeCardItem,
+  SwipeCardStamp,
+  SwipeCardTrigger,
+  SwipeCardUndo,
+} from '@/components/swipe-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -80,33 +87,20 @@ function Swipe({
   );
   const { current, decided, total, previous } = deckState(deck, draft.entries);
 
-  const decide = (isCandidate: boolean) => {
+  const save = (isCandidate: boolean) => {
     if (current) setEntry.mutate({ politicianId: current.politicianId, isCandidate });
   };
-  const undo = () => {
-    if (previous) removeEntry.mutate(previous.politicianId);
-  };
-
-  // Arrow keys decide, Backspace undoes. Buttons stay reachable with Tab.
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.altKey || event.ctrlKey || event.metaKey || event.repeat) return;
-      if (event.target instanceof HTMLElement && event.target.closest('input, textarea, select'))
-        return;
-      if (event.key === 'ArrowLeft') decide(false);
-      else if (event.key === 'ArrowRight') decide(true);
-      else if (event.key === 'Backspace') undo();
-      else return;
-      event.preventDefault();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  });
-
   const error = setEntry.error ?? removeEntry.error;
 
   return (
-    <div className="grid gap-4">
+    <SwipeCard
+      className="grid gap-4"
+      onSwipeLeft={() => save(false)}
+      onSwipeRight={() => save(true)}
+      onUndo={() => previous && removeEntry.mutate(previous.politicianId)}
+      canUndo={previous !== null}
+      keyboard
+    >
       <div className="grid gap-1">
         <div className="flex justify-between text-sm text-muted-foreground">
           <span>{t('predict.progressLabel')}</span>
@@ -120,31 +114,45 @@ function Swipe({
         />
       </div>
 
-      {current ? <CandidateCard candidate={current} /> : <DoneCard total={total} />}
+      {current ? (
+        <SwipeCardItem key={current.politicianId}>
+          <CandidateCard candidate={current} />
+          <SwipeCardStamp direction="right">{t('predict.yes')}</SwipeCardStamp>
+          <SwipeCardStamp direction="left">{t('predict.no')}</SwipeCardStamp>
+        </SwipeCardItem>
+      ) : (
+        <DoneCard total={total} />
+      )}
 
       {current ? (
         <div className="grid grid-cols-2 gap-3">
-          <Button size="lg" variant="outline" onClick={() => decide(false)}>
-            <X />
-            {t('predict.no')}
-          </Button>
-          <Button size="lg" onClick={() => decide(true)}>
-            <Check />
-            {t('predict.yes')}
-          </Button>
+          <SwipeCardTrigger direction="left" asChild>
+            <Button size="lg" variant="outline">
+              <X />
+              {t('predict.no')}
+            </Button>
+          </SwipeCardTrigger>
+          <SwipeCardTrigger direction="right" asChild>
+            <Button size="lg">
+              <Check />
+              {t('predict.yes')}
+            </Button>
+          </SwipeCardTrigger>
         </div>
       ) : null}
 
       <div className="flex items-center justify-between gap-3">
-        <Button variant="ghost" size="sm" onClick={undo} disabled={!previous}>
-          <Undo2 />
-          {t('predict.undo')}
-        </Button>
+        <SwipeCardUndo asChild>
+          <Button variant="ghost" size="sm">
+            <Undo2 />
+            {t('predict.undo')}
+          </Button>
+        </SwipeCardUndo>
         <p className="text-right text-xs text-muted-foreground">{t('predict.shortcuts')}</p>
       </div>
 
       {error ? <FormAlert variant="error">{errorMessage(t, error)}</FormAlert> : null}
-    </div>
+    </SwipeCard>
   );
 }
 
