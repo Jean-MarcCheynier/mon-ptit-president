@@ -76,3 +76,7 @@ _Avoid_ : leaderboard, palmarès
 **Rang** :
 La position d'un joueur dans le classement ; des joueurs à égalité de points partagent le même rang (1, 1, 3).
 _Avoid_ : place, position
+
+**Tendance** :
+La répartition des pronostics validés des joueurs pour une phase close (part des joueurs par choix, score prédit par candidat).
+_Avoid_ : sondage, stats, statistiques
