@@ -28,8 +28,12 @@ _Avoid_ : non qualifié, éliminé
 Personne inscrite, à l'adresse e-mail vérifiée, qui pronostique.
 _Avoid_ : utilisateur, parieur
 
+**Phase** :
+Une étape du jeu avec son ouverture et sa clôture : _qualifiés_, puis _1er tour_, puis _2nd tour_.
+_Avoid_ : étape, manche
+
 **Pronostic** :
-L'ensemble des décisions d'un joueur pour une élection, en brouillon ou validé ; seul le dernier pronostic validé compte.
+Ce qu'un joueur prédit pour une phase d'une élection, en brouillon ou validé ; seul le dernier pronostic validé compte. On dit _pronostic des qualifiés_, _du 1er tour_, _du 2nd tour_.
 _Avoid_ : pari, bulletin, ballot
 
 **Décision** :
@@ -37,20 +41,32 @@ Le choix « qualifié » ou « recalé » d'un joueur pour un candidat du pool.
 _Avoid_ : vote, choix, entrée
 
 **Clôture** :
-L'instant à partir duquel les pronostics d'une élection ne peuvent plus être modifiés.
+L'instant à partir duquel les pronostics d'une phase ne peuvent plus être modifiés.
 _Avoid_ : verrouillage, date limite, deadline
 
 **Jamais tranché** :
 Candidat ajouté au pool après la dernière validation d'un joueur ; le pronostic ne contient aucune décision à son sujet.
 
+**Score** :
+La part des suffrages exprimés obtenue par un candidat à un tour, prédite ou réelle.
+_Avoid_ : pourcentage, résultat
+
+**Écart** :
+La différence absolue, en points de pourcentage, entre le score prédit et le score réel d'un candidat.
+_Avoid_ : erreur, marge
+
+**Finalistes** :
+Les deux candidats qualifiés pour le 2nd tour.
+_Avoid_ : qualifiés (réservé à la liste officielle)
+
 ### Résultats
 
 **Résultat** :
 Le nombre de décisions justes d'un pronostic validé face à la liste officielle, rapporté au nombre de ses décisions (X / N).
-_Avoid_ : score (réservé au pronostic des scores)
+_Avoid_ : score
 
 **Points** :
-La valeur d'une décision juste, croissante avec la part des autres joueurs ayant fait le choix inverse : de 1 (tout le monde d'accord) à 100 (seul contre tous) ; une décision fausse vaut 0.
+Ce que rapporte un pronostic. Pour les qualifiés, une décision juste vaut de 1 (tout le monde d'accord) à 100 (seul contre tous) selon la rareté du choix ; pour les tours, chaque score vaut d'autant plus que l'écart est faible, plus des bonus pour les bons finalistes et le bon vainqueur.
 _Avoid_ : score
 
 **Classement** :
