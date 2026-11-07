@@ -1,7 +1,8 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { type CurrentElectionDto, ErrorCode } from '@presidency-bingo/shared';
+import { type CurrentElectionDto, ErrorCode, type Phase } from '@presidency-bingo/shared';
 import { ApiException } from '../common/api.exception.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { isPast, phaseScheduleSelect, phaseStatus, phaseWindow } from './phases.js';
 
 @Injectable()
 export class ElectionsService {
@@ -17,14 +18,19 @@ export class ElectionsService {
     return election.id;
   }
 
-  /** Id of the current election, if its predictions are still open; 403 once they are locked. */
-  async getOpenId(): Promise<string> {
+  /**
+   * Id of the current election, if the phase's predictions are open: 403 before their opening
+   * and once they are closed.
+   */
+  async getOpenId(phase: Phase): Promise<string> {
     const election = await this.prisma.election.findFirst({
       ...currentElection(),
-      select: { id: true, predictionsLockAt: true },
+      select: { id: true, ...phaseScheduleSelect },
     });
     if (!election) throw noCurrentElection();
-    if (isLocked(election.predictionsLockAt)) throw predictionsLocked();
+    const status = phaseStatus(phaseWindow(election, phase));
+    if (status === 'CLOSED') throw predictionsLocked();
+    if (status === 'UPCOMING') throw predictionsNotOpen();
     return election.id;
   }
 
@@ -35,7 +41,7 @@ export class ElectionsService {
       select: { id: true, officialListPublishedAt: true },
     });
     if (!election) throw noCurrentElection();
-    return { id: election.id, published: isPublished(election.officialListPublishedAt) };
+    return { id: election.id, published: isPast(election.officialListPublishedAt) };
   }
 
   /** The next election whose second round hasn't passed yet. */
@@ -51,6 +57,7 @@ export class ElectionsService {
       },
     });
     if (!election) throw noCurrentElection();
+    const firstRound = phaseWindow(election, 'FIRST_ROUND');
 
     return {
       id: election.id,
@@ -59,9 +66,14 @@ export class ElectionsService {
       firstRoundAt: election.firstRoundAt.toISOString(),
       secondRoundAt: election.secondRoundAt.toISOString(),
       predictionsLockAt: election.predictionsLockAt.toISOString(),
-      predictionsLocked: isLocked(election.predictionsLockAt),
+      predictionsLocked: isPast(election.predictionsLockAt),
       officialListPublishedAt: election.officialListPublishedAt?.toISOString() ?? null,
-      officialListPublished: isPublished(election.officialListPublishedAt),
+      officialListPublished: isPast(election.officialListPublishedAt),
+      firstRound: {
+        opensAt: firstRound.opensAt?.toISOString() ?? null,
+        closesAt: firstRound.closesAt?.toISOString() ?? null,
+        status: phaseStatus(firstRound),
+      },
       candidates: election.candidates.map(({ politician, ...candidate }) => ({
         politicianId: politician.id,
         name: politician.name,
@@ -81,16 +93,18 @@ const currentElection = (now = new Date()) =>
     orderBy: { firstRoundAt: 'asc' },
   }) as const;
 
-const isLocked = (lockAt: Date, now = new Date()) => now >= lockAt;
-
-const isPublished = (publishedAt: Date | null, now = new Date()) =>
-  publishedAt !== null && now >= publishedAt;
-
 const predictionsLocked = () =>
   new ApiException(
     HttpStatus.FORBIDDEN,
     ErrorCode.PREDICTIONS_LOCKED,
-    'Predictions are locked for this election',
+    'Predictions are closed for this phase',
+  );
+
+const predictionsNotOpen = () =>
+  new ApiException(
+    HttpStatus.FORBIDDEN,
+    ErrorCode.PREDICTIONS_NOT_OPEN,
+    'Predictions are not open yet for this phase',
   );
 
 const noCurrentElection = () =>

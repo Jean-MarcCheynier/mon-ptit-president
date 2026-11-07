@@ -133,6 +133,7 @@ describe('Elections (e2e)', () => {
         predictionsLocked: false,
         officialListPublishedAt: null,
         officialListPublished: false,
+        firstRound: { opensAt: null, closesAt: null, status: 'UPCOMING' },
       });
       expect(res.body.candidates.map((c: { name: string }) => c.name)).toEqual([
         'Alain Alpha',

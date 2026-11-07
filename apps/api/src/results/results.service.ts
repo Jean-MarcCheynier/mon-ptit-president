@@ -21,10 +21,11 @@ export class ResultsService {
     if (!published) return { published: false, result: null };
 
     const bet = await this.prisma.ballot.findFirst({
-      where: { userId, electionId, status: 'VALIDATED' },
+      where: { userId, electionId, phase: 'QUALIFIERS', status: 'VALIDATED' },
       orderBy: { validatedAt: 'desc' },
       select: {
         entries: {
+          where: { isCandidate: { not: null } },
           select: {
             politicianId: true,
             isCandidate: true,
@@ -40,7 +41,8 @@ export class ResultsService {
       this.tallies(electionId),
       this.qualified(electionId),
     ]);
-    const scored = scoreDecisions(bet.entries, tallies, qualified);
+    const decisions = bet.entries.map((e) => ({ ...e, isCandidate: e.isCandidate === true }));
+    const scored = scoreDecisions(decisions, tallies, qualified);
     const result: ResultDto = {
       correct: scored.filter((d) => d.correct).length,
       decisions: scored.length,
@@ -61,20 +63,14 @@ export class ResultsService {
     const rows = await this.prisma.$queryRaw<
       { politician_id: string; qualified: number; not_qualified: number }[]
     >`
-      SELECT e.politician_id,
-             COUNT(*) FILTER (WHERE e.is_candidate)::int AS qualified,
-             COUNT(*) FILTER (WHERE NOT e.is_candidate)::int AS not_qualified
-      FROM (
-        SELECT DISTINCT ON (b.user_id) b.id
-        FROM ballots b
-        JOIN users u ON u.id = b.user_id
-        WHERE b.election_id = ${electionId}::uuid
-          AND b.status = 'VALIDATED'
-          AND u.email_verified_at IS NOT NULL
-        ORDER BY b.user_id, b.validated_at DESC
-      ) latest
-      JOIN ballot_entries e ON e.ballot_id = latest.id
-      GROUP BY e.politician_id`;
+      SELECT d.politician_id,
+             COUNT(*) FILTER (WHERE d.is_candidate)::int AS qualified,
+             COUNT(*) FILTER (WHERE NOT d.is_candidate)::int AS not_qualified
+      FROM qualifier_decisions d
+      JOIN users u ON u.id = d.user_id
+      WHERE d.election_id = ${electionId}::uuid
+        AND u.email_verified_at IS NOT NULL
+      GROUP BY d.politician_id`;
     return new Map(
       rows.map((r) => [r.politician_id, { qualified: r.qualified, notQualified: r.not_qualified }]),
     );

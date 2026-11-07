@@ -1,12 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import {
-  type BallotEntryDto,
-  type CurrentBallotDto,
-  type DraftBallotDto,
-  ErrorCode,
-  MIN_CANDIDATES,
-  type ValidatedBallotDto,
-} from '@presidency-bingo/shared';
+import { ErrorCode, MIN_CANDIDATES, type Phase, SCORE_TOTAL } from '@presidency-bingo/shared';
 import { ApiException } from '../common/api.exception.js';
 import { ElectionsService } from '../elections/elections.service.js';
 import { Prisma } from '../generated/prisma/client.js';
@@ -14,14 +7,29 @@ import { PrismaService } from '../prisma/prisma.service.js';
 
 type Tx = Prisma.TransactionClient;
 
-const entrySelect = { politicianId: true, isCandidate: true } as const;
+const entrySelect = { politicianId: true, isCandidate: true, score: true } as const;
 const entriesSelect = { select: entrySelect, orderBy: { createdAt: 'asc' } } as const;
 
+/** A ballot line as stored: `isCandidate` for the qualifiers, `score` for the rounds. */
+export interface EntryRow {
+  politicianId: string;
+  isCandidate: boolean | null;
+  score: number | null;
+}
+
+/** What a line says, matching its phase. */
+export type EntryValue = { isCandidate: boolean } | { score: number };
+
+export interface ValidatedBallot {
+  validatedAt: Date;
+  entries: EntryRow[];
+}
+
 /**
- * The user's ballots for the current election: at most one draft, plus the validated history.
- * Validated ballots are immutable: entry writes and validation lock the draft row, so an entry
- * can never land in a ballot that is being validated. Every write is refused once predictions
- * are locked.
+ * The user's ballots for one phase of the current election: at most one draft, plus the
+ * validated history (docs/adr/0002). Validated ballots are immutable: entry writes and validation
+ * lock the draft row, so an entry can never land in a ballot that is being validated. Every write
+ * is refused outside the phase's opening and closing.
  */
 @Injectable()
 export class BallotsService {
@@ -30,48 +38,48 @@ export class BallotsService {
     private readonly elections: ElectionsService,
   ) {}
 
-  async getDraft(userId: string): Promise<DraftBallotDto> {
+  async getDraft(userId: string, phase: Phase): Promise<EntryRow[]> {
     const electionId = await this.elections.getCurrentId();
     const draft = await this.prisma.ballot.findFirst({
-      where: { userId, electionId, status: 'DRAFT' },
+      where: { userId, electionId, phase, status: 'DRAFT' },
       select: { entries: entriesSelect },
     });
-    return { entries: draft?.entries ?? [] };
+    return draft?.entries ?? [];
   }
 
-  /** The latest validated ballot: the user's current bet. */
-  async getCurrent(userId: string): Promise<CurrentBallotDto> {
+  /** The latest validated ballot: the one that counts. */
+  async getCurrent(userId: string, phase: Phase): Promise<ValidatedBallot | null> {
     const electionId = await this.elections.getCurrentId();
-    const ballot = await this.latestValidated(userId, electionId);
-    return { ballot: ballot && toValidatedDto(ballot) };
+    return this.latestValidated(userId, electionId, phase);
   }
 
-  /** Opens a draft to change the current bet, pre-filled from it. Returns the existing draft if any. */
-  async startDraft(userId: string): Promise<DraftBallotDto> {
-    const electionId = await this.elections.getOpenId();
-    await this.findOrCreateDraft(userId, electionId);
-    return this.getDraft(userId);
+  /** Opens a draft to change the current ballot, pre-filled from it. Returns the existing draft if any. */
+  async startDraft(userId: string, phase: Phase): Promise<EntryRow[]> {
+    const electionId = await this.elections.getOpenId(phase);
+    await this.findOrCreateDraft(userId, electionId, phase);
+    return this.getDraft(userId, phase);
   }
 
-  /** Records a decision, creating the draft on the first one. */
+  /** Records a line, creating the draft on the first one. */
   async setEntry(
     userId: string,
+    phase: Phase,
     politicianId: string,
-    isCandidate: boolean,
-  ): Promise<BallotEntryDto> {
-    const electionId = await this.elections.getOpenId();
-    const pool = await this.activePool(electionId);
+    value: EntryValue,
+  ): Promise<EntryRow> {
+    const electionId = await this.elections.getOpenId(phase);
+    const pool = await this.pool(electionId, phase);
     if (!pool.has(politicianId)) throw unknownCandidate();
 
     // Retries if the draft got validated between finding and locking it: the next one is pre-filled.
     for (;;) {
-      const ballotId = await this.findOrCreateDraft(userId, electionId, pool);
+      const ballotId = await this.findOrCreateDraft(userId, electionId, phase, pool);
       const entry = await this.prisma.$transaction(async (tx) => {
         if (!(await lockDraft(tx, ballotId, 'SHARE'))) return null;
         return tx.ballotEntry.upsert({
           where: { ballotId_politicianId: { ballotId, politicianId } },
-          create: { ballotId, politicianId, isCandidate },
-          update: { isCandidate },
+          create: { ballotId, politicianId, ...value },
+          update: value,
           select: entrySelect,
         });
       });
@@ -79,30 +87,32 @@ export class BallotsService {
     }
   }
 
-  /** Undoes a decision. Idempotent: removing a missing entry is a no-op. */
-  async removeEntry(userId: string, politicianId: string): Promise<void> {
-    const electionId = await this.elections.getOpenId();
+  /** Undoes a line. Idempotent: removing a missing entry is a no-op. */
+  async removeEntry(userId: string, phase: Phase, politicianId: string): Promise<void> {
+    const electionId = await this.elections.getOpenId(phase);
     await this.prisma.$transaction(async (tx) => {
-      const ballotId = await lockUserDraft(tx, userId, electionId, 'SHARE');
+      const ballotId = await lockUserDraft(tx, userId, electionId, phase, 'SHARE');
       if (ballotId) await tx.ballotEntry.deleteMany({ where: { ballotId, politicianId } });
     });
   }
 
   /**
-   * Freezes the draft into the user's current bet. Every active candidate must be decided and
-   * at least MIN_CANDIDATES kept; decisions on withdrawn politicians are dropped.
+   * Freezes the draft into the ballot that counts. Every candidate of the phase's pool must have
+   * a line (see `checkComplete`); lines on politicians who left the pool are dropped.
    */
-  async validate(userId: string): Promise<ValidatedBallotDto> {
-    const electionId = await this.elections.getOpenId();
-    const pool = await this.activePool(electionId);
+  async validate(userId: string, phase: Phase): Promise<ValidatedBallot> {
+    const electionId = await this.elections.getOpenId(phase);
+    const pool = await this.pool(electionId, phase);
 
     return this.prisma.$transaction(async (tx) => {
-      const ballotId = await lockUserDraft(tx, userId, electionId, 'UPDATE');
+      const ballotId = await lockUserDraft(tx, userId, electionId, phase, 'UPDATE');
       if (!ballotId) throw ballotIncomplete();
       const entries = await tx.ballotEntry.findMany({ where: { ballotId }, select: entrySelect });
-      const decided = entries.filter((e) => pool.has(e.politicianId));
-      if (decided.length < pool.size) throw ballotIncomplete();
-      if (decided.filter((e) => e.isCandidate).length < MIN_CANDIDATES) throw tooFewCandidates();
+      checkComplete(
+        phase,
+        entries.filter((e) => pool.has(e.politicianId)),
+        pool,
+      );
 
       await tx.ballotEntry.deleteMany({
         where: { ballotId, politicianId: { notIn: [...pool] } },
@@ -112,44 +122,55 @@ export class BallotsService {
         data: { status: 'VALIDATED', validatedAt: new Date() },
         select: { validatedAt: true, entries: entriesSelect },
       });
-      return toValidatedDto(ballot);
+      return { validatedAt: ballot.validatedAt ?? new Date(0), entries: ballot.entries };
     });
   }
 
-  private async activePool(electionId: string): Promise<Set<string>> {
+  /**
+   * The politicians a phase predicts on. Qualifiers: the active pool (every candidate except
+   * WITHDRAWN); first round: the qualified candidates of the official list.
+   */
+  private async pool(electionId: string, phase: Phase): Promise<Set<string>> {
+    const status = phase === 'QUALIFIERS' ? { not: 'WITHDRAWN' as const } : 'QUALIFIED';
     const candidates = await this.prisma.electionCandidate.findMany({
-      where: { electionId, status: { not: 'WITHDRAWN' } },
+      where: { electionId, status },
       select: { politicianId: true },
     });
     return new Set(candidates.map((c) => c.politicianId));
   }
 
-  private latestValidated(userId: string, electionId: string) {
-    return this.prisma.ballot.findFirst({
-      where: { userId, electionId, status: 'VALIDATED' },
+  private async latestValidated(
+    userId: string,
+    electionId: string,
+    phase: Phase,
+  ): Promise<ValidatedBallot | null> {
+    const ballot = await this.prisma.ballot.findFirst({
+      where: { userId, electionId, phase, status: 'VALIDATED' },
       orderBy: { validatedAt: 'desc' },
       select: { validatedAt: true, entries: entriesSelect },
     });
+    return ballot && { validatedAt: ballot.validatedAt ?? new Date(0), entries: ballot.entries };
   }
 
-  /** The draft's id. A new draft starts from the current bet, minus withdrawn candidates. */
+  /** The draft's id. A new draft starts from the current ballot, minus politicians out of the pool. */
   private async findOrCreateDraft(
     userId: string,
     electionId: string,
+    phase: Phase,
     pool?: Set<string>,
   ): Promise<string> {
-    const where = { userId, electionId, status: 'DRAFT' } as const;
+    const where = { userId, electionId, phase, status: 'DRAFT' } as const;
     const existing = await this.prisma.ballot.findFirst({ where, select: { id: true } });
     if (existing) return existing.id;
 
     const [current, active] = await Promise.all([
-      this.latestValidated(userId, electionId),
-      pool ?? this.activePool(electionId),
+      this.latestValidated(userId, electionId, phase),
+      pool ?? this.pool(electionId, phase),
     ]);
     const entries = current?.entries.filter((e) => active.has(e.politicianId)) ?? [];
     try {
       const created = await this.prisma.ballot.create({
-        data: { userId, electionId, entries: { create: entries } },
+        data: { userId, electionId, phase, entries: { create: entries } },
         select: { id: true },
       });
       return created.id;
@@ -162,6 +183,20 @@ export class BallotsService {
       throw error;
     }
   }
+}
+
+/**
+ * Whether a draft can be validated. Qualifiers: every candidate decided, at least MIN_CANDIDATES
+ * kept. Rounds: every qualified candidate scored, scores summing to exactly 100 %.
+ */
+function checkComplete(phase: Phase, entries: EntryRow[], pool: Set<string>): void {
+  if (entries.length < pool.size) throw ballotIncomplete();
+  if (phase === 'QUALIFIERS') {
+    if (entries.filter((e) => e.isCandidate).length < MIN_CANDIDATES) throw tooFewCandidates();
+    return;
+  }
+  const total = entries.reduce((sum, e) => sum + (e.score ?? 0), 0);
+  if (total !== SCORE_TOTAL) throw scoreTotalInvalid(total);
 }
 
 type LockMode = 'SHARE' | 'UPDATE';
@@ -178,23 +213,15 @@ async function lockUserDraft(
   tx: Tx,
   userId: string,
   electionId: string,
+  phase: Phase,
   mode: LockMode,
 ): Promise<string | undefined> {
   const rows = await tx.$queryRaw<{ id: string }[]>`
     SELECT id FROM ballots
-    WHERE user_id = ${userId}::uuid AND election_id = ${electionId}::uuid AND status = 'DRAFT'
+    WHERE user_id = ${userId}::uuid AND election_id = ${electionId}::uuid
+      AND phase = ${phase}::"BallotPhase" AND status = 'DRAFT'
     FOR ${Prisma.raw(mode)}`;
   return rows[0]?.id;
-}
-
-function toValidatedDto(ballot: {
-  validatedAt: Date | null;
-  entries: BallotEntryDto[];
-}): ValidatedBallotDto {
-  return {
-    validatedAt: (ballot.validatedAt ?? new Date(0)).toISOString(),
-    entries: ballot.entries,
-  };
 }
 
 export const unknownCandidate = () =>
@@ -216,4 +243,11 @@ const tooFewCandidates = () =>
     HttpStatus.UNPROCESSABLE_ENTITY,
     ErrorCode.TOO_FEW_CANDIDATES,
     `At least ${MIN_CANDIDATES} candidates must be kept`,
+  );
+
+const scoreTotalInvalid = (total: number) =>
+  new ApiException(
+    HttpStatus.UNPROCESSABLE_ENTITY,
+    ErrorCode.SCORE_TOTAL_INVALID,
+    `Scores must sum to ${SCORE_TOTAL} tenths of a point, not ${total}`,
   );
