@@ -144,7 +144,9 @@
     "UNKNOWN_CANDIDATE": "Ce candidat ne fait plus partie du pool. Recharge la page.",
     "BALLOT_INCOMPLETE": "Tranche tous les candidats avant de valider.",
     "TOO_FEW_CANDIDATES": "Retiens au moins 2 candidats qualifiés pour valider.",
-    "PREDICTIONS_LOCKED": "Les pronostics sont clos."
+    "PREDICTIONS_LOCKED": "Les pronostics sont clos.",
+    "PREDICTIONS_NOT_OPEN": "Ce pronostic n’est pas encore ouvert.",
+    "SCORE_TOTAL_INVALID": "Le total des scores doit faire exactement 100 %."
   },
   "predict": {
     "title": "Mon pronostic",
@@ -206,5 +208,26 @@
     "half": "La moitié des autres joueurs pense le contraire",
     "alone": "Tu es seul contre tous",
     "wrong": "Une décision fausse ne rapporte rien. Les points sont calculés à la publication de la liste officielle."
+  },
+  "firstRound": {
+    "title": "Pronostic du 1er tour",
+    "description": "Donne le score de chaque candidat qualifié, en pourcentage des suffrages exprimés. Le total doit faire exactement 100 %.",
+    "scoreLabel": "Score de {{name}}",
+    "invalid": "Indique un nombre entre 0 et 100, avec au plus une décimale.",
+    "remaining": "Reste à répartir : {{value}}",
+    "over": "Total dépassé de {{value}}",
+    "missing_one": "{{count}} candidat sans score.",
+    "missing_other": "{{count}} candidats sans score.",
+    "validate": "Valider mon pronostic",
+    "validatedTitle": "Ton pronostic du 1er tour est validé",
+    "validatedOn": "Validé le {{date}}",
+    "edit": "Modifier",
+    "currentBet": "Ton pronostic reste celui validé le {{date}} tant que tu ne valides pas cette modification.",
+    "closesOn": "Clôture le {{date}}.",
+    "upcoming": "Le pronostic du 1er tour ouvrira à la publication de la liste officielle.",
+    "closed": "Pronostics du 1er tour clos. Voici ton pronostic, validé le {{date}}.",
+    "notParticipated": "Pronostics du 1er tour clos, tu n’as pas participé.",
+    "predict": "Pronostique le 1er tour",
+    "view": "Voir mon pronostic du 1er tour"
   }
 }

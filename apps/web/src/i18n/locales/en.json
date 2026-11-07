@@ -144,7 +144,9 @@
     "UNKNOWN_CANDIDATE": "This candidate is no longer in the pool. Reload the page.",
     "BALLOT_INCOMPLETE": "Decide on every candidate before validating.",
     "TOO_FEW_CANDIDATES": "Keep at least 2 qualified candidates to validate.",
-    "PREDICTIONS_LOCKED": "Predictions are closed."
+    "PREDICTIONS_LOCKED": "Predictions are closed.",
+    "PREDICTIONS_NOT_OPEN": "This prediction is not open yet.",
+    "SCORE_TOTAL_INVALID": "The scores must add up to exactly 100%."
   },
   "predict": {
     "title": "My prediction",
@@ -206,5 +208,26 @@
     "half": "Half of the other players think otherwise",
     "alone": "You stand alone against everyone",
     "wrong": "A wrong decision scores nothing. Points are computed once the official list is published."
+  },
+  "firstRound": {
+    "title": "First-round prediction",
+    "description": "Give each qualified candidate's score, as a percentage of the votes cast. The total must be exactly 100%.",
+    "scoreLabel": "Score of {{name}}",
+    "invalid": "Enter a number between 0 and 100, with at most one decimal.",
+    "remaining": "Left to share out: {{value}}",
+    "over": "Total exceeded by {{value}}",
+    "missing_one": "{{count}} candidate without a score.",
+    "missing_other": "{{count}} candidates without a score.",
+    "validate": "Validate my prediction",
+    "validatedTitle": "Your first-round prediction is validated",
+    "validatedOn": "Validated on {{date}}",
+    "edit": "Edit",
+    "currentBet": "Your prediction remains the one validated on {{date}} until you validate this change.",
+    "closesOn": "Closes on {{date}}.",
+    "upcoming": "The first-round prediction opens when the official list is published.",
+    "closed": "First-round predictions are closed. Here is your prediction, validated on {{date}}.",
+    "notParticipated": "First-round predictions are closed, you did not take part.",
+    "predict": "Predict the first round",
+    "view": "View my first-round prediction"
   }
 }

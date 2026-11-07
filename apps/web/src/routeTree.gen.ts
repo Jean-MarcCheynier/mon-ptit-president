@@ -13,6 +13,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as GuestRouteImport } from './routes/_guest'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppFirstRoundRouteImport } from './routes/_app/first-round'
 import { Route as AppPredictRouteImport } from './routes/_app/predict'
 import { Route as AppReviewRouteImport } from './routes/_app/review'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
@@ -38,6 +39,11 @@ const VerifyEmailRoute = VerifyEmailRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFirstRoundRoute = AppFirstRoundRouteImport.update({
+  id: '/first-round',
+  path: '/first-round',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPredictRoute = AppPredictRouteImport.update({
@@ -84,6 +90,7 @@ const GuestResetPasswordRoute = GuestResetPasswordRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/first-round': typeof AppFirstRoundRoute
   '/predict': typeof AppPredictRoute
   '/review': typeof AppReviewRoute
   '/settings': typeof AppSettingsRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/first-round': typeof AppFirstRoundRoute
   '/predict': typeof AppPredictRoute
   '/review': typeof AppReviewRoute
   '/settings': typeof AppSettingsRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/_guest': typeof GuestRouteWithChildren
   '/verify-email': typeof VerifyEmailRoute
+  '/_app/first-round': typeof AppFirstRoundRoute
   '/_app/predict': typeof AppPredictRoute
   '/_app/review': typeof AppReviewRoute
   '/_app/settings': typeof AppSettingsRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/verify-email'
+    | '/first-round'
     | '/predict'
     | '/review'
     | '/settings'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/verify-email'
+    | '/first-round'
     | '/predict'
     | '/review'
     | '/settings'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_guest'
     | '/verify-email'
+    | '/_app/first-round'
     | '/_app/predict'
     | '/_app/review'
     | '/_app/settings'
@@ -195,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/first-round': {
+      id: '/_app/first-round'
+      path: '/first-round'
+      fullPath: '/first-round'
+      preLoaderRoute: typeof AppFirstRoundRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/predict': {
@@ -257,6 +276,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppFirstRoundRoute: typeof AppFirstRoundRoute
   AppPredictRoute: typeof AppPredictRoute
   AppReviewRoute: typeof AppReviewRoute
   AppSettingsRoute: typeof AppSettingsRoute
@@ -264,6 +284,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppFirstRoundRoute: AppFirstRoundRoute,
   AppPredictRoute: AppPredictRoute,
   AppReviewRoute: AppReviewRoute,
   AppSettingsRoute: AppSettingsRoute,
