@@ -129,9 +129,18 @@ d'envoi est journalisé sans faire échouer la requête : l'utilisateur peut tou
 pnpm test         # unitaires (shared, emails, API, front)
 pnpm test:e2e     # API de bout en bout sur la base app_test (pnpm db:up requis)
 pnpm test:smoke   # Playwright : inscription → email (lu dans Mailpit) → connexion
+pnpm test:smoke:isolated  # idem, sur une API et un Vite dédiés (ports 3001 et 5174)
 pnpm lint         # Biome
 pnpm typecheck
 ```
+
+`pnpm test:smoke` réutilise les serveurs de `pnpm dev` s'ils tournent. Or l'API de dev limite
+l'inscription à 5 par heure et par IP, et chaque test inscrit un nouveau joueur : la suite finit par
+échouer à l'étape « Vérifie ta boîte mail ». Avec `pnpm dev` lancé, préférer
+`pnpm test:smoke:isolated`. Il compile l'API dans `apps/api/dist-smoke` et la démarre sur le port 3001,
+sans rate limit, puis lance un Vite sur le port 5174 qui la proxifie (`API_PROXY_TARGET`). Les deux
+serveurs sont arrêtés à la fin, et ceux de dev ne sont pas touchés. La base (seedée) et Mailpit sont
+partagés.
 
 La CI GitHub Actions (`.github/workflows/ci.yml`) exécute tout cela à chaque push et à chaque PR.
 
