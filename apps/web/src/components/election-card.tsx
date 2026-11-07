@@ -1,4 +1,4 @@
-import type { CurrentElectionDto, ValidatedBallotDto } from '@presidency-bingo/shared';
+import type { CurrentElectionDto, ResultDto, ValidatedBallotDto } from '@presidency-bingo/shared';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { EditBallotButton } from '@/components/edit-ballot-button';
@@ -23,9 +23,11 @@ interface ElectionCardProps {
   decided: number;
   /** The user's current bet; null if they never validated one. */
   ballot: ValidatedBallotDto | null;
+  /** The user's result once the official list is published; null before, or without a bet. */
+  result: ResultDto | null;
 }
 
-export function ElectionCard({ election, decided, ballot }: ElectionCardProps) {
+export function ElectionCard({ election, decided, ballot, result }: ElectionCardProps) {
   const { t, i18n } = useTranslation();
   const now = useNow();
   const locked = usePredictionsLocked(election);
@@ -78,7 +80,21 @@ export function ElectionCard({ election, decided, ballot }: ElectionCardProps) {
         </div>
       </CardContent>
       <CardFooter className="flex-wrap gap-3">
-        {ballot ? (
+        {result ? (
+          <>
+            <div className="grid w-full gap-1">
+              <p className="text-sm font-medium">{t('results.home', { ...result })}</p>
+              <p className="text-2xl font-semibold tabular-nums">
+                {t('results.points', { count: result.points })}
+              </p>
+            </div>
+            <Button asChild>
+              <Link to="/predict">{t('results.view')}</Link>
+            </Button>
+          </>
+        ) : election.officialListPublished ? (
+          <p className="text-sm text-muted-foreground">{t('election.resultsNotParticipated')}</p>
+        ) : ballot ? (
           <>
             <p className="w-full text-sm font-medium">
               {t('ballot.validatedOn', {

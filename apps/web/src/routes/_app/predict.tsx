@@ -8,6 +8,8 @@ import { BallotColumn } from '@/components/ballot-column';
 import { EditBallotButton } from '@/components/edit-ballot-button';
 import { FormAlert } from '@/components/form-alert';
 import { initials } from '@/components/politician-avatar';
+import { ResultsView } from '@/components/results-view';
+import { ScoringRules } from '@/components/scoring-rules';
 import {
   SwipeCard,
   SwipeCardItem,
@@ -29,6 +31,7 @@ import {
 } from '@/lib/ballot';
 import { currentElectionQuery, usePredictionsLocked } from '@/lib/elections';
 import { errorMessage } from '@/lib/errors';
+import { resultsQuery } from '@/lib/results';
 import { stableShuffle } from '@/lib/shuffle';
 import { formatDateTime } from '@/lib/time';
 
@@ -38,21 +41,29 @@ export const Route = createFileRoute('/_app/predict')({
       context.queryClient.query(currentElectionQuery),
       context.queryClient.query(draftQuery),
       context.queryClient.query(currentBallotQuery),
+      context.queryClient.query(resultsQuery),
     ]),
   component: PredictPage,
 });
 
 function PredictPage() {
   const { t } = useTranslation();
-  const [{ data: election }, { data: draft }, { data: ballot }] = useSuspenseQueries({
-    queries: [currentElectionQuery, draftQuery, currentBallotQuery],
-  });
+  const [{ data: election }, { data: draft }, { data: ballot }, { data: results }] =
+    useSuspenseQueries({
+      queries: [currentElectionQuery, draftQuery, currentBallotQuery, resultsQuery],
+    });
   const locked = usePredictionsLocked(election);
 
   return (
     <div className={`mx-auto grid gap-6 ${locked ? 'max-w-3xl' : 'max-w-sm'}`}>
       <h1 className="text-2xl font-semibold">{t('predict.title')}</h1>
-      {election && locked ? (
+      {election && results.published ? (
+        results.result ? (
+          <ResultsView result={results.result} />
+        ) : (
+          <p className="text-muted-foreground">{t('election.resultsNotParticipated')}</p>
+        )
+      ) : election && locked ? (
         // Any unvalidated draft is ignored: only the validated bet counts.
         <LockedBallot candidates={election.candidates} ballot={ballot} />
       ) : election && ballot && draft.entries.length === 0 ? (
@@ -62,6 +73,8 @@ function PredictPage() {
       ) : (
         <p className="text-muted-foreground">{t('election.none')}</p>
       )}
+      {/* Explained before playing: the scoring only rewards bold bets if players know it. */}
+      {election && !results.published ? <ScoringRules /> : null}
     </div>
   );
 }

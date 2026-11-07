@@ -5,7 +5,8 @@
     "name": "Présidentielle 2027",
     "firstRoundAt": "2027-04-18T06:00:00Z",
     "secondRoundAt": "2027-05-02T06:00:00Z",
-    "predictionsLockAt": "2027-03-12T22:59:59Z"
+    "predictionsLockAt": "2027-03-12T22:59:59Z",
+    "officialListPublishedAt": null
   },
   "candidates": [
     {

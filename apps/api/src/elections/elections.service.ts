@@ -28,6 +28,16 @@ export class ElectionsService {
     return election.id;
   }
 
+  /** The current election, with whether its official list is published (results are shown). */
+  async getCurrentPublication(): Promise<{ id: string; published: boolean }> {
+    const election = await this.prisma.election.findFirst({
+      ...currentElection(),
+      select: { id: true, officialListPublishedAt: true },
+    });
+    if (!election) throw noCurrentElection();
+    return { id: election.id, published: isPublished(election.officialListPublishedAt) };
+  }
+
   /** The next election whose second round hasn't passed yet. */
   async getCurrent(): Promise<CurrentElectionDto> {
     const election = await this.prisma.election.findFirst({
@@ -50,6 +60,8 @@ export class ElectionsService {
       secondRoundAt: election.secondRoundAt.toISOString(),
       predictionsLockAt: election.predictionsLockAt.toISOString(),
       predictionsLocked: isLocked(election.predictionsLockAt),
+      officialListPublishedAt: election.officialListPublishedAt?.toISOString() ?? null,
+      officialListPublished: isPublished(election.officialListPublishedAt),
       candidates: election.candidates.map(({ politician, ...candidate }) => ({
         politicianId: politician.id,
         name: politician.name,
@@ -70,6 +82,9 @@ const currentElection = (now = new Date()) =>
   }) as const;
 
 const isLocked = (lockAt: Date, now = new Date()) => now >= lockAt;
+
+const isPublished = (publishedAt: Date | null, now = new Date()) =>
+  publishedAt !== null && now >= publishedAt;
 
 const predictionsLocked = () =>
   new ApiException(

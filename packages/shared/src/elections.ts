@@ -26,6 +26,10 @@ export interface CurrentElectionDto {
   predictionsLockAt: string;
   /** Past predictionsLockAt, by the server's clock: no more writes are accepted. */
   predictionsLocked: boolean;
+  /** When the official list was (or will be) published; null while unknown. */
+  officialListPublishedAt: string | null;
+  /** Past officialListPublishedAt, by the server's clock: results are available. */
+  officialListPublished: boolean;
   /** Active pool: every candidate except WITHDRAWN. */
   candidates: ElectionCandidateDto[];
 }

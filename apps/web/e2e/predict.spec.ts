@@ -181,3 +181,90 @@ test('a page opened before the deadline turns read-only on the next action', asy
   await expect(page.getByText('Pronostics clos, tu n’as pas participé.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Qualifié' })).toHaveCount(0);
 });
+
+/** Makes the API report the official list as published, with a fixed result for the player. */
+async function publishResults(page: Page) {
+  await page.route('**/api/elections/current', async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      json: {
+        ...(await response.json()),
+        predictionsLocked: true,
+        officialListPublished: true,
+      },
+    });
+  });
+  await page.route('**/api/elections/current/results', (route) =>
+    route.fulfill({
+      json: {
+        published: true,
+        result: {
+          correct: 1,
+          decisions: 2,
+          points: 58,
+          entries: [
+            {
+              politicianId: 'a',
+              name: 'Anne Alpha',
+              photoUrl: null,
+              isCandidate: true,
+              qualified: true,
+              agreement: 0.12,
+              points: 58,
+            },
+            {
+              politicianId: 'b',
+              name: 'Bruno Beta',
+              photoUrl: null,
+              isCandidate: true,
+              qualified: false,
+              agreement: null,
+              points: 0,
+            },
+          ],
+        },
+      },
+    }),
+  );
+}
+
+test('before the official list, the scoring is explained but no result is shown', async ({
+  page,
+}) => {
+  await signUp(page);
+  await page.getByRole('link', { name: 'Fais ton pronostic' }).click();
+  await page.getByText('Comment marquer des points').click();
+  await expect(page.getByText('Tu es seul contre tous')).toBeVisible();
+  await expect(page.getByText('100 points')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Résultats' })).toHaveCount(0);
+});
+
+test('once the official list is published, home and prediction show the result', async ({
+  page,
+}) => {
+  await signUp(page);
+  await publishResults(page);
+  await page.reload();
+  await expect(page.getByText('Résultats : 1 / 2 décisions justes')).toBeVisible();
+  await expect(page.getByText('58 points')).toBeVisible();
+
+  await page.getByRole('link', { name: 'Voir le détail' }).click();
+  await expect(page.getByRole('heading', { name: 'Résultats' })).toBeVisible();
+  await expect(page.getByText('Ton choix : Qualifié · Réalité : Recalé')).toBeVisible();
+  await expect(page.getByText(/12\s?% des autres joueurs étaient d’accord avec toi/)).toBeVisible();
+  await expect(page.getByText('Aucun autre joueur ne l’a tranché')).toBeVisible();
+  await expect(page.getByText('Comment marquer des points')).toHaveCount(0);
+});
+
+test('once the official list is published, a player without a bet is told so', async ({ page }) => {
+  await signUp(page);
+  await publishResults(page);
+  await page.route('**/api/elections/current/results', (route) =>
+    route.fulfill({ json: { published: true, result: null } }),
+  );
+  await page.reload();
+  await expect(
+    page.getByText('Liste officielle publiée. Tu n’avais pas validé de pronostic.'),
+  ).toBeVisible();
+});

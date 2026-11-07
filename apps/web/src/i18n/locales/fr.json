@@ -82,7 +82,8 @@
     "predict": "Fais ton pronostic",
     "none": "Aucune élection à venir pour le moment.",
     "resume": "Reprendre ton brouillon ({{decided}}/{{total}})",
-    "notParticipated": "Pronostics clos, tu n’as pas participé."
+    "notParticipated": "Pronostics clos, tu n’as pas participé.",
+    "resultsNotParticipated": "Liste officielle publiée. Tu n’avais pas validé de pronostic."
   },
   "settings": {
     "title": "Paramètres",
@@ -183,5 +184,27 @@
     "undecided_other": "{{count}} candidats restent à trancher.",
     "continue": "Continuer le swipe",
     "validate": "Valider mon pronostic"
+  },
+  "results": {
+    "title": "Résultats",
+    "summary": "{{correct}} / {{decisions}} décisions justes",
+    "home": "Résultats : {{correct}} / {{decisions}} décisions justes",
+    "points_one": "{{count}} point",
+    "points_other": "{{count}} points",
+    "yourChoice": "Ton choix : {{choice}}",
+    "reality": "Réalité : {{reality}}",
+    "agreement": "{{percent}} des autres joueurs étaient d’accord avec toi",
+    "alone": "Aucun autre joueur ne l’a tranché",
+    "right": "Juste",
+    "wrong": "Faux",
+    "view": "Voir le détail"
+  },
+  "scoring": {
+    "title": "Comment marquer des points",
+    "description": "Chaque décision juste rapporte des points, d’autant plus que les autres joueurs ont fait le choix inverse.",
+    "unanimous": "Tout le monde est d’accord avec toi",
+    "half": "La moitié des autres joueurs pense le contraire",
+    "alone": "Tu es seul contre tous",
+    "wrong": "Une décision fausse ne rapporte rien. Les points sont calculés à la publication de la liste officielle."
   }
 }

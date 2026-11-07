@@ -8,6 +8,7 @@ import { meQuery } from '@/lib/auth';
 import { currentBallotQuery, draftQuery } from '@/lib/ballot';
 import { currentElectionQuery } from '@/lib/elections';
 import { errorMessage } from '@/lib/errors';
+import { resultsQuery } from '@/lib/results';
 
 /** Home stays up when the prediction API fails: errors are shown in place of the election card. */
 export const Route = createFileRoute('/_app/')({
@@ -16,6 +17,7 @@ export const Route = createFileRoute('/_app/')({
       context.queryClient.query(currentElectionQuery).catch(noop),
       context.queryClient.query(draftQuery).catch(noop),
       context.queryClient.query(currentBallotQuery).catch(noop),
+      context.queryClient.query(resultsQuery).catch(noop),
     ]),
   component: HomePage,
 });
@@ -26,8 +28,9 @@ function HomePage() {
   const election = useQuery(currentElectionQuery);
   const draft = useQuery(draftQuery);
   const ballot = useQuery(currentBallotQuery);
+  const results = useQuery(resultsQuery);
   // Without the draft or the bet, the card would offer the wrong action.
-  const error = election.error ?? draft.error ?? ballot.error;
+  const error = election.error ?? draft.error ?? ballot.error ?? results.error;
 
   return (
     <div className="grid gap-6">
@@ -37,11 +40,12 @@ function HomePage() {
       </div>
       {error ? (
         <FormAlert variant="error">{errorMessage(t, error)}</FormAlert>
-      ) : election.data && draft.data && ballot.data !== undefined ? (
+      ) : election.data && draft.data && ballot.data !== undefined && results.data ? (
         <ElectionCard
           election={election.data}
           decided={decidedIn(election.data, draft.data)}
           ballot={ballot.data}
+          result={results.data.result}
         />
       ) : election.data === null ? (
         <p className="text-muted-foreground">{t('election.none')}</p>
