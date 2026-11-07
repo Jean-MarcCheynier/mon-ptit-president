@@ -16,8 +16,8 @@ import { BallotsService, type EntryRow, type ValidatedBallot } from './ballots.s
 const PHASE = 'FIRST_ROUND';
 
 /**
- * The first-round prediction: a score per qualified candidate, in tenths of a point, summing to
- * 100 %. Open from the publication of the official list until the phase's closing.
+ * The first-round prediction: a score per qualified candidate, in tenths of a point, 0 by default;
+ * the sum is free. Open from the publication of the official list until the phase's closing.
  */
 @ApiTags('ballots')
 @Controller('elections/current/first-round')

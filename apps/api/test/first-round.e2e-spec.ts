@@ -141,23 +141,25 @@ describe('First-round predictions (e2e)', () => {
     await score(ada, { anne: 0, bruno: 1000 });
   });
 
-  it('validates only a complete prediction summing to exactly 100 %', async () => {
+  it('validates whatever the total, a candidate without a score counting as 0 %', async () => {
     const ada = await t.signUp();
-    expect((await ada.post(VALIDATE).expect(422)).body.code).toBe(ErrorCode.BALLOT_INCOMPLETE);
+    // No draft yet: every score is 0 %.
+    const empty = await ada.post(VALIDATE).expect(200);
+    expect(sorted(empty.body.entries)).toEqual(asEntries({ anne: 0, bruno: 0, chloe: 0 }));
 
-    await score(ada, { anne: 500, bruno: 500 });
-    // chloe is missing, even though the sum is right.
-    expect((await ada.post(VALIDATE).expect(422)).body.code).toBe(ErrorCode.BALLOT_INCOMPLETE);
-
-    await score(ada, { chloe: 1 });
-    expect((await ada.post(VALIDATE).expect(422)).body.code).toBe(ErrorCode.SCORE_TOTAL_INVALID);
-    await score(ada, { anne: 499 });
-
+    await ada.post(DRAFT).expect(200);
+    await score(ada, { anne: 600, bruno: 300 });
+    await ada.delete(entry('chloe')).expect(204);
     const validated = await ada.post(VALIDATE).expect(200);
-    expect(sorted(validated.body.entries)).toEqual(asEntries({ anne: 499, bruno: 500, chloe: 1 }));
+    expect(sorted(validated.body.entries)).toEqual(asEntries({ anne: 600, bruno: 300, chloe: 0 }));
     expect((await ada.get(DRAFT).expect(200)).body).toEqual({ entries: [] });
     const current = await ada.get(BALLOT).expect(200);
     expect(current.body.ballot.validatedAt).toBe(validated.body.validatedAt);
+
+    // Past 100 % too.
+    await score(ada, { anne: 1000, bruno: 1000 });
+    const over = await ada.post(VALIDATE).expect(200);
+    expect(sorted(over.body.entries)).toEqual(asEntries({ anne: 1000, bruno: 1000, chloe: 0 }));
   });
 
   it('reopens a draft pre-filled from the latest validated prediction', async () => {

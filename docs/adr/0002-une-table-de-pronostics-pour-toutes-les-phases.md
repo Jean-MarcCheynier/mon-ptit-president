@@ -5,6 +5,6 @@ Les trois phases du jeu (qualifiés, 1er tour, 2nd tour) partagent le même cycl
 ## Consequences
 
 - Le 2nd tour est un pronostic du même type que le 1er : deux lignes (finalistes A et B) dont la somme vaut 100, même si l'UI n'en fait saisir qu'une.
-- Les scores sont stockés en entiers de dixièmes de point (23,4 % → 234) ; un pronostic de tour valide si la somme vaut exactement 1000.
+- Les scores sont stockés en entiers de dixièmes de point (23,4 % → 234), de 0 à 1000. Au 1er tour, la somme est libre : chaque qualifié démarre à 0 et le joueur peut valider même si la somme ne vaut pas 1000 (le « reste à répartir » n'est qu'indicatif). Forcer exactement 100 % rendait la saisie pénible avec une dizaine de qualifiés ou plus.
 - Les lectures et statistiques passent par une vue par sorte de pronostic (`qualifier_decisions`, `round_scores`), aux colonnes typées et non nulles, filtrées sur le dernier pronostic validé ; index `(election_id, phase, status)` sur `ballots`. Si le volume l'exige : vue matérialisée rafraîchie à la clôture, puis partitionnement de `ballot_entries` par phase, sans changer le code d'écriture.
 - Ouverture et clôture sont définies par phase ; l'actuel `predictionsLockAt` devient la clôture de la phase des qualifiés.

@@ -145,8 +145,7 @@
     "BALLOT_INCOMPLETE": "Decide on every candidate before validating.",
     "TOO_FEW_CANDIDATES": "Keep at least 2 qualified candidates to validate.",
     "PREDICTIONS_LOCKED": "Predictions are closed.",
-    "PREDICTIONS_NOT_OPEN": "This prediction is not open yet.",
-    "SCORE_TOTAL_INVALID": "The scores must add up to exactly 100%."
+    "PREDICTIONS_NOT_OPEN": "This prediction is not open yet."
   },
   "predict": {
     "title": "My prediction",
@@ -211,13 +210,11 @@
   },
   "firstRound": {
     "title": "First-round prediction",
-    "description": "Give each qualified candidate's score, as a percentage of the votes cast. The total must be exactly 100%.",
+    "description": "Give each qualified candidate's score, as a percentage of the votes cast. Each one starts at 0%. “Left to share out” is only a guide: you can validate even if the total isn't 100%.",
     "scoreLabel": "Score of {{name}}",
     "invalid": "Enter a number between 0 and 100, with at most one decimal.",
     "remaining": "Left to share out: {{value}}",
     "over": "Total exceeded by {{value}}",
-    "missing_one": "{{count}} candidate without a score.",
-    "missing_other": "{{count}} candidates without a score.",
     "validate": "Validate my prediction",
     "validatedTitle": "Your first-round prediction is validated",
     "validatedOn": "Validated on {{date}}",

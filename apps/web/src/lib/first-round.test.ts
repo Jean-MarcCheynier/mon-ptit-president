@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatScore, parseScore, scoresState } from './first-round';
+import { formatScore, parseScore, remainingScore } from './first-round';
 
 describe('parseScore', () => {
   it('reads a percentage with at most one decimal into tenths of a point', () => {
@@ -31,29 +31,16 @@ describe('formatScore', () => {
   });
 });
 
-describe('scoresState', () => {
+describe('remainingScore', () => {
   const ids = ['a', 'b', 'c'];
 
-  it('counts what remains to share out and blocks until every score is set', () => {
-    expect(scoresState(ids, { a: 500, b: 300 })).toEqual({
-      remaining: 200,
-      missing: 1,
-      blocker: 'BALLOT_INCOMPLETE',
-    });
+  it('counts what remains to share out, a missing score counting as 0', () => {
+    expect(remainingScore(ids, { a: 500, b: 300 })).toBe(200);
+    expect(remainingScore(ids, {})).toBe(1000);
   });
 
-  it('blocks when the scores do not sum to 100 %', () => {
-    expect(scoresState(ids, { a: 500, b: 300, c: 300 })).toMatchObject({
-      remaining: -100,
-      blocker: 'SCORE_TOTAL_INVALID',
-    });
-  });
-
-  it('can be validated at exactly 100 %, ignoring candidates out of the list', () => {
-    expect(scoresState(ids, { a: 500, b: 300, c: 200, z: 50 })).toEqual({
-      remaining: 0,
-      missing: 0,
-      blocker: null,
-    });
+  it('goes negative past 100 % and ignores candidates out of the list', () => {
+    expect(remainingScore(ids, { a: 500, b: 300, c: 300 })).toBe(-100);
+    expect(remainingScore(ids, { a: 500, b: 300, c: 200, z: 50 })).toBe(0);
   });
 });

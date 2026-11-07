@@ -19,7 +19,6 @@ import {
   firstRoundBallotQuery,
   firstRoundDraftQuery,
   formatScore,
-  useRemoveScore,
   useSetScore,
   useStartFirstRoundDraft,
   useValidateScores,
@@ -107,9 +106,8 @@ function EditScores({
 }) {
   const { t, i18n } = useTranslation();
   const setScore = useSetScore();
-  const removeScore = useRemoveScore();
   const validate = useValidateScores();
-  const error = setScore.error ?? removeScore.error ?? validate.error;
+  const error = setScore.error ?? validate.error;
 
   return (
     <>
@@ -123,11 +121,7 @@ function EditScores({
       <ScoreForm
         candidates={candidates}
         entries={entries}
-        onSave={(politicianId, score) =>
-          score === null
-            ? removeScore.mutateAsync(politicianId)
-            : setScore.mutateAsync({ politicianId, score })
-        }
+        onSave={(politicianId, score) => setScore.mutateAsync({ politicianId, score })}
         onValidate={() => validate.mutate()}
         validating={validate.isPending}
       />

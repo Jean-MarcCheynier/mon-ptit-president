@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { ErrorCode, MIN_CANDIDATES, type Phase, SCORE_TOTAL } from '@presidency-bingo/shared';
+import { ErrorCode, MIN_CANDIDATES, type Phase } from '@presidency-bingo/shared';
 import { ApiException } from '../common/api.exception.js';
 import { ElectionsService } from '../elections/elections.service.js';
 import { Prisma } from '../generated/prisma/client.js';
@@ -97,22 +97,32 @@ export class BallotsService {
   }
 
   /**
-   * Freezes the draft into the ballot that counts. Every candidate of the phase's pool must have
-   * a line (see `checkComplete`); lines on politicians who left the pool are dropped.
+   * Freezes the draft into the ballot that counts; lines on politicians who left the pool are
+   * dropped. Qualifiers: every candidate must be decided (see `checkQualifiers`). Rounds: every
+   * score defaults to 0 %, so a candidate without a line gets one at 0 and the sum is free
+   * (docs/adr/0002); a round can be validated without any draft.
    */
   async validate(userId: string, phase: Phase): Promise<ValidatedBallot> {
     const electionId = await this.elections.getOpenId(phase);
     const pool = await this.pool(electionId, phase);
+    const round = phase !== 'QUALIFIERS';
+    if (round) await this.findOrCreateDraft(userId, electionId, phase, pool);
 
     return this.prisma.$transaction(async (tx) => {
       const ballotId = await lockUserDraft(tx, userId, electionId, phase, 'UPDATE');
       if (!ballotId) throw ballotIncomplete();
       const entries = await tx.ballotEntry.findMany({ where: { ballotId }, select: entrySelect });
-      checkComplete(
-        phase,
-        entries.filter((e) => pool.has(e.politicianId)),
-        pool,
-      );
+      const inPool = entries.filter((e) => pool.has(e.politicianId));
+      if (round) {
+        const scored = new Set(inPool.map((e) => e.politicianId));
+        await tx.ballotEntry.createMany({
+          data: [...pool]
+            .filter((politicianId) => !scored.has(politicianId))
+            .map((politicianId) => ({ ballotId, politicianId, score: 0 })),
+        });
+      } else {
+        checkQualifiers(inPool, pool);
+      }
 
       await tx.ballotEntry.deleteMany({
         where: { ballotId, politicianId: { notIn: [...pool] } },
@@ -185,18 +195,10 @@ export class BallotsService {
   }
 }
 
-/**
- * Whether a draft can be validated. Qualifiers: every candidate decided, at least MIN_CANDIDATES
- * kept. Rounds: every qualified candidate scored, scores summing to exactly 100 %.
- */
-function checkComplete(phase: Phase, entries: EntryRow[], pool: Set<string>): void {
+/** Whether a qualifiers' draft can be validated: every candidate decided, at least MIN_CANDIDATES kept. */
+function checkQualifiers(entries: EntryRow[], pool: Set<string>): void {
   if (entries.length < pool.size) throw ballotIncomplete();
-  if (phase === 'QUALIFIERS') {
-    if (entries.filter((e) => e.isCandidate).length < MIN_CANDIDATES) throw tooFewCandidates();
-    return;
-  }
-  const total = entries.reduce((sum, e) => sum + (e.score ?? 0), 0);
-  if (total !== SCORE_TOTAL) throw scoreTotalInvalid(total);
+  if (entries.filter((e) => e.isCandidate).length < MIN_CANDIDATES) throw tooFewCandidates();
 }
 
 type LockMode = 'SHARE' | 'UPDATE';
@@ -243,11 +245,4 @@ const tooFewCandidates = () =>
     HttpStatus.UNPROCESSABLE_ENTITY,
     ErrorCode.TOO_FEW_CANDIDATES,
     `At least ${MIN_CANDIDATES} candidates must be kept`,
-  );
-
-const scoreTotalInvalid = (total: number) =>
-  new ApiException(
-    HttpStatus.UNPROCESSABLE_ENTITY,
-    ErrorCode.SCORE_TOTAL_INVALID,
-    `Scores must sum to ${SCORE_TOTAL} tenths of a point, not ${total}`,
   );

@@ -32,7 +32,7 @@ export interface CurrentBallotDto {
 export const PHASES = ['QUALIFIERS', 'FIRST_ROUND', 'SECOND_ROUND'] as const;
 export type Phase = (typeof PHASES)[number];
 
-/** Scores are stored in tenths of a point: 23.4 % is 234, and a round's prediction sums to 1000. */
+/** Scores are stored in tenths of a point: 23.4 % is 234, up to 1000 (100 %). The sum is free. */
 export const SCORE_TOTAL = 1000;
 
 export const scoreEntryInputSchema = z.object({ score: z.int().min(0).max(SCORE_TOTAL) });

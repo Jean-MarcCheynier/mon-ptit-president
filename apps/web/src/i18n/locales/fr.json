@@ -145,8 +145,7 @@
     "BALLOT_INCOMPLETE": "Tranche tous les candidats avant de valider.",
     "TOO_FEW_CANDIDATES": "Retiens au moins 2 candidats qualifiés pour valider.",
     "PREDICTIONS_LOCKED": "Les pronostics sont clos.",
-    "PREDICTIONS_NOT_OPEN": "Ce pronostic n’est pas encore ouvert.",
-    "SCORE_TOTAL_INVALID": "Le total des scores doit faire exactement 100 %."
+    "PREDICTIONS_NOT_OPEN": "Ce pronostic n’est pas encore ouvert."
   },
   "predict": {
     "title": "Mon pronostic",
@@ -211,13 +210,11 @@
   },
   "firstRound": {
     "title": "Pronostic du 1er tour",
-    "description": "Donne le score de chaque candidat qualifié, en pourcentage des suffrages exprimés. Le total doit faire exactement 100 %.",
+    "description": "Donne le score de chaque candidat qualifié, en pourcentage des suffrages exprimés. Chacun démarre à 0 %. Le « reste à répartir » est indicatif : tu peux valider même si le total ne fait pas 100 %.",
     "scoreLabel": "Score de {{name}}",
     "invalid": "Indique un nombre entre 0 et 100, avec au plus une décimale.",
     "remaining": "Reste à répartir : {{value}}",
     "over": "Total dépassé de {{value}}",
-    "missing_one": "{{count}} candidat sans score.",
-    "missing_other": "{{count}} candidats sans score.",
     "validate": "Valider mon pronostic",
     "validatedTitle": "Ton pronostic du 1er tour est validé",
     "validatedOn": "Validé le {{date}}",

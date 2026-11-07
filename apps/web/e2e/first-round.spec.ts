@@ -64,10 +64,11 @@ async function openFirstRound(page: Page) {
       return json({ entries: draft });
     }
     if (path === '/draft/validate') {
-      const entries = draft ?? [];
-      const total = entries.reduce((sum, e) => sum + e.score, 0);
-      if (entries.length < qualified.length) return json({ code: 'BALLOT_INCOMPLETE' }, 422);
-      if (total !== 1000) return json({ code: 'SCORE_TOTAL_INVALID' }, 422);
+      // Like the API: a candidate without a score counts as 0 %, and the sum is free.
+      const entries = qualified.map(
+        (politicianId) =>
+          draft?.find((e) => e.politicianId === politicianId) ?? { politicianId, score: 0 },
+      );
       ballot = { validatedAt: new Date().toISOString(), entries };
       draft = null;
       return json(ballot);
@@ -82,7 +83,7 @@ async function openFirstRound(page: Page) {
   });
 }
 
-test('share out 100 % between the qualified candidates, survive a reload, validate, edit', async ({
+test('share out the scores with sliders and fields, survive a reload, validate, edit', async ({
   page,
 }) => {
   await openFirstRound(page);
@@ -91,25 +92,32 @@ test('share out 100 % between the qualified candidates, survive a reload, valida
   await expect(page.getByRole('heading', { name: 'Pronostic du 1er tour' })).toBeVisible();
 
   const fields = page.getByRole('textbox', { name: /^Score de / });
+  const sliders = page.getByRole('slider', { name: /^Score de / });
   await expect(fields).toHaveCount(3);
+  await expect(sliders).toHaveCount(3);
+  await expect(fields.nth(2)).toHaveValue('0');
   const validate = page.getByRole('button', { name: 'Valider mon pronostic' });
   await expect(page.getByText('Reste à répartir : 100,0 %')).toBeVisible();
-  await expect(validate).toBeDisabled();
 
   await fields.nth(0).fill('45,5');
   await fields.nth(1).fill('30');
   await fields.nth(1).blur();
+  await expect(sliders.nth(0)).toHaveAttribute('aria-valuenow', '455');
   await expect(page.getByText('Reste à répartir : 24,5 %')).toBeVisible();
 
-  // Saved on blur: a reload keeps both scores.
+  // The slider: one keyboard step is 0.1 point, saved at once.
+  await sliders.nth(1).press('ArrowRight');
+  await expect(fields.nth(1)).toHaveValue('30,1');
+
+  // Saved: a reload keeps the scores.
   await page.reload();
   await expect(fields.nth(0)).toHaveValue('45,5');
-  await expect(fields.nth(1)).toHaveValue('30');
+  await expect(fields.nth(1)).toHaveValue('30,1');
 
   await fields.nth(2).fill('30');
-  await expect(page.getByText('Total dépassé de 5,5 %')).toBeVisible();
-  await expect(validate).toBeDisabled();
-  await fields.nth(2).fill('24,5');
+  await expect(page.getByText('Total dépassé de 5,6 %')).toBeVisible();
+  // The total is only a guide: validating is allowed anyway.
+  await fields.nth(2).fill('10');
   await validate.click();
 
   await expect(page.getByText('Ton pronostic du 1er tour est validé')).toBeVisible();

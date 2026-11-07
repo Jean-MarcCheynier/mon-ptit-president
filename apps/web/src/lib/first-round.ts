@@ -72,19 +72,6 @@ export function useSetScore() {
   });
 }
 
-/** Clears one score. */
-export function useRemoveScore() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (politicianId: string) => api<void>(entryPath(politicianId), { method: 'DELETE' }),
-    onSuccess: (_, politicianId) =>
-      queryClient.setQueryData(
-        firstRoundDraftQuery.queryKey,
-        setDraft((entries) => entries.filter((e) => e.politicianId !== politicianId)),
-      ),
-  });
-}
-
 /** Freezes the draft into the prediction that counts. */
 export function useValidateScores() {
   const queryClient = useQueryClient();
@@ -112,6 +99,15 @@ export function parseScore(text: string): number | null | undefined {
   return tenths <= SCORE_TOTAL ? tenths : undefined;
 }
 
+/** Slider step: one tenth of a point. */
+export const SCORE_STEP = 1;
+
+/** Tenths of a point as a plain number for a field, in the locale ("23,4"). */
+export const toScoreInput = (tenths: number, locale: string | undefined) =>
+  new Intl.NumberFormat(locale, { maximumFractionDigits: 1, useGrouping: false }).format(
+    tenths / 10,
+  );
+
 /** Tenths of a point as a percentage with one decimal, e.g. "23,4 %". */
 export function formatScore(tenths: number, locale: string | undefined): string {
   return new Intl.NumberFormat(locale, {
@@ -121,29 +117,13 @@ export function formatScore(tenths: number, locale: string | undefined): string 
   }).format(tenths / SCORE_TOTAL);
 }
 
-export interface ScoresState {
-  /** Tenths of a point left to share out; negative when the scores exceed 100 %. */
-  remaining: number;
-  /** Qualified candidates without a score. */
-  missing: number;
-  /** Why the prediction can't be validated yet (same codes as the API); null when it can. */
-  blocker: typeof ErrorCode.BALLOT_INCOMPLETE | typeof ErrorCode.SCORE_TOTAL_INVALID | null;
-}
-
-/** Where a first-round prediction stands, over the qualified candidates only. */
-export function scoresState(
+/**
+ * Tenths of a point left to share out between the qualified candidates (a candidate without a
+ * score counts as 0); negative when the scores exceed 100 %. Only a guide: the sum is free.
+ */
+export function remainingScore(
   qualifiedIds: string[],
   scores: Readonly<Record<string, number>>,
-): ScoresState {
-  const scored = qualifiedIds.filter((id) => scores[id] !== undefined);
-  const total = scored.reduce((sum, id) => sum + (scores[id] ?? 0), 0);
-  const missing = qualifiedIds.length - scored.length;
-  const remaining = SCORE_TOTAL - total;
-  const blocker =
-    missing > 0
-      ? ErrorCode.BALLOT_INCOMPLETE
-      : remaining !== 0
-        ? ErrorCode.SCORE_TOTAL_INVALID
-        : null;
-  return { remaining, missing, blocker };
+): number {
+  return SCORE_TOTAL - qualifiedIds.reduce((sum, id) => sum + (scores[id] ?? 0), 0);
 }

@@ -94,7 +94,6 @@ export const ErrorCode = {
   TOO_FEW_CANDIDATES: 'TOO_FEW_CANDIDATES',
   PREDICTIONS_LOCKED: 'PREDICTIONS_LOCKED',
   PREDICTIONS_NOT_OPEN: 'PREDICTIONS_NOT_OPEN',
-  SCORE_TOTAL_INVALID: 'SCORE_TOTAL_INVALID',
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
