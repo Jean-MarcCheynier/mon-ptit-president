@@ -89,6 +89,8 @@ model Election {
   secondRoundAt     DateTime @map("second_round_at")
   // After this instant, predictions are read-only.
   predictionsLockAt DateTime @map("predictions_lock_at")
+  // Publication of the official list by the Constitutional Council; results are shown from then.
+  officialListPublishedAt DateTime? @map("official_list_published_at")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 

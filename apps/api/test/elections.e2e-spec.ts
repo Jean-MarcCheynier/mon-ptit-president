@@ -57,15 +57,58 @@ describe('Elections (e2e)', () => {
       await seedElection(t.prisma, {
         ...fixture,
         candidates: fixture.candidates.map((c) =>
-          c.slug === 'zoe-zed' ? { ...c, partyLabel: 'Nouveau parti', status: 'QUALIFIED' } : c,
+          c.slug === 'zoe-zed' ? { ...c, partyLabel: 'Nouveau parti', status: 'WITHDRAWN' } : c,
         ),
       } satisfies ElectionSeed);
 
       const updated = await t.prisma.electionCandidate.findFirstOrThrow({
         where: { politician: { slug: 'zoe-zed' } },
       });
-      expect(updated).toMatchObject({ partyLabel: 'Nouveau parti', status: 'QUALIFIED' });
+      expect(updated).toMatchObject({ partyLabel: 'Nouveau parti', status: 'WITHDRAWN' });
       expect(await t.prisma.electionCandidate.count()).toBe(3);
+    });
+
+    it('publishes the official list idempotently, keeping withdrawn candidates', async () => {
+      const published = {
+        election: { ...fixture.election, officialListPublishedAt: inDays(-1) },
+        candidates: [
+          candidate('zoe-zed', 'Zoé Zed', 'QUALIFIED'),
+          candidate('alain-alpha', 'Alain Alpha', 'NOT_QUALIFIED'),
+          candidate('william-withdrawn', 'William Withdrawn', 'WITHDRAWN'),
+        ],
+      } satisfies ElectionSeed;
+      await seedElection(t.prisma, fixture);
+      await seedElection(t.prisma, published);
+      await seedElection(t.prisma, published);
+
+      const statuses = await t.prisma.electionCandidate.findMany({
+        select: { status: true, politician: { select: { slug: true } } },
+        orderBy: { politician: { slug: 'asc' } },
+      });
+      expect(statuses.map((c) => [c.politician.slug, c.status])).toEqual([
+        ['alain-alpha', 'NOT_QUALIFIED'],
+        ['william-withdrawn', 'WITHDRAWN'],
+        ['zoe-zed', 'QUALIFIED'],
+      ]);
+      const election = await t.prisma.election.findFirstOrThrow();
+      expect(election.officialListPublishedAt?.toISOString()).toBe(
+        published.election.officialListPublishedAt,
+      );
+    });
+
+    it('rejects official list statuses that contradict the publication date', async () => {
+      await expect(
+        seedElection(t.prisma, {
+          ...fixture,
+          candidates: [candidate('x', 'X', 'QUALIFIED')],
+        }),
+      ).rejects.toThrow(/not published yet/);
+      await expect(
+        seedElection(t.prisma, {
+          election: { ...fixture.election, officialListPublishedAt: inDays(-1) },
+          candidates: [candidate('x', 'X', 'DECLARED')],
+        }),
+      ).rejects.toThrow(/Official list published/);
     });
 
     it('rejects invalid data', async () => {
@@ -88,6 +131,8 @@ describe('Elections (e2e)', () => {
         slug: 'presidentielle-test',
         predictionsLockAt: fixture.election.predictionsLockAt,
         predictionsLocked: false,
+        officialListPublishedAt: null,
+        officialListPublished: false,
       });
       expect(res.body.candidates.map((c: { name: string }) => c.name)).toEqual([
         'Alain Alpha',

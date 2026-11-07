@@ -9,6 +9,7 @@ import { ConfigModule } from './config/config.module.js';
 import { ElectionsModule } from './elections/elections.module.js';
 import { HealthController } from './health/health.controller.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { ResultsModule } from './results/results.module.js';
 import { UsersModule } from './users/users.module.js';
 
 @Module({
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module.js';
     UsersModule,
     ElectionsModule,
     BallotsModule,
+    ResultsModule,
   ],
   controllers: [HealthController],
   // Registered before AuthModule's JwtAuthGuard, so rate limiting runs first.

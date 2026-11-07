@@ -82,7 +82,8 @@
     "predict": "Make your prediction",
     "none": "No upcoming election for now.",
     "resume": "Resume your draft ({{decided}}/{{total}})",
-    "notParticipated": "Predictions are closed, you didn’t take part."
+    "notParticipated": "Predictions are closed, you didn’t take part.",
+    "resultsNotParticipated": "Official list published. You hadn't validated a prediction."
   },
   "settings": {
     "title": "Settings",
@@ -183,5 +184,27 @@
     "undecided_other": "{{count}} candidates left to decide.",
     "continue": "Keep swiping",
     "validate": "Validate my prediction"
+  },
+  "results": {
+    "title": "Results",
+    "summary": "{{correct}} / {{decisions}} right decisions",
+    "home": "Results: {{correct}} / {{decisions}} right decisions",
+    "points_one": "{{count}} point",
+    "points_other": "{{count}} points",
+    "yourChoice": "Your pick: {{choice}}",
+    "reality": "Reality: {{reality}}",
+    "agreement": "{{percent}} of the other players agreed with you",
+    "alone": "No other player decided on them",
+    "right": "Right",
+    "wrong": "Wrong",
+    "view": "See the details"
+  },
+  "scoring": {
+    "title": "How to score points",
+    "description": "Each right decision scores points, the more so when the other players chose otherwise.",
+    "unanimous": "Everyone agrees with you",
+    "half": "Half of the other players think otherwise",
+    "alone": "You stand alone against everyone",
+    "wrong": "A wrong decision scores nothing. Points are computed once the official list is published."
   }
 }
