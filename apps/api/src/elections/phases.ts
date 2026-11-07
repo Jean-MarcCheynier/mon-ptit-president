@@ -22,15 +22,16 @@ export const phaseScheduleSelect = {
 
 /**
  * When each phase opens and closes. Qualifiers: from the creation of the election until
- * `predictionsLockAt`; first round: from the publication of the official list until
- * `firstRoundClosesAt`. The second round isn't scheduled yet (#28).
+ * `predictionsLockAt`; first round: from the creation of the election too (players predict on
+ * their kept candidates until the official list is published) until `firstRoundClosesAt`.
+ * The second round isn't scheduled yet (#28).
  */
 export function phaseWindow(election: PhaseSchedule, phase: Phase): PhaseWindow {
   switch (phase) {
     case 'QUALIFIERS':
       return { opensAt: election.createdAt, closesAt: election.predictionsLockAt };
     case 'FIRST_ROUND':
-      return { opensAt: election.officialListPublishedAt, closesAt: election.firstRoundClosesAt };
+      return { opensAt: election.createdAt, closesAt: election.firstRoundClosesAt };
     default:
       return { opensAt: null, closesAt: null };
   }

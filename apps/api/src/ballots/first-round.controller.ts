@@ -2,6 +2,7 @@ import { Controller, Delete, Get, HttpCode, Param, Post, Put } from '@nestjs/com
 import { ApiTags } from '@nestjs/swagger';
 import {
   type CurrentScoresDto,
+  type ScoreCandidatesDto,
   type ScoreDraftDto,
   type ScoreEntryDto,
   type ScoreEntryInput,
@@ -16,13 +17,20 @@ import { BallotsService, type EntryRow, type ValidatedBallot } from './ballots.s
 const PHASE = 'FIRST_ROUND';
 
 /**
- * The first-round prediction: a score per qualified candidate, in tenths of a point, 0 by default;
- * the sum is free. Open from the publication of the official list until the phase's closing.
+ * The first-round prediction: a score per candidate, in tenths of a point, 0 by default; the sum
+ * is free. Open from the creation of the election until the phase's closing. The candidates are
+ * the kept ones of the user's qualifiers' prediction until the official list is published, then
+ * the qualified ones (see `candidates`).
  */
 @ApiTags('ballots')
 @Controller('elections/current/first-round')
 export class FirstRoundController {
   constructor(private readonly ballots: BallotsService) {}
+
+  @Get('candidates')
+  candidates(@CurrentUser() user: AuthUser): Promise<ScoreCandidatesDto> {
+    return this.ballots.getPool(user.id, PHASE);
+  }
 
   @Get('ballot')
   async current(@CurrentUser() user: AuthUser): Promise<CurrentScoresDto> {

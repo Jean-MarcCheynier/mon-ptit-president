@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { ErrorCode, MIN_CANDIDATES, type Phase } from '@presidency-bingo/shared';
 import { ApiException } from '../common/api.exception.js';
 import { ElectionsService } from '../elections/elections.service.js';
+import { isPast } from '../elections/phases.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -53,6 +54,16 @@ export class BallotsService {
     return this.latestValidated(userId, electionId, phase);
   }
 
+  /** The politicians the user predicts on for a phase (see `pool`). */
+  async getPool(
+    userId: string,
+    phase: Phase,
+  ): Promise<{ politicianIds: string[]; official: boolean }> {
+    const electionId = await this.elections.getCurrentId();
+    const { ids, official } = await this.poolOf(userId, electionId, phase);
+    return { politicianIds: [...ids], official };
+  }
+
   /** Opens a draft to change the current ballot, pre-filled from it. Returns the existing draft if any. */
   async startDraft(userId: string, phase: Phase): Promise<EntryRow[]> {
     const electionId = await this.elections.getOpenId(phase);
@@ -68,7 +79,7 @@ export class BallotsService {
     value: EntryValue,
   ): Promise<EntryRow> {
     const electionId = await this.elections.getOpenId(phase);
-    const pool = await this.pool(electionId, phase);
+    const pool = await this.pool(userId, electionId, phase);
     if (!pool.has(politicianId)) throw unknownCandidate();
 
     // Retries if the draft got validated between finding and locking it: the next one is pre-filled.
@@ -104,7 +115,7 @@ export class BallotsService {
    */
   async validate(userId: string, phase: Phase): Promise<ValidatedBallot> {
     const electionId = await this.elections.getOpenId(phase);
-    const pool = await this.pool(electionId, phase);
+    const pool = await this.pool(userId, electionId, phase);
     const round = phase !== 'QUALIFIERS';
     if (round) await this.findOrCreateDraft(userId, electionId, phase, pool);
 
@@ -136,17 +147,48 @@ export class BallotsService {
     });
   }
 
+  private async pool(userId: string, electionId: string, phase: Phase): Promise<Set<string>> {
+    return (await this.poolOf(userId, electionId, phase)).ids;
+  }
+
   /**
    * The politicians a phase predicts on. Qualifiers: the active pool (every candidate except
-   * WITHDRAWN); first round: the qualified candidates of the official list.
+   * WITHDRAWN). Rounds: the qualified candidates once the official list is published; before
+   * that, the first round takes the candidates kept in the user's validated qualifiers'
+   * prediction, or the whole active pool if they have none.
    */
-  private async pool(electionId: string, phase: Phase): Promise<Set<string>> {
-    const status = phase === 'QUALIFIERS' ? { not: 'WITHDRAWN' as const } : 'QUALIFIED';
-    const candidates = await this.prisma.electionCandidate.findMany({
-      where: { electionId, status },
-      select: { politicianId: true },
+  private async poolOf(
+    userId: string,
+    electionId: string,
+    phase: Phase,
+  ): Promise<{ ids: Set<string>; official: boolean }> {
+    const statusIn = async (status: 'QUALIFIED' | { not: 'WITHDRAWN' }) => {
+      const candidates = await this.prisma.electionCandidate.findMany({
+        where: { electionId, status },
+        select: { politicianId: true },
+      });
+      return new Set(candidates.map((c) => c.politicianId));
+    };
+    if (phase === 'QUALIFIERS')
+      return { ids: await statusIn({ not: 'WITHDRAWN' }), official: false };
+
+    const { officialListPublishedAt } = await this.prisma.election.findUniqueOrThrow({
+      where: { id: electionId },
+      select: { officialListPublishedAt: true },
     });
-    return new Set(candidates.map((c) => c.politicianId));
+    if (phase === 'SECOND_ROUND' || isPast(officialListPublishedAt)) {
+      return { ids: await statusIn('QUALIFIED'), official: true };
+    }
+    const [active, qualifiers] = await Promise.all([
+      statusIn({ not: 'WITHDRAWN' }),
+      this.latestValidated(userId, electionId, 'QUALIFIERS'),
+    ]);
+    const kept = new Set(
+      (qualifiers?.entries ?? [])
+        .filter((e) => e.isCandidate && active.has(e.politicianId))
+        .map((e) => e.politicianId),
+    );
+    return { ids: kept.size > 0 ? kept : active, official: false };
   }
 
   private async latestValidated(
@@ -175,7 +217,7 @@ export class BallotsService {
 
     const [current, active] = await Promise.all([
       this.latestValidated(userId, electionId, phase),
-      pool ?? this.pool(electionId, phase),
+      pool ?? this.pool(userId, electionId, phase),
     ]);
     const entries = current?.entries.filter((e) => active.has(e.politicianId)) ?? [];
     try {

@@ -6,17 +6,19 @@ import type {
 } from '@presidency-bingo/shared';
 import { useSuspenseQueries } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { Pencil } from 'lucide-react';
+import { Info, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form-alert';
 import { PoliticianAvatar } from '@/components/politician-avatar';
 import { ScoreForm } from '@/components/score-form';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { currentElectionQuery, usePhaseStatus } from '@/lib/elections';
 import { errorMessage } from '@/lib/errors';
 import {
   firstRoundBallotQuery,
+  firstRoundCandidatesQuery,
   firstRoundDraftQuery,
   formatScore,
   useSetScore,
@@ -29,6 +31,7 @@ export const Route = createFileRoute('/_app/first-round')({
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.query(currentElectionQuery),
+      context.queryClient.query(firstRoundCandidatesQuery),
       context.queryClient.query(firstRoundDraftQuery),
       context.queryClient.query(firstRoundBallotQuery),
     ]),
@@ -53,11 +56,18 @@ function FirstRoundPage() {
 
 function FirstRound({ election }: { election: CurrentElectionDto }) {
   const { t, i18n } = useTranslation();
-  const [{ data: draft }, { data: ballot }] = useSuspenseQueries({
-    queries: [firstRoundDraftQuery, firstRoundBallotQuery],
+  const [{ data: pool }, { data: draft }, { data: ballot }] = useSuspenseQueries({
+    queries: [firstRoundCandidatesQuery, firstRoundDraftQuery, firstRoundBallotQuery],
   });
   const status = usePhaseStatus(election.firstRound);
-  const qualified = election.candidates.filter((c) => c.status === 'QUALIFIED');
+  const ids = new Set(pool.politicianIds);
+  const candidates = election.candidates.filter((c) => ids.has(c.politicianId));
+  // A prediction validated before the official list: it still counts, on the qualified only.
+  const listSinceBallot =
+    pool.official &&
+    ballot !== null &&
+    election.officialListPublishedAt !== null &&
+    ballot.validatedAt < election.officialListPublishedAt;
 
   if (status === 'UPCOMING') {
     return <p className="text-muted-foreground">{t('firstRound.upcoming')}</p>;
@@ -71,7 +81,7 @@ function FirstRound({ election }: { election: CurrentElectionDto }) {
             date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage),
           })}
         </p>
-        <ScoresList candidates={qualified} entries={ballot.entries} />
+        <ScoresList candidates={candidates} entries={ballot.entries} />
       </div>
     );
   }
@@ -86,10 +96,14 @@ function FirstRound({ election }: { election: CurrentElectionDto }) {
       <p className="text-muted-foreground">
         {t('firstRound.description')} {closesOn}
       </p>
+      {pool.official ? null : <Notice>{t('firstRound.provisional')}</Notice>}
+      {listSinceBallot && draft.entries.length === 0 ? (
+        <Notice>{t('firstRound.reviewAfterList')}</Notice>
+      ) : null}
       {ballot && draft.entries.length === 0 ? (
-        <ValidatedScores candidates={qualified} ballot={ballot} />
+        <ValidatedScores candidates={candidates} ballot={ballot} />
       ) : (
-        <EditScores candidates={qualified} entries={draft.entries} ballot={ballot} />
+        <EditScores candidates={candidates} entries={draft.entries} ballot={ballot} />
       )}
     </div>
   );
@@ -199,5 +213,14 @@ function ScoresList({
         </li>
       ))}
     </ul>
+  );
+}
+
+function Notice({ children }: { children: React.ReactNode }) {
+  return (
+    <Alert>
+      <Info />
+      <AlertDescription>{children}</AlertDescription>
+    </Alert>
   );
 }

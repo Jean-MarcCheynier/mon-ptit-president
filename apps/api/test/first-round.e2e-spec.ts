@@ -47,6 +47,7 @@ const BASE = '/api/elections/current/first-round';
 const DRAFT = `${BASE}/draft`;
 const VALIDATE = `${DRAFT}/validate`;
 const BALLOT = `${BASE}/ballot`;
+const CANDIDATES = `${BASE}/candidates`;
 
 type Agent = Awaited<ReturnType<TestApp['signUp']>>;
 
@@ -67,6 +68,27 @@ describe('First-round predictions (e2e)', () => {
   const asEntries = (scores: Record<string, number>) =>
     sorted(Object.entries(scores).map(([slug, s]) => ({ politicianId: id(slug), score: s })));
 
+  /** A validated qualifiers' prediction, written directly: that phase is closed in these seeds. */
+  const validateQualifiers = async (email: string, decisions: Record<string, boolean>) => {
+    const user = await t.prisma.user.findUniqueOrThrow({ where: { email } });
+    const { id: electionId } = await t.prisma.election.findFirstOrThrow();
+    await t.prisma.ballot.create({
+      data: {
+        userId: user.id,
+        electionId,
+        phase: 'QUALIFIERS',
+        status: 'VALIDATED',
+        validatedAt: new Date(),
+        entries: {
+          create: Object.entries(decisions).map(([slug, isCandidate]) => ({
+            politicianId: id(slug),
+            isCandidate,
+          })),
+        },
+      },
+    });
+  };
+
   const seed = async (input: ElectionSeed) => {
     await seedElection(t.prisma, input);
     const politicians = await t.prisma.politician.findMany();
@@ -82,29 +104,62 @@ describe('First-round predictions (e2e)', () => {
     await seed(published());
   });
 
-  it('opens at the publication of the official list', async () => {
+  it('opens before the official list, on the whole active pool without a qualifiers prediction', async () => {
     await t.reset();
     await seed(beforeList);
     const ada = await t.signUp();
 
-    const before = await ada.get('/api/elections/current').expect(200);
-    expect(before.body.firstRound).toEqual({
-      opensAt: null,
-      closesAt: election.firstRoundClosesAt,
-      status: 'UPCOMING',
-    });
-    const refused = await ada.put(entry('anne')).send({ score: 300 }).expect(403);
-    expect(refused.body.code).toBe(ErrorCode.PREDICTIONS_NOT_OPEN);
-    await ada.post(DRAFT).expect(403);
+    const election = await ada.get('/api/elections/current').expect(200);
+    expect(election.body.firstRound.status).toBe('OPEN');
+    const pool = await ada.get(CANDIDATES).expect(200);
+    expect(pool.body.official).toBe(false);
+    expect([...pool.body.politicianIds].sort()).toEqual(
+      ['anne', 'bruno', 'chloe', 'david'].map(id).sort(),
+    );
+    await score(ada, { anne: 300, david: 200 });
+  });
 
-    // A publication date in the future doesn't open it either.
-    await seed(published({ officialListPublishedAt: inDays(1) }));
-    await ada.put(entry('anne')).send({ score: 300 }).expect(403);
+  it('before the official list, scores the candidates kept in the qualifiers prediction', async () => {
+    await t.reset();
+    await seed(beforeList);
+    const ada = await t.signUp();
+    await validateQualifiers('ada@example.com', {
+      anne: true,
+      bruno: true,
+      chloe: false,
+      david: false,
+    });
+
+    const pool = await ada.get(CANDIDATES).expect(200);
+    expect([...pool.body.politicianIds].sort()).toEqual([id('anne'), id('bruno')].sort());
+    const refused = await ada.put(entry('chloe')).send({ score: 100 }).expect(404);
+    expect(refused.body.code).toBe(ErrorCode.UNKNOWN_CANDIDATE);
+
+    await score(ada, { anne: 600 });
+    const validated = await ada.post(VALIDATE).expect(200);
+    expect(sorted(validated.body.entries)).toEqual(asEntries({ anne: 600, bruno: 0 }));
+  });
+
+  it('keeps a prediction validated before the list, then scores the qualified only', async () => {
+    await t.reset();
+    await seed(beforeList);
+    const ada = await t.signUp();
+    await score(ada, { anne: 500, david: 300 });
+    await ada.post(VALIDATE).expect(200);
 
     await seed(published());
-    const after = await ada.get('/api/elections/current').expect(200);
-    expect(after.body.firstRound.status).toBe('OPEN');
-    await ada.put(entry('anne')).send({ score: 300 }).expect(200);
+    const pool = await ada.get(CANDIDATES).expect(200);
+    expect(pool.body.official).toBe(true);
+    expect([...pool.body.politicianIds].sort()).toEqual(['anne', 'bruno', 'chloe'].map(id).sort());
+    // Still the prediction that counts; its line on david (not qualified) is for readers to ignore.
+    const current = await ada.get(BALLOT).expect(200);
+    expect(sorted(current.body.ballot.entries)).toEqual(
+      asEntries({ anne: 500, bruno: 0, chloe: 0, david: 300 }),
+    );
+    // Editing it starts from the qualified only.
+    const draft = await ada.post(DRAFT).expect(200);
+    expect(sorted(draft.body.entries)).toEqual(asEntries({ anne: 500, bruno: 0, chloe: 0 }));
+    await ada.put(entry('david')).send({ score: 100 }).expect(404);
   });
 
   it('stays closed while its closing is unknown', async () => {

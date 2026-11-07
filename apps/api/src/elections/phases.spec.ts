@@ -18,23 +18,21 @@ describe('phase status', () => {
     expect(status(election, 'QUALIFIERS', '2027-03-12T22:59:59Z')).toBe('CLOSED');
   });
 
-  it('opens the first round at the publication of the official list', () => {
-    expect(status(election, 'FIRST_ROUND', '2027-03-20T11:59:59Z')).toBe('UPCOMING');
+  it('opens the first round at creation, without waiting for the official list', () => {
+    const unpublished = { ...election, officialListPublishedAt: null };
+    expect(status(unpublished, 'FIRST_ROUND', '2026-11-07T00:00:00Z')).toBe('OPEN');
     expect(status(election, 'FIRST_ROUND', '2027-03-20T12:00:00Z')).toBe('OPEN');
     expect(status(election, 'FIRST_ROUND', '2027-04-16T21:59:58Z')).toBe('OPEN');
     expect(status(election, 'FIRST_ROUND', '2027-04-16T21:59:59Z')).toBe('CLOSED');
   });
 
-  it('keeps the first round upcoming while a date is unknown', () => {
-    const unpublished = { ...election, officialListPublishedAt: null };
-    expect(status(unpublished, 'FIRST_ROUND', '2027-04-01T00:00:00Z')).toBe('UPCOMING');
+  it('keeps the first round upcoming while its closing is unknown', () => {
     const unscheduled = { ...election, firstRoundClosesAt: null };
     expect(status(unscheduled, 'FIRST_ROUND', '2027-04-01T00:00:00Z')).toBe('UPCOMING');
   });
 
-  it('closes a phase whose closing has passed, even if it never opened', () => {
-    const unpublished = { ...election, officialListPublishedAt: null };
-    expect(status(unpublished, 'FIRST_ROUND', '2027-04-17T00:00:00Z')).toBe('CLOSED');
+  it('closes a phase whose closing has passed', () => {
+    expect(status(election, 'FIRST_ROUND', '2027-04-17T00:00:00Z')).toBe('CLOSED');
   });
 
   it('does not open the second round yet', () => {

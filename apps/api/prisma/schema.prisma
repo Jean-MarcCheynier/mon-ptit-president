@@ -90,9 +90,9 @@ model Election {
   // Closing of the qualifiers' predictions: after this instant, they are read-only.
   predictionsLockAt DateTime @map("predictions_lock_at")
   // Publication of the official list by the Constitutional Council; results are shown from then,
-  // and the first-round predictions open.
+  // and the first-round predictions switch from the kept candidates to the qualified ones.
   officialListPublishedAt DateTime? @map("official_list_published_at")
-  // Closing of the first-round predictions; null while unknown (the phase doesn't open).
+  // Closing of the first-round predictions; null while unknown (the phase stays upcoming).
   firstRoundClosesAt DateTime? @map("first_round_closes_at")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")

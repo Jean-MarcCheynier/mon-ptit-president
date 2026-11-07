@@ -45,6 +45,17 @@ export interface ScoreEntryDto {
 }
 
 /** The user's draft of a round's prediction; no entries when there is no draft. */
+/**
+ * The politicians a player scores in the first round: the qualified candidates once the official
+ * list is published; before that, the candidates kept in their qualifiers' prediction (the whole
+ * active pool if they have none).
+ */
+export interface ScoreCandidatesDto {
+  politicianIds: string[];
+  /** Whether this is the official list (else the provisional one above). */
+  official: boolean;
+}
+
 export interface ScoreDraftDto {
   entries: ScoreEntryDto[];
 }

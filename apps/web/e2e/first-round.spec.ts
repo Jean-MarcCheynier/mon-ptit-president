@@ -57,6 +57,7 @@ async function openFirstRound(page: Page) {
     const method = request.method();
     const json = (body: unknown, status = 200) => route.fulfill({ status, json: body });
 
+    if (path === '/candidates') return json({ politicianIds: qualified, official: true });
     if (path === '/ballot') return json({ ballot });
     if (path === '/draft' && method === 'GET') return json({ entries: draft ?? [] });
     if (path === '/draft' && method === 'POST') {

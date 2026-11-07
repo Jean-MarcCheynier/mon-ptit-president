@@ -2,6 +2,7 @@ import {
   type CurrentScoresDto,
   ErrorCode,
   SCORE_TOTAL,
+  type ScoreCandidatesDto,
   type ScoreDraftDto,
   type ScoreEntryDto,
   type ValidatedScoresDto,
@@ -15,6 +16,19 @@ const entryPath = (politicianId: string) => `${DRAFT}/entries/${politicianId}`;
 
 const noElection = (error: unknown) =>
   error instanceof ApiRequestError && error.code === ErrorCode.NO_CURRENT_ELECTION;
+
+/** Who the user scores: their kept candidates until the official list, then the qualified ones. */
+export const firstRoundCandidatesQuery = queryOptions({
+  queryKey: ['elections', 'current', 'first-round', 'candidates'],
+  queryFn: async (): Promise<ScoreCandidatesDto> => {
+    try {
+      return await api<ScoreCandidatesDto>(`${BASE}/candidates`);
+    } catch (error) {
+      if (noElection(error)) return { politicianIds: [], official: false };
+      throw error;
+    }
+  },
+});
 
 /** The user's draft of the first-round prediction; empty when there is none. */
 export const firstRoundDraftQuery = queryOptions({

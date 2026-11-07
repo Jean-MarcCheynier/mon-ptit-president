@@ -41,7 +41,7 @@ export interface CurrentElectionDto {
   officialListPublishedAt: string | null;
   /** Past officialListPublishedAt, by the server's clock: results are available. */
   officialListPublished: boolean;
-  /** First-round predictions: open from the publication of the official list. */
+  /** First-round predictions: open from the creation of the election until firstRoundClosesAt. */
   firstRound: PhaseWindowDto;
   /** Active pool: every candidate except WITHDRAWN. */
   candidates: ElectionCandidateDto[];
