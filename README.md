@@ -154,6 +154,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 
 ```bash
 pnpm db:migrate                                    # nouvelle migration après modification du schéma
+pnpm db:reset                                      # base de dev vidée : migrations rejouées, client régénéré, seed (efface tout)
 pnpm --filter @presidency-bingo/api db:studio      # Prisma Studio
 pnpm --filter @presidency-bingo/web dlx shadcn@latest add dialog   # ajouter un composant UI
 ```

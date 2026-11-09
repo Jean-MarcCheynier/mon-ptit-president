@@ -165,6 +165,7 @@ describe('Results (e2e)', () => {
       data: {
         userId: ghost.id,
         electionId,
+        phase: 'QUALIFIERS',
         status: 'VALIDATED',
         validatedAt: new Date(),
         entries: { create: [{ politicianId: await id('bruno'), isCandidate: false }] },

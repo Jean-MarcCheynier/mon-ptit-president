@@ -1,6 +1,6 @@
 # Mon p'tit président
 
-Jeu de pronostics entre amis autour de l'élection présidentielle : les joueurs devinent quels candidats seront sur la ligne de départ, et marquent d'autant plus de points que leur intuition était rare.
+Jeu de pronostics entre amis autour de l'élection présidentielle : phase après phase, les joueurs devinent quels candidats seront sur la ligne de départ, qui sera élu et avec quels scores, et marquent d'autant plus de points que leur intuition était audacieuse.
 
 ## Language
 
@@ -29,11 +29,23 @@ Personne inscrite, à l'adresse e-mail vérifiée, qui pronostique.
 _Avoid_ : utilisateur, parieur
 
 **Phase** :
-Une étape du jeu avec son ouverture et sa clôture : _qualifiés_, puis _1er tour_, puis _2nd tour_.
-_Avoid_ : étape, manche
+Une étape du parcours du joueur, dans l'ordre : _présentation_, _qualifiés_, _vainqueur_, _1er tour_, _2nd tour_. Le joueur n'accède à une phase qu'après avoir validé la précédente, et peut revenir modifier une phase tant qu'elle n'est pas close. Une phase close sans pronostic validé est _sautée_ : elle ne bloque plus la suite et ne rapporte aucun point.
+_Avoid_ : manche, niveau
+
+**Vainqueur** :
+Le candidat élu président à l'issue du 2nd tour. Le joueur le pronostique juste après les qualifiés, en choisissant un favori ou « autre candidat ».
+_Avoid_ : gagnant, élu, président
+
+**Favori** :
+Un des candidats proposés, la même liste pour tous, au pronostic du vainqueur, chacun avec sa cote ; « autre candidat » couvre tous les autres.
+_Avoid_ : outsider, choix
+
+**Cote** :
+Les points, fixés d'avance et identiques pour tous, que rapporte un favori (ou « autre candidat ») s'il est élu ; d'autant plus élevée que le choix est improbable.
+_Avoid_ : côte, prime, mise
 
 **Pronostic** :
-Ce qu'un joueur prédit pour une phase d'une élection, en brouillon ou validé ; seul le dernier pronostic validé compte. On dit _pronostic des qualifiés_, _du 1er tour_, _du 2nd tour_.
+Ce qu'un joueur prédit pour une phase d'une élection, en brouillon ou validé ; seul le dernier pronostic validé compte. On dit _pronostic des qualifiés_, _du vainqueur_, _du 1er tour_, _du 2nd tour_.
 _Avoid_ : pari, bulletin, ballot
 
 **Décision** :
@@ -56,7 +68,7 @@ La différence absolue, en points de pourcentage, entre le score prédit et le s
 _Avoid_ : erreur, marge
 
 **Finalistes** :
-Les deux candidats qualifiés pour le 2nd tour.
+Les deux candidats qualifiés pour le 2nd tour. Le pronostic du 2nd tour porte sur les finalistes réels, une fois le 1er tour joué.
 _Avoid_ : qualifiés (réservé à la liste officielle)
 
 ### Résultats
@@ -66,7 +78,7 @@ Le nombre de décisions justes d'un pronostic validé face à la liste officiell
 _Avoid_ : score
 
 **Points** :
-Ce que rapporte un pronostic. Pour les qualifiés, une décision juste vaut de 1 (tout le monde d'accord) à 100 (seul contre tous) selon la rareté du choix ; pour les tours, chaque score vaut d'autant plus que l'écart est faible, plus des bonus pour les bons finalistes et le bon vainqueur.
+Ce que rapporte un pronostic. Pour les qualifiés, une décision juste vaut de 1 (tout le monde d'accord) à 100 (seul contre tous) selon la rareté du choix ; pour le vainqueur, la cote du choix s'il est élu ; pour les tours, chaque score vaut d'autant plus que l'écart est faible, plus des bonus pour les bons finalistes (1er tour) et le bon gagnant du duel (2nd tour).
 _Avoid_ : score
 
 **Classement** :

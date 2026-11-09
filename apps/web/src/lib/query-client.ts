@@ -8,9 +8,14 @@ export const queryClient: QueryClient = new QueryClient({
     queries: { retry: false, refetchOnWindowFocus: false },
   },
   mutationCache: new MutationCache({
-    // The server locked predictions before this page noticed: refetch so the UI turns read-only.
+    // The server closed (or hasn't opened) a phase this page thought open: refetch the election
+    // so the UI follows the server's clock.
     onError: (error) => {
-      if (error instanceof ApiRequestError && error.code === ErrorCode.PREDICTIONS_LOCKED) {
+      if (
+        error instanceof ApiRequestError &&
+        (error.code === ErrorCode.PREDICTIONS_LOCKED ||
+          error.code === ErrorCode.PREDICTIONS_NOT_OPEN)
+      ) {
         void queryClient.invalidateQueries({ queryKey: currentElectionQuery.queryKey });
       }
     },

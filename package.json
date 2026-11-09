@@ -18,7 +18,8 @@
     "prepare": "husky",
     "db:migrate": "pnpm --filter @presidency-bingo/api db:migrate",
     "test:smoke": "pnpm --filter @presidency-bingo/web test:e2e",
-    "db:seed": "pnpm --filter @presidency-bingo/api db:seed"
+    "db:seed": "pnpm --filter @presidency-bingo/api db:seed",
+    "db:reset": "pnpm --filter @presidency-bingo/api db:reset"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.3",

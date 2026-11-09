@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { usePredictionsLocked } from '@/lib/elections';
+import { usePhaseStatus, usePredictionsLocked } from '@/lib/elections';
 import { formatDateTime, timeUntil, useNow } from '@/lib/time';
 
 const PREVIEW_SIZE = 8;
@@ -31,6 +31,7 @@ export function ElectionCard({ election, decided, ballot, result }: ElectionCard
   const { t, i18n } = useTranslation();
   const now = useNow();
   const locked = usePredictionsLocked(election);
+  const firstRound = usePhaseStatus(election.firstRound);
   const remaining = locked ? null : timeUntil(new Date(election.predictionsLockAt), now);
   const formatDate = (iso: string) =>
     new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' }).format(new Date(iso));
@@ -124,6 +125,13 @@ export function ElectionCard({ election, decided, ballot, result }: ElectionCard
             </Link>
           </Button>
         )}
+        {firstRound !== 'UPCOMING' ? (
+          <Button asChild variant={firstRound === 'OPEN' ? 'default' : 'outline'}>
+            <Link to="/first-round">
+              {firstRound === 'OPEN' ? t('firstRound.predict') : t('firstRound.view')}
+            </Link>
+          </Button>
+        ) : null}
       </CardFooter>
     </Card>
   );

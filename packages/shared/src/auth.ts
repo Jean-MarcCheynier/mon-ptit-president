@@ -93,6 +93,7 @@ export const ErrorCode = {
   BALLOT_INCOMPLETE: 'BALLOT_INCOMPLETE',
   TOO_FEW_CANDIDATES: 'TOO_FEW_CANDIDATES',
   PREDICTIONS_LOCKED: 'PREDICTIONS_LOCKED',
+  PREDICTIONS_NOT_OPEN: 'PREDICTIONS_NOT_OPEN',
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 

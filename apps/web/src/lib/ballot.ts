@@ -9,6 +9,7 @@ import {
 } from '@presidency-bingo/shared';
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiRequestError, api } from './api';
+import { firstRoundCandidatesQuery } from './first-round';
 
 const DRAFT = '/elections/current/draft';
 const BALLOT = '/elections/current/ballot';
@@ -61,6 +62,8 @@ export function useValidate() {
     onSuccess: (ballot) => {
       queryClient.setQueryData(currentBallotQuery.queryKey, ballot);
       queryClient.setQueryData(draftQuery.queryKey, { entries: [] });
+      // The kept candidates are who the first round scores until the official list.
+      void queryClient.invalidateQueries({ queryKey: firstRoundCandidatesQuery.queryKey });
     },
   });
 }

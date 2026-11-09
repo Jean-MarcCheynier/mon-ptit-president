@@ -16,6 +16,8 @@ export const electionSeedSchema = z
       predictionsLockAt: z.coerce.date(),
       // Null until the Constitutional Council publishes the official list.
       officialListPublishedAt: z.coerce.date().nullable().default(null),
+      // Closing of the first-round predictions, which open at the official list's publication.
+      firstRoundClosesAt: z.coerce.date().nullable().default(null),
     }),
     candidates: z.array(
       z.object({

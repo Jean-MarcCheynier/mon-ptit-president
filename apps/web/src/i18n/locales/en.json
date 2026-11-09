@@ -144,7 +144,8 @@
     "UNKNOWN_CANDIDATE": "This candidate is no longer in the pool. Reload the page.",
     "BALLOT_INCOMPLETE": "Decide on every candidate before validating.",
     "TOO_FEW_CANDIDATES": "Keep at least 2 qualified candidates to validate.",
-    "PREDICTIONS_LOCKED": "Predictions are closed."
+    "PREDICTIONS_LOCKED": "Predictions are closed.",
+    "PREDICTIONS_NOT_OPEN": "This prediction is not open yet."
   },
   "predict": {
     "title": "My prediction",
@@ -206,5 +207,26 @@
     "half": "Half of the other players think otherwise",
     "alone": "You stand alone against everyone",
     "wrong": "A wrong decision scores nothing. Points are computed once the official list is published."
+  },
+  "firstRound": {
+    "title": "First-round prediction",
+    "description": "Give each candidate's score, as a percentage of the votes cast. Each one starts at 0%. “Left to share out” is only a guide: you can validate even if the total isn't 100%.",
+    "scoreLabel": "Score of {{name}}",
+    "invalid": "Enter a number between 0 and 100, with at most one decimal.",
+    "remaining": "Left to share out: {{value}}",
+    "over": "Total exceeded by {{value}}",
+    "validate": "Validate my prediction",
+    "validatedTitle": "Your first-round prediction is validated",
+    "validatedOn": "Validated on {{date}}",
+    "edit": "Edit",
+    "currentBet": "Your prediction remains the one validated on {{date}} until you validate this change.",
+    "closesOn": "Closes on {{date}}.",
+    "upcoming": "The first-round prediction opens soon.",
+    "provisional": "Provisional list: you score the candidates you kept in your qualifiers' prediction (every candidate if you haven't validated one). Once the official list is published, only the qualified ones count and you can adjust your scores.",
+    "reviewAfterList": "The official list is published: your prediction still counts on the qualified candidates, but you may want to review it.",
+    "closed": "First-round predictions are closed. Here is your prediction, validated on {{date}}.",
+    "notParticipated": "First-round predictions are closed, you did not take part.",
+    "predict": "Predict the first round",
+    "view": "View my first-round prediction"
   }
 }

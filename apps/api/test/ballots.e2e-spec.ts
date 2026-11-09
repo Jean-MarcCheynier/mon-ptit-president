@@ -122,6 +122,7 @@ describe('Ballots (e2e)', () => {
       data: {
         userId: user.id,
         electionId: election.id,
+        phase: 'QUALIFIERS',
         status: 'VALIDATED',
         validatedAt: new Date(),
       },
@@ -129,9 +130,29 @@ describe('Ballots (e2e)', () => {
 
     await agent.put(entry('anne')).send({ isCandidate: true }).expect(200);
     expect(await draftCount()).toBe(1);
+    const draft = { userId: user.id, electionId: election.id };
     await expect(
-      t.prisma.ballot.create({ data: { userId: user.id, electionId: election.id } }),
+      t.prisma.ballot.create({ data: { ...draft, phase: 'QUALIFIERS' } }),
     ).rejects.toThrow();
+    // One draft per phase: another phase has its own.
+    await t.prisma.ballot.create({ data: { ...draft, phase: 'FIRST_ROUND' } });
+  });
+
+  it('stores exactly one of a decision and a score per line', async () => {
+    await t.signUp();
+    const [user, election] = await Promise.all([
+      t.prisma.user.findFirstOrThrow(),
+      t.prisma.election.findFirstOrThrow(),
+    ]);
+    const { id: ballotId } = await t.prisma.ballot.create({
+      data: { userId: user.id, electionId: election.id, phase: 'QUALIFIERS' },
+    });
+    const line = { ballotId, politicianId: id('anne') };
+    await expect(t.prisma.ballotEntry.create({ data: line })).rejects.toThrow();
+    await expect(
+      t.prisma.ballotEntry.create({ data: { ...line, isCandidate: true, score: 100 } }),
+    ).rejects.toThrow();
+    await expect(t.prisma.ballotEntry.create({ data: { ...line, score: 1001 } })).rejects.toThrow();
   });
 
   it('keeps drafts private to each user', async () => {
@@ -429,7 +450,7 @@ describe('Ballots (e2e)', () => {
       Object.entries(decisions)
         .map(([slug, isCandidate]) => ({ politicianId: id(slug), isCandidate }))
         .sort((a, b) => a.politicianId.localeCompare(b.politicianId));
-    const sortedEntries = (entries: { politicianId: string; isCandidate: boolean }[]) =>
+    const sortedEntries = (entries: { politicianId: string; isCandidate: boolean | null }[]) =>
       entries
         .map(({ politicianId, isCandidate }) => ({ politicianId, isCandidate }))
         .sort((a, b) => a.politicianId.localeCompare(b.politicianId));

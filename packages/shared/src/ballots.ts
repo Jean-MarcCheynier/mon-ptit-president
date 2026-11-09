@@ -27,3 +27,46 @@ export interface ValidatedBallotDto {
 export interface CurrentBallotDto {
   ballot: ValidatedBallotDto | null;
 }
+
+/** The phases of the game, each with its own predictions, opening and closing. */
+export const PHASES = ['QUALIFIERS', 'FIRST_ROUND', 'SECOND_ROUND'] as const;
+export type Phase = (typeof PHASES)[number];
+
+/** Scores are stored in tenths of a point: 23.4 % is 234, up to 1000 (100 %). The sum is free. */
+export const SCORE_TOTAL = 1000;
+
+export const scoreEntryInputSchema = z.object({ score: z.int().min(0).max(SCORE_TOTAL) });
+export type ScoreEntryInput = z.infer<typeof scoreEntryInputSchema>;
+
+export interface ScoreEntryDto {
+  politicianId: string;
+  /** Predicted score, in tenths of a point of the votes cast. */
+  score: number;
+}
+
+/** The user's draft of a round's prediction; no entries when there is no draft. */
+/**
+ * The politicians a player scores in the first round: the qualified candidates once the official
+ * list is published; before that, the candidates kept in their qualifiers' prediction (the whole
+ * active pool if they have none).
+ */
+export interface ScoreCandidatesDto {
+  politicianIds: string[];
+  /** Whether this is the official list (else the provisional one above). */
+  official: boolean;
+}
+
+export interface ScoreDraftDto {
+  entries: ScoreEntryDto[];
+}
+
+/** An immutable, validated round prediction. The latest one counts. */
+export interface ValidatedScoresDto {
+  validatedAt: string;
+  entries: ScoreEntryDto[];
+}
+
+/** The user's current prediction of a round, if they ever validated one. */
+export interface CurrentScoresDto {
+  ballot: ValidatedScoresDto | null;
+}

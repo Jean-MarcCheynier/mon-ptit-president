@@ -87,10 +87,13 @@ model Election {
   name              String
   firstRoundAt      DateTime @map("first_round_at")
   secondRoundAt     DateTime @map("second_round_at")
-  // After this instant, predictions are read-only.
+  // Closing of the qualifiers' predictions: after this instant, they are read-only.
   predictionsLockAt DateTime @map("predictions_lock_at")
-  // Publication of the official list by the Constitutional Council; results are shown from then.
+  // Publication of the official list by the Constitutional Council; results are shown from then,
+  // and the first-round predictions switch from the kept candidates to the qualified ones.
   officialListPublishedAt DateTime? @map("official_list_published_at")
+  // Closing of the first-round predictions; null while unknown (the phase stays upcoming).
+  firstRoundClosesAt DateTime? @map("first_round_closes_at")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
@@ -148,12 +151,20 @@ enum BallotStatus {
   VALIDATED
 }
 
-// A user's prediction for an election. At most one DRAFT per user and election, enforced by
-// the partial unique index "ballots_one_draft_per_user" (raw SQL in the migration).
+enum BallotPhase {
+  QUALIFIERS
+  FIRST_ROUND
+  SECOND_ROUND
+}
+
+// A user's prediction for a phase of an election (docs/adr/0002). At most one DRAFT per user,
+// election and phase, enforced by the partial unique index "ballots_one_draft_per_user" (raw SQL
+// in the migrations). Reads go through the views "qualifier_decisions" and "round_scores".
 model Ballot {
   id          String       @id @default(uuid(7)) @db.Uuid
   userId      String       @map("user_id") @db.Uuid
   electionId  String       @map("election_id") @db.Uuid
+  phase       BallotPhase
   status      BallotStatus @default(DRAFT)
   validatedAt DateTime?    @map("validated_at")
   createdAt   DateTime     @default(now()) @map("created_at")
@@ -164,20 +175,21 @@ model Ballot {
   entries  BallotEntry[]
 
   @@index([userId, electionId])
+  @@index([electionId, phase, status])
   @@map("ballots")
 }
 
-// One decision of a ballot: will this politician be on the first-round ballot paper?
+// One line of a ballot, about one politician. Exactly one of isCandidate (qualifiers: will they be
+// on the first-round ballot paper?) and score (rounds) is set: CHECK "ballot_entries_one_value".
 model BallotEntry {
-  id               String   @id @default(uuid(7)) @db.Uuid
-  ballotId         String   @map("ballot_id") @db.Uuid
-  politicianId     String   @map("politician_id") @db.Uuid
-  isCandidate      Boolean  @map("is_candidate")
-  // Predicted vote shares in percent; not used yet.
-  scoreFirstRound  Float?   @map("score_first_round")
-  scoreSecondRound Float?   @map("score_second_round")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(uuid(7)) @db.Uuid
+  ballotId     String   @map("ballot_id") @db.Uuid
+  politicianId String   @map("politician_id") @db.Uuid
+  isCandidate  Boolean? @map("is_candidate")
+  // Predicted score in tenths of a point of the votes cast (23.4 % → 234), 0 to 1000.
+  score        Int?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   ballot     Ballot     @relation(fields: [ballotId], references: [id], onDelete: Cascade)
   politician Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
