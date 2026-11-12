@@ -38,6 +38,22 @@ async function lockPredictions(page: Page) {
       json: { ...(await response.json()), predictionsLocked: true },
     });
   });
+  // The qualifiers and the winner close together: closed once validated, else skipped.
+  await page.route('**/api/elections/current/phases', async (route) => {
+    const response = await route.fetch();
+    const { phases } = (await response.json()) as { phases: { phase: string; state: string }[] };
+    const closesAt = new Date(Date.now() - 1000).toISOString();
+    await route.fulfill({
+      response,
+      json: {
+        phases: phases.map((p) =>
+          p.phase === 'QUALIFIERS' || p.phase === 'WINNER'
+            ? { ...p, closesAt, state: p.state === 'DONE' ? 'CLOSED' : 'SKIPPED' }
+            : p,
+        ),
+      },
+    });
+  });
 }
 
 test('swipe with the keyboard and the mouse, survive a reload, undo, resume from home', async ({
@@ -141,7 +157,7 @@ test('swipe everything, review, validate, then edit the bet', async ({ page }) =
   // After the deadline, the bet is read-only.
   await lockPredictions(page);
   await page.goto('/');
-  await expect(page.getByText('Pronostics clos', { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Close · close le/)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Modifier' })).toHaveCount(0);
   await page.getByRole('link', { name: 'Voir mon pronostic' }).click();
   await expect(page.getByText(/^Pronostics clos\. Voici ton pronostic/)).toBeVisible();
@@ -151,11 +167,20 @@ test('swipe everything, review, validate, then edit the bet', async ({ page }) =
   await expect(page).toHaveURL(/\/predict$/);
 });
 
+test('the first round opens once the qualifiers are validated', async ({ page }) => {
+  await signUp(page);
+  await expect(page.getByRole('link', { name: 'Pronostique le 1er tour' })).toHaveCount(0);
+  await page.goto('/first-round');
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('link', { name: 'Fais ton pronostic' })).toBeVisible();
+});
+
 test('after the deadline, a user who never validated cannot take part', async ({ page }) => {
   await signUp(page);
   await lockPredictions(page);
   await page.reload();
-  await expect(page.getByText('Pronostics clos, tu n’as pas participé.')).toBeVisible();
+  // Skipped (that it opens the first round is covered by the API's tests).
+  await expect(page.getByText(/^Sautée · close le/).first()).toBeVisible();
   await expect(page.getByRole('link', { name: 'Fais ton pronostic' })).toHaveCount(0);
 
   await page.getByRole('link', { name: 'Mon pronostic' }).click();

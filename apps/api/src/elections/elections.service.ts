@@ -1,8 +1,13 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { type CurrentElectionDto, ErrorCode, type Phase } from '@presidency-bingo/shared';
+import {
+  type CurrentElectionDto,
+  ErrorCode,
+  type Phase,
+  type PlayerPhaseDto,
+} from '@presidency-bingo/shared';
 import { ApiException } from '../common/api.exception.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { isPast, phaseScheduleSelect, phaseStatus, phaseWindow } from './phases.js';
+import { isPast, type PlayerPhase, phaseScheduleSelect, playerPhases } from './phases.js';
 
 @Injectable()
 export class ElectionsService {
@@ -18,20 +23,41 @@ export class ElectionsService {
     return election.id;
   }
 
+  /** The player's journey through the current election (see `playerPhases`). */
+  async getPhases(userId: string): Promise<PlayerPhaseDto[]> {
+    const { phases } = await this.journey(userId);
+    return phases.map(({ closesAt, ...phase }) => ({
+      ...phase,
+      closesAt: closesAt?.toISOString() ?? null,
+    }));
+  }
+
   /**
-   * Id of the current election, if the phase's predictions are open: 403 before their opening
-   * and once they are closed.
+   * Id of the current election, if the player can write their prediction of the phase: 403
+   * PREDICTIONS_NOT_OPEN while the phase isn't reachable yet, PREDICTIONS_LOCKED once it is
+   * closed.
    */
-  async getOpenId(phase: Phase): Promise<string> {
+  async getOpenId(userId: string, phase: Phase): Promise<string> {
+    const { id, phases } = await this.journey(userId);
+    const state = phases.find((p) => p.phase === phase)?.state;
+    if (state === 'CLOSED' || state === 'SKIPPED') throw predictionsLocked();
+    if (state !== 'TODO' && state !== 'DONE') throw predictionsNotOpen();
+    return id;
+  }
+
+  private async journey(userId: string): Promise<{ id: string; phases: PlayerPhase[] }> {
     const election = await this.prisma.election.findFirst({
       ...currentElection(),
       select: { id: true, ...phaseScheduleSelect },
     });
     if (!election) throw noCurrentElection();
-    const status = phaseStatus(phaseWindow(election, phase));
-    if (status === 'CLOSED') throw predictionsLocked();
-    if (status === 'UPCOMING') throw predictionsNotOpen();
-    return election.id;
+    const validated = await this.prisma.ballot.findMany({
+      where: { userId, electionId: election.id, status: 'VALIDATED' },
+      distinct: ['phase'],
+      select: { phase: true },
+    });
+    const phases = playerPhases(election, new Set(validated.map((b) => b.phase)));
+    return { id: election.id, phases };
   }
 
   /** The current election, with whether its official list is published (results are shown). */
@@ -57,7 +83,6 @@ export class ElectionsService {
       },
     });
     if (!election) throw noCurrentElection();
-    const firstRound = phaseWindow(election, 'FIRST_ROUND');
 
     return {
       id: election.id,
@@ -69,11 +94,6 @@ export class ElectionsService {
       predictionsLocked: isPast(election.predictionsLockAt),
       officialListPublishedAt: election.officialListPublishedAt?.toISOString() ?? null,
       officialListPublished: isPast(election.officialListPublishedAt),
-      firstRound: {
-        opensAt: firstRound.opensAt?.toISOString() ?? null,
-        closesAt: firstRound.closesAt?.toISOString() ?? null,
-        status: phaseStatus(firstRound),
-      },
       candidates: election.candidates.map(({ politician, ...candidate }) => ({
         politicianId: politician.id,
         name: politician.name,
