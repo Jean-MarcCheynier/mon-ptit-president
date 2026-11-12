@@ -30,7 +30,7 @@ export interface ValidatedBallot {
  * The user's ballots for one phase of the current election: at most one draft, plus the
  * validated history (docs/adr/0002). Validated ballots are immutable: entry writes and validation
  * lock the draft row, so an entry can never land in a ballot that is being validated. Every write
- * is refused outside the phase's opening and closing.
+ * is refused while the phase isn't open to the user (see `ElectionsService.getOpenId`).
  */
 @Injectable()
 export class BallotsService {
@@ -66,7 +66,7 @@ export class BallotsService {
 
   /** Opens a draft to change the current ballot, pre-filled from it. Returns the existing draft if any. */
   async startDraft(userId: string, phase: Phase): Promise<EntryRow[]> {
-    const electionId = await this.elections.getOpenId(phase);
+    const electionId = await this.elections.getOpenId(userId, phase);
     await this.findOrCreateDraft(userId, electionId, phase);
     return this.getDraft(userId, phase);
   }
@@ -78,7 +78,7 @@ export class BallotsService {
     politicianId: string,
     value: EntryValue,
   ): Promise<EntryRow> {
-    const electionId = await this.elections.getOpenId(phase);
+    const electionId = await this.elections.getOpenId(userId, phase);
     const pool = await this.pool(userId, electionId, phase);
     if (!pool.has(politicianId)) throw unknownCandidate();
 
@@ -100,7 +100,7 @@ export class BallotsService {
 
   /** Undoes a line. Idempotent: removing a missing entry is a no-op. */
   async removeEntry(userId: string, phase: Phase, politicianId: string): Promise<void> {
-    const electionId = await this.elections.getOpenId(phase);
+    const electionId = await this.elections.getOpenId(userId, phase);
     await this.prisma.$transaction(async (tx) => {
       const ballotId = await lockUserDraft(tx, userId, electionId, phase, 'SHARE');
       if (ballotId) await tx.ballotEntry.deleteMany({ where: { ballotId, politicianId } });
@@ -114,7 +114,7 @@ export class BallotsService {
    * (docs/adr/0002); a round can be validated without any draft.
    */
   async validate(userId: string, phase: Phase): Promise<ValidatedBallot> {
-    const electionId = await this.elections.getOpenId(phase);
+    const electionId = await this.elections.getOpenId(userId, phase);
     const pool = await this.pool(userId, electionId, phase);
     const round = phase !== 'QUALIFIERS';
     if (round) await this.findOrCreateDraft(userId, electionId, phase, pool);

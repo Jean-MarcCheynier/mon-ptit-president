@@ -17,14 +17,42 @@ export interface ElectionCandidateDto {
   status: CandidateStatus;
 }
 
-export type PhaseStatus = 'UPCOMING' | 'OPEN' | 'CLOSED';
+/**
+ * The phases of the player's journey, in order (GLOSSARY.md, "Phase"). A player reaches a phase
+ * once the previous one is validated or closed (docs/adr/0002).
+ */
+export const GAME_PHASES = [
+  'PRESENTATION',
+  'QUALIFIERS',
+  'WINNER',
+  'FIRST_ROUND',
+  'SECOND_ROUND',
+] as const;
+export type GamePhase = (typeof GAME_PHASES)[number];
 
-/** When a phase's predictions open and close; null while unknown. */
-export interface PhaseWindowDto {
-  opensAt: string | null;
+/**
+ * Where a player stands in a phase. UPCOMING: not reachable yet (previous phase not done, or
+ * not scheduled yet). TODO: reachable, nothing validated. DONE: validated, still editable.
+ * CLOSED: validated, then closed (read-only). SKIPPED: closed without a validated prediction.
+ */
+export type PhaseState = 'UPCOMING' | 'TODO' | 'DONE' | 'CLOSED' | 'SKIPPED';
+
+export interface PlayerPhaseDto {
+  phase: GamePhase;
+  /** By the server's clock. */
+  state: PhaseState;
+  /** Closing of the phase; null if it never closes or while unknown. */
   closesAt: string | null;
-  /** By the server's clock. A phase without both dates is UPCOMING until its closing passes. */
-  status: PhaseStatus;
+  /**
+   * False while the phase isn't built yet: it doesn't hold the journey back (the next phase
+   * opens as if it weren't there) and can't be opened.
+   */
+  playable: boolean;
+}
+
+/** The connected player's journey through the current election. */
+export interface PlayerPhasesDto {
+  phases: PlayerPhaseDto[];
 }
 
 export interface CurrentElectionDto {
@@ -41,8 +69,6 @@ export interface CurrentElectionDto {
   officialListPublishedAt: string | null;
   /** Past officialListPublishedAt, by the server's clock: results are available. */
   officialListPublished: boolean;
-  /** First-round predictions: open from the creation of the election until firstRoundClosesAt. */
-  firstRound: PhaseWindowDto;
   /** Active pool: every candidate except WITHDRAWN. */
   candidates: ElectionCandidateDto[];
 }

@@ -1,24 +1,23 @@
-import type { CurrentElectionDto, ResultDto, ValidatedBallotDto } from '@presidency-bingo/shared';
+import type {
+  CurrentElectionDto,
+  PlayerPhaseDto,
+  ResultDto,
+  ValidatedBallotDto,
+} from '@presidency-bingo/shared';
 import { Link } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { EditBallotButton } from '@/components/edit-ballot-button';
-import { PoliticianAvatar } from '@/components/politician-avatar';
+import { PhaseTrail } from '@/components/phase-trail';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { usePhaseStatus, usePredictionsLocked } from '@/lib/elections';
-import { formatDateTime, timeUntil, useNow } from '@/lib/time';
-
-const PREVIEW_SIZE = 8;
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { usePredictionsLocked } from '@/lib/elections';
+import { usePhaseState } from '@/lib/phases';
+import { formatDateTime } from '@/lib/time';
 
 interface ElectionCardProps {
   election: CurrentElectionDto;
+  /** The user's journey through the election. */
+  phases: PlayerPhaseDto[];
   /** Candidates already decided in the user's draft. */
   decided: number;
   /** The user's current bet; null if they never validated one. */
@@ -27,17 +26,11 @@ interface ElectionCardProps {
   result: ResultDto | null;
 }
 
-export function ElectionCard({ election, decided, ballot, result }: ElectionCardProps) {
+/** The current election and the user's journey through its phases. */
+export function ElectionCard({ election, phases, decided, ballot, result }: ElectionCardProps) {
   const { t, i18n } = useTranslation();
-  const now = useNow();
-  const locked = usePredictionsLocked(election);
-  const firstRound = usePhaseStatus(election.firstRound);
-  const remaining = locked ? null : timeUntil(new Date(election.predictionsLockAt), now);
   const formatDate = (iso: string) =>
     new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' }).format(new Date(iso));
-
-  const preview = election.candidates.slice(0, PREVIEW_SIZE);
-  const hidden = election.candidates.length - preview.length;
 
   return (
     <Card>
@@ -50,89 +43,96 @@ export function ElectionCard({ election, decided, ballot, result }: ElectionCard
           })}
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            {remaining ? t('election.closesIn') : t('election.closed')}
-          </p>
-          {remaining ? (
-            <p className="text-2xl font-semibold tabular-nums" aria-live="polite">
-              {t('election.countdown', { ...remaining })}
-            </p>
-          ) : null}
-        </div>
-        <div className="grid gap-2">
-          <p className="text-sm text-muted-foreground">
-            {t('election.pool', { count: election.candidates.length })}
-          </p>
-          <div className="flex flex-wrap items-center -space-x-2">
-            {preview.map((candidate) => (
-              <PoliticianAvatar
-                key={candidate.politicianId}
-                name={candidate.name}
-                photoUrl={candidate.photoUrl}
-                className="ring-2 ring-card"
+      <CardContent>
+        <PhaseTrail
+          phases={phases}
+          actions={{
+            QUALIFIERS: (
+              <QualifiersAction
+                election={election}
+                decided={decided}
+                ballot={ballot}
+                result={result}
               />
-            ))}
-            {hidden > 0 ? (
-              <span className="ml-4 text-sm text-muted-foreground">+{hidden}</span>
-            ) : null}
-          </div>
-        </div>
+            ),
+            FIRST_ROUND: <FirstRoundAction phase={phases.find((p) => p.phase === 'FIRST_ROUND')} />,
+          }}
+        />
       </CardContent>
-      <CardFooter className="flex-wrap gap-3">
-        {result ? (
-          <>
-            <div className="grid w-full gap-1">
-              <p className="text-sm font-medium">{t('results.home', { ...result })}</p>
-              <p className="text-2xl font-semibold tabular-nums">
-                {t('results.points', { count: result.points })}
-              </p>
-            </div>
-            <Button asChild>
-              <Link to="/predict">{t('results.view')}</Link>
-            </Button>
-          </>
-        ) : election.officialListPublished ? (
-          <p className="text-sm text-muted-foreground">{t('election.resultsNotParticipated')}</p>
-        ) : ballot ? (
-          <>
-            <p className="w-full text-sm font-medium">
-              {t('ballot.validatedOn', {
-                date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage),
-              })}
-            </p>
-            {locked ? (
-              <Button asChild variant="outline">
-                <Link to="/predict">{t('ballot.view')}</Link>
-              </Button>
-            ) : decided > 0 ? (
-              <Button asChild>
-                <Link to="/review">{t('ballot.resumeEdit')}</Link>
-              </Button>
-            ) : (
-              <EditBallotButton candidates={election.candidates} ballot={ballot} />
-            )}
-          </>
-        ) : locked ? (
-          <p className="text-sm text-muted-foreground">{t('election.notParticipated')}</p>
-        ) : (
-          <Button asChild>
-            <Link to="/predict">
-              {decided > 0
-                ? t('election.resume', { decided, total: election.candidates.length })
-                : t('election.predict')}
-            </Link>
-          </Button>
-        )}
-        {firstRound !== 'UPCOMING' ? (
-          <Button asChild variant={firstRound === 'OPEN' ? 'default' : 'outline'}>
-            <Link to="/first-round">
-              {firstRound === 'OPEN' ? t('firstRound.predict') : t('firstRound.view')}
-            </Link>
-          </Button>
-        ) : null}
-      </CardFooter>
     </Card>
+  );
+}
+
+function QualifiersAction({
+  election,
+  decided,
+  ballot,
+  result,
+}: Omit<ElectionCardProps, 'phases'>) {
+  const { t, i18n } = useTranslation();
+  const locked = usePredictionsLocked(election);
+
+  if (result) {
+    return (
+      <>
+        <div className="grid w-full gap-1">
+          <p className="text-sm font-medium">{t('results.home', { ...result })}</p>
+          <p className="text-2xl font-semibold tabular-nums">
+            {t('results.points', { count: result.points })}
+          </p>
+        </div>
+        <Button asChild>
+          <Link to="/predict">{t('results.view')}</Link>
+        </Button>
+      </>
+    );
+  }
+  if (election.officialListPublished) {
+    return <p className="text-sm text-muted-foreground">{t('election.resultsNotParticipated')}</p>;
+  }
+  if (ballot) {
+    return (
+      <>
+        <p className="w-full text-sm font-medium">
+          {t('ballot.validatedOn', {
+            date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage),
+          })}
+        </p>
+        {locked ? (
+          <Button asChild variant="outline">
+            <Link to="/predict">{t('ballot.view')}</Link>
+          </Button>
+        ) : decided > 0 ? (
+          <Button asChild>
+            <Link to="/review">{t('ballot.resumeEdit')}</Link>
+          </Button>
+        ) : (
+          <EditBallotButton candidates={election.candidates} ballot={ballot} />
+        )}
+      </>
+    );
+  }
+  if (locked) return null;
+  return (
+    <Button asChild>
+      <Link to="/predict">
+        {decided > 0
+          ? t('election.resume', { decided, total: election.candidates.length })
+          : t('election.predict')}
+      </Link>
+    </Button>
+  );
+}
+
+function FirstRoundAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
+  const { t } = useTranslation();
+  const state = usePhaseState(phase);
+  if (state === 'SKIPPED') return null;
+  return (
+    <Button asChild variant={state === 'TODO' ? 'default' : 'outline'}>
+      <Link to="/first-round">
+        {state === 'TODO' ? t('firstRound.predict') : t('firstRound.view')}
+      </Link>
+    </Button>
   );
 }
