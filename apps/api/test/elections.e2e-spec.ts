@@ -133,9 +133,9 @@ describe('Elections (e2e)', () => {
         predictionsLocked: false,
         officialListPublishedAt: null,
         officialListPublished: false,
-        // Opens at the election's creation; stays upcoming while its closing is unknown.
-        firstRound: { opensAt: expect.any(String), closesAt: null, status: 'UPCOMING' },
       });
+      // Phase states are per player: see GET /api/elections/current/phases.
+      expect(res.body).not.toHaveProperty('firstRound');
       expect(res.body.candidates.map((c: { name: string }) => c.name)).toEqual([
         'Alain Alpha',
         'Zoé Zed',

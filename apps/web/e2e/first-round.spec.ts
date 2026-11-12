@@ -2,9 +2,9 @@ import { expect, type Page, test } from '@playwright/test';
 import { linkFromLatestEmail } from './mailpit';
 
 // Requires the seeded election (`pnpm --filter @presidency-bingo/api db:seed`). The seed doesn't
-// publish the official list, so the first round is opened by faking the API: the election says
-// the phase is open with three qualified candidates, and the first-round routes are served from
-// memory with the API's rules.
+// publish the official list, so the first round is opened by faking the API: the phases say it is
+// reachable, the election has three qualified candidates, and the first-round routes are served
+// from memory with the API's rules.
 
 async function signUp(page: Page) {
   const email = `scorer+${Date.now()}@example.com`;
@@ -39,14 +39,21 @@ async function openFirstRound(page: Page) {
     qualified = candidates.slice(0, 3).map((c: { politicianId: string }) => c.politicianId);
     await route.fulfill({
       response,
+      json: { ...election, candidates },
+    });
+  });
+
+  // The first round is reachable (as once the qualifiers are cleared), done once validated.
+  await page.route('**/api/elections/current/phases', async (route) => {
+    const response = await route.fetch();
+    const { phases } = (await response.json()) as { phases: { phase: string }[] };
+    const closesAt = new Date(Date.now() + 10 * DAY).toISOString();
+    await route.fulfill({
+      response,
       json: {
-        ...election,
-        candidates,
-        firstRound: {
-          opensAt: new Date(Date.now() - DAY).toISOString(),
-          closesAt: new Date(Date.now() + 10 * DAY).toISOString(),
-          status: 'OPEN',
-        },
+        phases: phases.map((p) =>
+          p.phase === 'FIRST_ROUND' ? { ...p, closesAt, state: ballot ? 'DONE' : 'TODO' } : p,
+        ),
       },
     });
   });

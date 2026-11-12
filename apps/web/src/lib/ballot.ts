@@ -10,6 +10,7 @@ import {
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiRequestError, api } from './api';
 import { firstRoundCandidatesQuery } from './first-round';
+import { phasesQuery } from './phases';
 
 const DRAFT = '/elections/current/draft';
 const BALLOT = '/elections/current/ballot';
@@ -64,6 +65,8 @@ export function useValidate() {
       queryClient.setQueryData(draftQuery.queryKey, { entries: [] });
       // The kept candidates are who the first round scores until the official list.
       void queryClient.invalidateQueries({ queryKey: firstRoundCandidatesQuery.queryKey });
+      // Validating clears the phase: the next one opens.
+      void queryClient.invalidateQueries({ queryKey: phasesQuery.queryKey });
     },
   });
 }

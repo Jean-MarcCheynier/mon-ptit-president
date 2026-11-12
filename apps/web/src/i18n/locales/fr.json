@@ -74,16 +74,32 @@
   },
   "election": {
     "rounds": "1er tour le {{first}}, 2nd tour le {{second}}",
-    "closesIn": "Fin des pronostics dans",
-    "closed": "Pronostics clos",
-    "countdown": "{{days}} j {{hours}} h {{minutes}} min",
-    "pool_one": "{{count}} candidat potentiel",
-    "pool_other": "{{count}} candidats potentiels",
     "predict": "Fais ton pronostic",
     "none": "Aucune élection à venir pour le moment.",
     "resume": "Reprendre ton brouillon ({{decided}}/{{total}})",
     "notParticipated": "Pronostics clos, tu n’as pas participé.",
     "resultsNotParticipated": "Liste officielle publiée. Tu n’avais pas validé de pronostic."
+  },
+  "phases": {
+    "title": "Ton parcours",
+    "names": {
+      "PRESENTATION": "Présentation",
+      "QUALIFIERS": "Qualifiés",
+      "WINNER": "Vainqueur",
+      "FIRST_ROUND": "1er tour",
+      "SECOND_ROUND": "2nd tour"
+    },
+    "states": {
+      "UPCOMING": "À venir",
+      "TODO": "À faire",
+      "DONE": "Faite",
+      "CLOSED": "Close",
+      "SKIPPED": "Sautée"
+    },
+    "soon": "Bientôt",
+    "closesOn": "clôture le {{date}}",
+    "closedOn": "close le {{date}}",
+    "closesIn": "clôture dans {{days}} j {{hours}} h {{minutes}} min"
   },
   "settings": {
     "title": "Paramètres",

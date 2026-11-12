@@ -9,6 +9,7 @@ import {
 } from '@presidency-bingo/shared';
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiRequestError, api } from './api';
+import { phasesQuery } from './phases';
 
 const BASE = '/elections/current/first-round';
 const DRAFT = `${BASE}/draft`;
@@ -94,6 +95,7 @@ export function useValidateScores() {
     onSuccess: (ballot) => {
       queryClient.setQueryData(firstRoundBallotQuery.queryKey, ballot);
       queryClient.setQueryData(firstRoundDraftQuery.queryKey, { entries: [] });
+      void queryClient.invalidateQueries({ queryKey: phasesQuery.queryKey });
     },
   });
 }

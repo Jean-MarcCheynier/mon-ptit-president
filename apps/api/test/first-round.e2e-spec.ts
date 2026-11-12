@@ -25,7 +25,7 @@ const election = {
   firstRoundClosesAt: inDays(18),
 };
 
-/** Qualifiers closed, official list not published yet: the first round isn't open. */
+/** Qualifiers closed (so skipped or closed: the first round is open), official list not published yet. */
 const beforeList = {
   election,
   candidates: ['anne', 'bruno', 'chloe', 'david'].map((slug) => candidate(slug, 'DECLARED')),
@@ -50,6 +50,11 @@ const BALLOT = `${BASE}/ballot`;
 const CANDIDATES = `${BASE}/candidates`;
 
 type Agent = Awaited<ReturnType<TestApp['signUp']>>;
+
+const firstRoundState = async (agent: Agent) => {
+  const res = await agent.get('/api/elections/current/phases').expect(200);
+  return res.body.phases.find((p: { phase: string }) => p.phase === 'FIRST_ROUND')?.state;
+};
 
 describe('First-round predictions (e2e)', () => {
   let t: TestApp;
@@ -109,8 +114,7 @@ describe('First-round predictions (e2e)', () => {
     await seed(beforeList);
     const ada = await t.signUp();
 
-    const election = await ada.get('/api/elections/current').expect(200);
-    expect(election.body.firstRound.status).toBe('OPEN');
+    expect(await firstRoundState(ada)).toBe('TODO');
     const pool = await ada.get(CANDIDATES).expect(200);
     expect(pool.body.official).toBe(false);
     expect([...pool.body.politicianIds].sort()).toEqual(
@@ -251,8 +255,7 @@ describe('First-round predictions (e2e)', () => {
     await ada.post(VALIDATE).expect(200);
     await seed(published({ firstRoundClosesAt: inDays(-1) }));
 
-    const election = await ada.get('/api/elections/current').expect(200);
-    expect(election.body.firstRound.status).toBe('CLOSED');
+    expect(await firstRoundState(ada)).toBe('CLOSED');
     for (const res of [
       await ada.put(entry('anne')).send({ score: 500 }),
       await ada.delete(entry('anne')),

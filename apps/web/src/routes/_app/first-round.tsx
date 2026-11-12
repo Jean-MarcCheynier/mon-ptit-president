@@ -14,7 +14,7 @@ import { ScoreForm } from '@/components/score-form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { currentElectionQuery, usePhaseStatus } from '@/lib/elections';
+import { currentElectionQuery } from '@/lib/elections';
 import { errorMessage } from '@/lib/errors';
 import {
   firstRoundBallotQuery,
@@ -25,12 +25,16 @@ import {
   useStartFirstRoundDraft,
   useValidateScores,
 } from '@/lib/first-round';
+import { isWritable, phasesQuery, requirePhase, usePhaseState } from '@/lib/phases';
 import { formatDateTime } from '@/lib/time';
 
+/** Reachable once the qualifiers are cleared (validated or closed); else back to the journey. */
 export const Route = createFileRoute('/_app/first-round')({
+  beforeLoad: ({ context }) => requirePhase(context.queryClient, 'FIRST_ROUND'),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.query(currentElectionQuery),
+      context.queryClient.query(phasesQuery),
       context.queryClient.query(firstRoundCandidatesQuery),
       context.queryClient.query(firstRoundDraftQuery),
       context.queryClient.query(firstRoundBallotQuery),
@@ -56,10 +60,11 @@ function FirstRoundPage() {
 
 function FirstRound({ election }: { election: CurrentElectionDto }) {
   const { t, i18n } = useTranslation();
-  const [{ data: pool }, { data: draft }, { data: ballot }] = useSuspenseQueries({
-    queries: [firstRoundCandidatesQuery, firstRoundDraftQuery, firstRoundBallotQuery],
+  const [{ data: pool }, { data: draft }, { data: ballot }, { data: phases }] = useSuspenseQueries({
+    queries: [firstRoundCandidatesQuery, firstRoundDraftQuery, firstRoundBallotQuery, phasesQuery],
   });
-  const status = usePhaseStatus(election.firstRound);
+  const phase = phases.find((p) => p.phase === 'FIRST_ROUND');
+  const state = usePhaseState(phase);
   const ids = new Set(pool.politicianIds);
   const candidates = election.candidates.filter((c) => ids.has(c.politicianId));
   // A prediction validated before the official list: it still counts, on the qualified only.
@@ -69,10 +74,10 @@ function FirstRound({ election }: { election: CurrentElectionDto }) {
     election.officialListPublishedAt !== null &&
     ballot.validatedAt < election.officialListPublishedAt;
 
-  if (status === 'UPCOMING') {
+  if (state === 'UPCOMING') {
     return <p className="text-muted-foreground">{t('firstRound.upcoming')}</p>;
   }
-  if (status === 'CLOSED') {
+  if (!isWritable(state)) {
     if (!ballot) return <p className="text-muted-foreground">{t('firstRound.notParticipated')}</p>;
     return (
       <div className="grid gap-4">
@@ -86,10 +91,8 @@ function FirstRound({ election }: { election: CurrentElectionDto }) {
     );
   }
 
-  const closesOn = election.firstRound.closesAt
-    ? t('firstRound.closesOn', {
-        date: formatDateTime(election.firstRound.closesAt, i18n.resolvedLanguage),
-      })
+  const closesOn = phase?.closesAt
+    ? t('firstRound.closesOn', { date: formatDateTime(phase.closesAt, i18n.resolvedLanguage) })
     : null;
   return (
     <div className="grid gap-4">

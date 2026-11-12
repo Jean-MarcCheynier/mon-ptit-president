@@ -8,9 +8,13 @@ import { meQuery } from '@/lib/auth';
 import { currentBallotQuery, draftQuery } from '@/lib/ballot';
 import { currentElectionQuery } from '@/lib/elections';
 import { errorMessage } from '@/lib/errors';
+import { phasesQuery } from '@/lib/phases';
 import { resultsQuery } from '@/lib/results';
 
-/** Home stays up when the prediction API fails: errors are shown in place of the election card. */
+/**
+ * Home: the election and the user's journey through its phases. It stays up when the prediction
+ * API fails: errors are shown in place of the election card.
+ */
 export const Route = createFileRoute('/_app/')({
   loader: ({ context }) =>
     Promise.all([
@@ -18,6 +22,7 @@ export const Route = createFileRoute('/_app/')({
       context.queryClient.query(draftQuery).catch(noop),
       context.queryClient.query(currentBallotQuery).catch(noop),
       context.queryClient.query(resultsQuery).catch(noop),
+      context.queryClient.query(phasesQuery).catch(noop),
     ]),
   component: HomePage,
 });
@@ -29,8 +34,9 @@ function HomePage() {
   const draft = useQuery(draftQuery);
   const ballot = useQuery(currentBallotQuery);
   const results = useQuery(resultsQuery);
-  // Without the draft or the bet, the card would offer the wrong action.
-  const error = election.error ?? draft.error ?? ballot.error ?? results.error;
+  const phases = useQuery(phasesQuery);
+  // Without the draft, the bet or the phases, the card would offer the wrong action.
+  const error = election.error ?? draft.error ?? ballot.error ?? results.error ?? phases.error;
 
   return (
     <div className="grid gap-6">
@@ -40,9 +46,14 @@ function HomePage() {
       </div>
       {error ? (
         <FormAlert variant="error">{errorMessage(t, error)}</FormAlert>
-      ) : election.data && draft.data && ballot.data !== undefined && results.data ? (
+      ) : election.data &&
+        draft.data &&
+        ballot.data !== undefined &&
+        results.data &&
+        phases.data ? (
         <ElectionCard
           election={election.data}
+          phases={phases.data}
           decided={decidedIn(election.data, draft.data)}
           ballot={ballot.data}
           result={results.data.result}

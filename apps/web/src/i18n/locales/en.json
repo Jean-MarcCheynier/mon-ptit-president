@@ -74,16 +74,32 @@
   },
   "election": {
     "rounds": "First round on {{first}}, second round on {{second}}",
-    "closesIn": "Predictions close in",
-    "closed": "Predictions closed",
-    "countdown": "{{days}}d {{hours}}h {{minutes}}m",
-    "pool_one": "{{count}} potential candidate",
-    "pool_other": "{{count}} potential candidates",
     "predict": "Make your prediction",
     "none": "No upcoming election for now.",
     "resume": "Resume your draft ({{decided}}/{{total}})",
     "notParticipated": "Predictions are closed, you didn’t take part.",
     "resultsNotParticipated": "Official list published. You hadn't validated a prediction."
+  },
+  "phases": {
+    "title": "Your journey",
+    "names": {
+      "PRESENTATION": "Introduction",
+      "QUALIFIERS": "Qualifiers",
+      "WINNER": "Winner",
+      "FIRST_ROUND": "First round",
+      "SECOND_ROUND": "Second round"
+    },
+    "states": {
+      "UPCOMING": "Upcoming",
+      "TODO": "To do",
+      "DONE": "Done",
+      "CLOSED": "Closed",
+      "SKIPPED": "Skipped"
+    },
+    "soon": "Coming soon",
+    "closesOn": "closes on {{date}}",
+    "closedOn": "closed on {{date}}",
+    "closesIn": "closes in {{days}}d {{hours}}h {{minutes}}m"
   },
   "settings": {
     "title": "Settings",
