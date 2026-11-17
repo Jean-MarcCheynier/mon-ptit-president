@@ -243,6 +243,6 @@
     "closed": "Pronostics du 1er tour clos. Voici ton pronostic, validé le {{date}}.",
     "notParticipated": "Pronostics du 1er tour clos, tu n’as pas participé.",
     "predict": "Pronostique le 1er tour",
-    "view": "Voir mon pronostic du 1er tour"
+    "view": "Voir mon pronostic"
   }
 }
