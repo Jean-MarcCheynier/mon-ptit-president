@@ -167,3 +167,23 @@ pnpm db:reset                                      # base de dev vidée : migrat
 pnpm --filter @presidency-bingo/api db:studio      # Prisma Studio
 pnpm --filter @presidency-bingo/web dlx shadcn@latest add dialog   # ajouter un composant UI
 ```
+
+## Presentation
+
+### Explications
+
+#### Conception
+
+*Methodology - Github project and roadmap
+*Claude Matt Pocock Skills
+*Grilling phase, glossary
+
+#### Dev tools
+
+*Biome
+*Vite
+
+#### Devops
+
+*Data seeds and migrations
+*Playwright e2e

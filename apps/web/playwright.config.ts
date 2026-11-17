@@ -11,6 +11,7 @@ const isolated = !!process.env.SMOKE_ISOLATED && !process.env.CI;
 const apiPort = isolated ? 3001 : 3000;
 const webPort = isolated ? 5174 : 5173;
 const webUrl = `http://localhost:${webPort}`;
+const slowMo = Number(process.env.SLOW_MO) || 0;
 
 const api = {
   url: `http://localhost:${apiPort}/api/health`,
@@ -22,10 +23,14 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
+  // A slowed-down run (SLOW_MO) needs more than the default 30s per test.
+  timeout: slowMo ? 120_000 : 30_000,
   use: {
     baseURL: webUrl,
     locale: 'fr-FR',
     trace: 'retain-on-failure',
+    // `SLOW_MO=500 pnpm test:smoke:isolated --headed`: pause (ms) between actions, to watch the run.
+    launchOptions: { slowMo },
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], locale: 'fr-FR' } }],
   webServer: isolated
