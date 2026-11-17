@@ -7,7 +7,13 @@ import {
 } from '@presidency-bingo/shared';
 import { ApiException } from '../common/api.exception.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { isPast, type PlayerPhase, phaseScheduleSelect, playerPhases } from './phases.js';
+import {
+  isPast,
+  type PlayerPhase,
+  phaseScheduleSelect,
+  playerPhases,
+  toPhaseSchedule,
+} from './phases.js';
 
 @Injectable()
 export class ElectionsService {
@@ -56,7 +62,7 @@ export class ElectionsService {
       distinct: ['phase'],
       select: { phase: true },
     });
-    const phases = playerPhases(election, new Set(validated.map((b) => b.phase)));
+    const phases = playerPhases(toPhaseSchedule(election), new Set(validated.map((b) => b.phase)));
     return { id: election.id, phases };
   }
 

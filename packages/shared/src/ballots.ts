@@ -29,7 +29,7 @@ export interface CurrentBallotDto {
 }
 
 /** The phases of the game, each with its own predictions, opening and closing. */
-export const PHASES = ['QUALIFIERS', 'FIRST_ROUND', 'SECOND_ROUND'] as const;
+export const PHASES = ['QUALIFIERS', 'WINNER', 'FIRST_ROUND', 'SECOND_ROUND'] as const;
 export type Phase = (typeof PHASES)[number];
 
 /** Scores are stored in tenths of a point: 23.4 % is 234, up to 1000 (100 %). The sum is free. */
@@ -44,7 +44,6 @@ export interface ScoreEntryDto {
   score: number;
 }
 
-/** The user's draft of a round's prediction; no entries when there is no draft. */
 /**
  * The politicians a player scores in the first round: the qualified candidates once the official
  * list is published; before that, the candidates kept in their qualifiers' prediction (the whole
@@ -56,6 +55,7 @@ export interface ScoreCandidatesDto {
   official: boolean;
 }
 
+/** The user's draft of a round's prediction; no entries when there is no draft. */
 export interface ScoreDraftDto {
   entries: ScoreEntryDto[];
 }
@@ -69,4 +69,45 @@ export interface ValidatedScoresDto {
 /** The user's current prediction of a round, if they ever validated one. */
 export interface CurrentScoresDto {
   ballot: ValidatedScoresDto | null;
+}
+
+/**
+ * A choice of the winner's prediction (docs/adr/0003): a favorite with its odds, the points it
+ * brings if elected. Without a politician, it is "autre candidat": anyone but the favorites.
+ */
+export interface FavoriteDto {
+  id: string;
+  odds: number;
+  politician: {
+    id: string;
+    name: string;
+    photoUrl: string | null;
+    photoCredit: string | null;
+  } | null;
+}
+
+/** The current election's favorites, in display order; empty while the phase isn't set up. */
+export interface FavoritesDto {
+  favorites: FavoriteDto[];
+}
+
+export const winnerChoiceInputSchema = z.object({ favoriteId: z.uuid() });
+export type WinnerChoiceInput = z.infer<typeof winnerChoiceInputSchema>;
+
+/** The user's draft of the winner's prediction; null when there is no draft or no choice yet. */
+export interface WinnerDraftDto {
+  favoriteId: string | null;
+}
+
+/** An immutable, validated winner's prediction. The latest one counts. */
+export interface ValidatedWinnerDto {
+  validatedAt: string;
+  favoriteId: string;
+}
+
+/** The user's current winner's prediction, if they ever validated one. */
+export interface CurrentWinnerDto {
+  ballot: ValidatedWinnerDto | null;
+  /** The odds of the choice if elected, else 0; null until the president is elected, or without a prediction. */
+  points: number | null;
 }

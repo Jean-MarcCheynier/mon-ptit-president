@@ -10,7 +10,9 @@ const prisma = new PrismaClient({
 
 try {
   const result = await seedElection(prisma, presidentielle2027);
-  console.log(`Seeded ${presidentielle2027.election.slug}: ${result.candidates} candidates`);
+  console.log(
+    `Seeded ${presidentielle2027.election.slug}: ${result.candidates} candidates, ${result.favorites} favorites`,
+  );
 } finally {
   await prisma.$disconnect();
 }

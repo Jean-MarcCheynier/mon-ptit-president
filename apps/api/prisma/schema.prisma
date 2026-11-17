@@ -82,23 +82,27 @@ model VerificationToken {
 }
 
 model Election {
-  id                String   @id @default(uuid(7)) @db.Uuid
-  slug              String   @unique
-  name              String
-  firstRoundAt      DateTime @map("first_round_at")
-  secondRoundAt     DateTime @map("second_round_at")
+  id                      String    @id @default(uuid(7)) @db.Uuid
+  slug                    String    @unique
+  name                    String
+  firstRoundAt            DateTime  @map("first_round_at")
+  secondRoundAt           DateTime  @map("second_round_at")
   // Closing of the qualifiers' predictions: after this instant, they are read-only.
-  predictionsLockAt DateTime @map("predictions_lock_at")
+  predictionsLockAt       DateTime  @map("predictions_lock_at")
   // Publication of the official list by the Constitutional Council; results are shown from then,
   // and the first-round predictions switch from the kept candidates to the qualified ones.
   officialListPublishedAt DateTime? @map("official_list_published_at")
   // Closing of the first-round predictions; null while unknown (the phase stays upcoming).
-  firstRoundClosesAt DateTime? @map("first_round_closes_at")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  firstRoundClosesAt      DateTime? @map("first_round_closes_at")
+  // The president elected at the second round; null until known. Scores the winner's predictions.
+  electedPoliticianId     String?   @map("elected_politician_id") @db.Uuid
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
 
+  elected    Politician?         @relation("ElectedPresident", fields: [electedPoliticianId], references: [id])
   candidates ElectionCandidate[]
   ballots    Ballot[]
+  favorites  Favorite[]
 
   @@map("elections")
 }
@@ -116,6 +120,8 @@ model Politician {
 
   candidacies   ElectionCandidate[]
   ballotEntries BallotEntry[]
+  favorites     Favorite[]
+  elected       Election[]          @relation("ElectedPresident")
 
   @@map("politicians")
 }
@@ -153,13 +159,38 @@ enum BallotStatus {
 
 enum BallotPhase {
   QUALIFIERS
+  WINNER
   FIRST_ROUND
   SECOND_ROUND
 }
 
+// A choice of the winner's prediction (docs/adr/0003): a politician, or "autre candidat" when
+// politicianId is null (at most one per election: partial unique index "favorites_one_other", raw
+// SQL in the migrations). Fixed once the phase opens: never deleted, predictions point to them.
+model Favorite {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  electionId   String   @map("election_id") @db.Uuid
+  politicianId String?  @map("politician_id") @db.Uuid
+  // Points if elected: CHECK "favorites_odds_positive".
+  odds         Int
+  // Display order, ascending.
+  position     Int
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  election   Election    @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  politician Politician? @relation(fields: [politicianId], references: [id], onDelete: Restrict)
+  ballots    Ballot[]
+
+  @@unique([electionId, politicianId])
+  @@map("favorites")
+}
+
 // A user's prediction for a phase of an election (docs/adr/0002). At most one DRAFT per user,
 // election and phase, enforced by the partial unique index "ballots_one_draft_per_user" (raw SQL
-// in the migrations). Reads go through the views "qualifier_decisions" and "round_scores".
+// in the migrations). Reads go through the views "qualifier_decisions", "round_scores" and
+// "winner_choices". The winner's prediction has no entries: its choice is favoriteId, set only on
+// that phase and required once validated (CHECK "ballots_favorite_winner_only").
 model Ballot {
   id          String       @id @default(uuid(7)) @db.Uuid
   userId      String       @map("user_id") @db.Uuid
@@ -167,11 +198,13 @@ model Ballot {
   phase       BallotPhase
   status      BallotStatus @default(DRAFT)
   validatedAt DateTime?    @map("validated_at")
+  favoriteId  String?      @map("favorite_id") @db.Uuid
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
 
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   election Election      @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  favorite Favorite?     @relation(fields: [favoriteId], references: [id], onDelete: Restrict)
   entries  BallotEntry[]
 
   @@index([userId, electionId])

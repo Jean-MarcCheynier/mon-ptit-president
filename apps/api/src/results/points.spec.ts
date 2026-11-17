@@ -1,4 +1,4 @@
-import { scoreDecisions, type Tally } from './points.js';
+import { scoreDecisions, scoreWinner, type Tally } from './points.js';
 
 const tallies = (entries: Record<string, Tally>) => new Map(Object.entries(entries));
 const one = (isCandidate: boolean, tally: Tally, qualified: boolean) => {
@@ -54,5 +54,26 @@ describe('scoreDecisions', () => {
 
   it('counts "recalé" right for a candidate missing from the official list', () => {
     expect(one(false, { qualified: 0, notQualified: 1 }, false).correct).toBe(true);
+  });
+});
+
+describe('scoreWinner', () => {
+  const favorites = new Set(['le-pen', 'glucksmann']);
+
+  it('brings the odds of an elected favorite', () => {
+    expect(scoreWinner({ politicianId: 'glucksmann', odds: 9999 }, 'glucksmann', favorites)).toBe(
+      9999,
+    );
+  });
+
+  it('brings nothing when another is elected', () => {
+    expect(scoreWinner({ politicianId: 'le-pen', odds: 90 }, 'glucksmann', favorites)).toBe(0);
+    expect(scoreWinner({ politicianId: 'le-pen', odds: 90 }, 'outsider', favorites)).toBe(0);
+  });
+
+  it('makes "autre candidat" win when the elected is none of the favorites', () => {
+    const other = { politicianId: null, odds: 1000 };
+    expect(scoreWinner(other, 'outsider', favorites)).toBe(1000);
+    expect(scoreWinner(other, 'le-pen', favorites)).toBe(0);
   });
 });
