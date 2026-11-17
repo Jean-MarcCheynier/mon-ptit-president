@@ -48,3 +48,9 @@ Used by `/wayfinder`. The **map** is a single issue with **child** issues as tic
 - **Frontier query**: list the map's open children (`gh issue list --state open`, scoped to the map's sub-issues / task list), drop any with an open blocker (see **Count open blockers**, or an open issue in the `Blocked by` line) or an assignee; first in map order wins.
 - **Claim**: `gh issue edit <n> --add-assignee @me`, the session's first write.
 - **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then append a context pointer (gist + link) to the map's Decisions-so-far.
+
+## Environment (WSL)
+
+- `gh` is not on the WSL `PATH`: call the Windows binary `gh.exe` (same arguments).
+- `git fetch` / `git pull` over SSH fail from WSL (no key). Fetch over HTTPS with `gh.exe` as the credential helper:
+  `git -c credential.helper= -c credential.helper='!gh.exe auth git-credential' fetch https://github.com/Jean-MarcCheynier/mon-ptit-president.git main:refs/remotes/origin/main`

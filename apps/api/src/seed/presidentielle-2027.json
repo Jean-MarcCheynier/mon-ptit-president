@@ -1,5 +1,5 @@
 {
-  "$comment": "Pool researched in October 2026 (issue #2). Dates: Council of Ministers, 1 July 2026. predictionsLockAt: end of the sponsorship period (12 March 2027, 18:00); the Constitutional Council publishes the official list afterwards, exact date not yet known. firstRoundClosesAt: Friday 16 April 2027, 23:59:59 Paris time (CEST), before the electoral silence. Candidates are never deleted: drop-outs stay in the file as WITHDRAWN.",
+  "$comment": "Pool researched in October 2026 (issue #2). Dates: Council of Ministers, 1 July 2026. predictionsLockAt: end of the sponsorship period (12 March 2027, 18:00); the Constitutional Council publishes the official list afterwards, exact date not yet known. firstRoundClosesAt: Friday 16 April 2027, 23:59:59 Paris time (CEST), before the electoral silence. Candidates are never deleted: drop-outs stay in the file as WITHDRAWN. Favorites (issue #36): order and odds set early November 2026 from Polymarket and the polls (Votons, Ifop, Ipsos), then adjusted by hand; Jordan Bardella dropped out; null is \"autre candidat\".",
   "election": {
     "slug": "presidentielle-2027",
     "name": "Présidentielle 2027",
@@ -7,8 +7,19 @@
     "secondRoundAt": "2027-05-02T06:00:00Z",
     "predictionsLockAt": "2027-03-12T22:59:59Z",
     "officialListPublishedAt": null,
-    "firstRoundClosesAt": "2027-04-16T21:59:59Z"
+    "firstRoundClosesAt": "2027-04-16T21:59:59Z",
+    "electedSlug": null
   },
+  "favorites": [
+    { "slug": "marine-le-pen", "odds": 90 },
+    { "slug": "jean-luc-melenchon", "odds": 120 },
+    { "slug": "edouard-philippe", "odds": 150 },
+    { "slug": "david-lisnard", "odds": 250 },
+    { "slug": "marine-tondelier", "odds": 500 },
+    { "slug": "sandrine-rousseau", "odds": 750 },
+    { "slug": "raphael-glucksmann", "odds": 9999 },
+    { "slug": null, "odds": 1000 }
+  ],
   "candidates": [
     {
       "slug": "nathalie-arthaud",

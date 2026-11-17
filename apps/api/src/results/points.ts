@@ -37,3 +37,25 @@ export function scoreDecisions<D extends Decision>(
     return { ...decision, correct, agreement, points: correct ? 100 ** p : 0 };
   });
 }
+
+/** A winner's prediction: a favorite, or "autre candidat" when `politicianId` is null. */
+export interface WinnerChoice {
+  politicianId: string | null;
+  odds: number;
+}
+
+/**
+ * Scores a winner's prediction (docs/adr/0003-le-vainqueur-se-joue-a-cotes-fixes.md): the odds of
+ * the choice if elected, else 0. "Autre candidat" wins when the elected is none of the favorites.
+ *
+ * @param favorites the politicians of the favorites ("autre candidat" aside)
+ */
+export function scoreWinner(
+  choice: WinnerChoice,
+  elected: string,
+  favorites: ReadonlySet<string>,
+): number {
+  const right =
+    choice.politicianId === null ? !favorites.has(elected) : choice.politicianId === elected;
+  return right ? choice.odds : 0;
+}

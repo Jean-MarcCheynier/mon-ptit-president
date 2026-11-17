@@ -253,7 +253,7 @@ async function lockDraft(tx: Tx, ballotId: string, mode: LockMode): Promise<bool
   return rows.length > 0;
 }
 
-async function lockUserDraft(
+export async function lockUserDraft(
   tx: Tx,
   userId: string,
   electionId: string,
@@ -275,7 +275,7 @@ export const unknownCandidate = () =>
     'Not a candidate of the current election',
   );
 
-const ballotIncomplete = () =>
+export const ballotIncomplete = () =>
   new ApiException(
     HttpStatus.UNPROCESSABLE_ENTITY,
     ErrorCode.BALLOT_INCOMPLETE,

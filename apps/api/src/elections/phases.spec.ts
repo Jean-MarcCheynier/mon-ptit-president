@@ -6,6 +6,7 @@ const at = (iso: string) => new Date(iso);
 const election: PhaseSchedule = {
   predictionsLockAt: at('2027-03-12T17:00:00Z'),
   firstRoundClosesAt: at('2027-04-16T21:59:59Z'),
+  hasFavorites: true,
 };
 
 const BEFORE_LOCK = '2026-11-10T00:00:00Z';
@@ -34,7 +35,7 @@ describe('player phases', () => {
     ]);
   });
 
-  it('starts a new player at the qualifiers, the phases not built yet letting them through', () => {
+  it('starts a new player at the qualifiers', () => {
     expect(states(BEFORE_LOCK)).toEqual({
       PRESENTATION: 'UPCOMING',
       QUALIFIERS: 'TODO',
@@ -43,18 +44,34 @@ describe('player phases', () => {
       SECOND_ROUND: 'UPCOMING',
     });
     const playable = playerPhases(election, new Set(), at(BEFORE_LOCK)).map((p) => p.playable);
-    expect(playable).toEqual([false, true, false, true, false]);
+    expect(playable).toEqual([false, true, true, true, false]);
   });
 
-  it('opens the first round once the qualifiers are validated (the winner is not built yet)', () => {
+  it('opens each phase once the previous one is validated', () => {
     expect(states(BEFORE_LOCK, ['QUALIFIERS'])).toMatchObject({
       QUALIFIERS: 'DONE',
+      WINNER: 'TODO',
+      FIRST_ROUND: 'UPCOMING',
+    });
+    expect(states(BEFORE_LOCK, ['QUALIFIERS', 'WINNER'])).toMatchObject({
+      WINNER: 'DONE',
       FIRST_ROUND: 'TODO',
     });
-    expect(states(BEFORE_LOCK, ['QUALIFIERS', 'FIRST_ROUND'])).toMatchObject({
+    expect(states(BEFORE_LOCK, ['QUALIFIERS', 'WINNER', 'FIRST_ROUND'])).toMatchObject({
       QUALIFIERS: 'DONE',
+      WINNER: 'DONE',
       FIRST_ROUND: 'DONE',
     });
+  });
+
+  it('lets the player through the winner while the election has no favorites', () => {
+    const noFavorites = { ...election, hasFavorites: false };
+    const phases = playerPhases(noFavorites, new Set(['QUALIFIERS']), at(BEFORE_LOCK));
+    expect(phases.find((p) => p.phase === 'WINNER')).toMatchObject({
+      state: 'UPCOMING',
+      playable: false,
+    });
+    expect(states(BEFORE_LOCK, ['QUALIFIERS'], noFavorites)).toMatchObject({ FIRST_ROUND: 'TODO' });
   });
 
   it('skips a phase closed without a validated prediction, which opens the next one', () => {
@@ -70,8 +87,9 @@ describe('player phases', () => {
       QUALIFIERS: 'CLOSED',
       FIRST_ROUND: 'TODO',
     });
-    expect(states(AFTER_FIRST_ROUND, ['QUALIFIERS', 'FIRST_ROUND'])).toMatchObject({
+    expect(states(AFTER_FIRST_ROUND, ['QUALIFIERS', 'WINNER', 'FIRST_ROUND'])).toMatchObject({
       QUALIFIERS: 'CLOSED',
+      WINNER: 'CLOSED',
       FIRST_ROUND: 'CLOSED',
     });
     expect(states(AFTER_FIRST_ROUND, ['QUALIFIERS'])).toMatchObject({ FIRST_ROUND: 'SKIPPED' });
