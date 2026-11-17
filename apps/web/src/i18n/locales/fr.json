@@ -161,7 +161,8 @@
     "BALLOT_INCOMPLETE": "Tranche tous les candidats avant de valider.",
     "TOO_FEW_CANDIDATES": "Retiens au moins 2 candidats qualifiés pour valider.",
     "PREDICTIONS_LOCKED": "Les pronostics sont clos.",
-    "PREDICTIONS_NOT_OPEN": "Ce pronostic n’est pas encore ouvert."
+    "PREDICTIONS_NOT_OPEN": "Ce pronostic n’est pas encore ouvert.",
+    "UNKNOWN_FAVORITE": "Ce favori n’existe pas. Recharge la page."
   },
   "predict": {
     "title": "Mon pronostic",
@@ -223,6 +224,26 @@
     "half": "La moitié des autres joueurs pense le contraire",
     "alone": "Tu es seul contre tous",
     "wrong": "Une décision fausse ne rapporte rien. Les points sont calculés à la publication de la liste officielle."
+  },
+  "winner": {
+    "title": "Pronostic du vainqueur",
+    "description": "Qui sera élu président ? Choisis un favori ou « autre candidat ». Sa cote, ce sont les points que tu marques s’il est élu.",
+    "closesOn": "Clôture le {{date}}.",
+    "other": "Autre candidat",
+    "otherHint": "Gagne si l’élu n’est aucun des favoris",
+    "odds": "{{value}} pts",
+    "validate": "Valider mon pronostic",
+    "cancel": "Annuler",
+    "validatedTitle": "Ton pronostic du vainqueur est validé",
+    "validatedOn": "Validé le {{date}}",
+    "edit": "Modifier",
+    "currentBet": "Ton pronostic reste celui validé le {{date}} tant que tu ne valides pas cette modification.",
+    "upcoming": "Le pronostic du vainqueur ouvrira une fois tes qualifiés validés.",
+    "closed": "Pronostics du vainqueur clos. Voici ton pronostic, validé le {{date}}.",
+    "notParticipated": "Pronostics du vainqueur clos, tu n’as pas participé.",
+    "points": "Tu marques {{value}} points.",
+    "predict": "Pronostique le vainqueur",
+    "view": "Voir mon pronostic"
   },
   "firstRound": {
     "title": "Pronostic du 1er tour",

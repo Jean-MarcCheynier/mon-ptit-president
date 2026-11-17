@@ -57,6 +57,7 @@ export function ElectionCard({ election, phases, decided, ballot, result }: Elec
                 result={result}
               />
             ),
+            WINNER: <WinnerAction phase={phases.find((p) => p.phase === 'WINNER')} />,
             FIRST_ROUND: <FirstRoundAction phase={phases.find((p) => p.phase === 'FIRST_ROUND')} />,
           }}
         />
@@ -124,6 +125,36 @@ function QualifiersAction({
       </Link>
     </Button>
   );
+}
+
+function WinnerAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
+  const { t } = useTranslation();
+  const state = usePhaseState(phase);
+  if (state === 'TODO') {
+    return (
+      <Button asChild>
+        <Link to="/winner">{t('winner.predict')}</Link>
+      </Button>
+    );
+  }
+  if (state === 'DONE') {
+    return (
+      <Button asChild variant="outline">
+        <Link to="/winner" search={{ edit: true }}>
+          <Pencil />
+          {t('winner.edit')}
+        </Link>
+      </Button>
+    );
+  }
+  if (state === 'CLOSED') {
+    return (
+      <Button asChild variant="outline">
+        <Link to="/winner">{t('winner.view')}</Link>
+      </Button>
+    );
+  }
+  return null;
 }
 
 function FirstRoundAction({ phase }: { phase: PlayerPhaseDto | undefined }) {

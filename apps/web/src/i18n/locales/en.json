@@ -161,7 +161,8 @@
     "BALLOT_INCOMPLETE": "Decide on every candidate before validating.",
     "TOO_FEW_CANDIDATES": "Keep at least 2 qualified candidates to validate.",
     "PREDICTIONS_LOCKED": "Predictions are closed.",
-    "PREDICTIONS_NOT_OPEN": "This prediction is not open yet."
+    "PREDICTIONS_NOT_OPEN": "This prediction is not open yet.",
+    "UNKNOWN_FAVORITE": "This favorite does not exist. Reload the page."
   },
   "predict": {
     "title": "My prediction",
@@ -223,6 +224,26 @@
     "half": "Half of the other players think otherwise",
     "alone": "You stand alone against everyone",
     "wrong": "A wrong decision scores nothing. Points are computed once the official list is published."
+  },
+  "winner": {
+    "title": "Winner prediction",
+    "description": "Who will be elected president? Pick a favorite or “another candidate”. Its odds are the points you score if they are elected.",
+    "closesOn": "Closes on {{date}}.",
+    "other": "Another candidate",
+    "otherHint": "Wins if none of the favorites is elected",
+    "odds": "{{value}} pts",
+    "validate": "Validate my prediction",
+    "cancel": "Cancel",
+    "validatedTitle": "Your winner prediction is validated",
+    "validatedOn": "Validated on {{date}}",
+    "edit": "Edit",
+    "currentBet": "Your prediction stays the one validated on {{date}} until you validate this change.",
+    "upcoming": "The winner prediction opens once your qualifiers are validated.",
+    "closed": "Winner predictions are closed. Here is your prediction, validated on {{date}}.",
+    "notParticipated": "Winner predictions are closed, you did not take part.",
+    "points": "You score {{value}} points.",
+    "predict": "Predict the winner",
+    "view": "See my prediction"
   },
   "firstRound": {
     "title": "First-round prediction",

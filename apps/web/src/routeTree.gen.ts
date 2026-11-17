@@ -17,6 +17,7 @@ import { Route as AppFirstRoundRouteImport } from './routes/_app/first-round'
 import { Route as AppPredictRouteImport } from './routes/_app/predict'
 import { Route as AppReviewRouteImport } from './routes/_app/review'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppWinnerRouteImport } from './routes/_app/winner'
 import { Route as GuestCheckEmailRouteImport } from './routes/_guest/check-email'
 import { Route as GuestForgotPasswordRouteImport } from './routes/_guest/forgot-password'
 import { Route as GuestLoginRouteImport } from './routes/_guest/login'
@@ -61,6 +62,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppWinnerRoute = AppWinnerRouteImport.update({
+  id: '/winner',
+  path: '/winner',
+  getParentRoute: () => AppRoute,
+} as any)
 const GuestCheckEmailRoute = GuestCheckEmailRouteImport.update({
   id: '/check-email',
   path: '/check-email',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/predict': typeof AppPredictRoute
   '/review': typeof AppReviewRoute
   '/settings': typeof AppSettingsRoute
+  '/winner': typeof AppWinnerRoute
   '/check-email': typeof GuestCheckEmailRoute
   '/forgot-password': typeof GuestForgotPasswordRoute
   '/login': typeof GuestLoginRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/predict': typeof AppPredictRoute
   '/review': typeof AppReviewRoute
   '/settings': typeof AppSettingsRoute
+  '/winner': typeof AppWinnerRoute
   '/check-email': typeof GuestCheckEmailRoute
   '/forgot-password': typeof GuestForgotPasswordRoute
   '/login': typeof GuestLoginRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/_app/predict': typeof AppPredictRoute
   '/_app/review': typeof AppReviewRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/winner': typeof AppWinnerRoute
   '/_guest/check-email': typeof GuestCheckEmailRoute
   '/_guest/forgot-password': typeof GuestForgotPasswordRoute
   '/_guest/login': typeof GuestLoginRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/predict'
     | '/review'
     | '/settings'
+    | '/winner'
     | '/check-email'
     | '/forgot-password'
     | '/login'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/predict'
     | '/review'
     | '/settings'
+    | '/winner'
     | '/check-email'
     | '/forgot-password'
     | '/login'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/_app/predict'
     | '/_app/review'
     | '/_app/settings'
+    | '/_app/winner'
     | '/_guest/check-email'
     | '/_guest/forgot-password'
     | '/_guest/login'
@@ -237,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/winner': {
+      id: '/_app/winner'
+      path: '/winner'
+      fullPath: '/winner'
+      preLoaderRoute: typeof AppWinnerRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_guest/check-email': {
       id: '/_guest/check-email'
       path: '/check-email'
@@ -280,6 +299,7 @@ interface AppRouteChildren {
   AppPredictRoute: typeof AppPredictRoute
   AppReviewRoute: typeof AppReviewRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppWinnerRoute: typeof AppWinnerRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -288,6 +308,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPredictRoute: AppPredictRoute,
   AppReviewRoute: AppReviewRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppWinnerRoute: AppWinnerRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
