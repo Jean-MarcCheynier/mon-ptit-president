@@ -4,13 +4,15 @@ import type {
   ResultDto,
   ValidatedBallotDto,
 } from '@presidency-bingo/shared';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { EditBallotButton } from '@/components/edit-ballot-button';
 import { PhaseTrail } from '@/components/phase-trail';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePredictionsLocked } from '@/lib/elections';
+import { useStartFirstRoundDraft } from '@/lib/first-round';
 import { usePhaseState } from '@/lib/phases';
 import { formatDateTime } from '@/lib/time';
 
@@ -127,12 +129,35 @@ function QualifiersAction({
 function FirstRoundAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
   const { t } = useTranslation();
   const state = usePhaseState(phase);
-  if (state === 'SKIPPED') return null;
-  return (
-    <Button asChild variant={state === 'TODO' ? 'default' : 'outline'}>
-      <Link to="/first-round">
-        {state === 'TODO' ? t('firstRound.predict') : t('firstRound.view')}
-      </Link>
-    </Button>
-  );
+  const navigate = useNavigate();
+  const startDraft = useStartFirstRoundDraft();
+  if (state === 'TODO') {
+    return (
+      <Button asChild>
+        <Link to="/first-round">{t('firstRound.predict')}</Link>
+      </Button>
+    );
+  }
+  if (state === 'DONE') {
+    return (
+      <Button
+        variant="outline"
+        disabled={startDraft.isPending}
+        onClick={() =>
+          startDraft.mutate(undefined, { onSuccess: () => navigate({ to: '/first-round' }) })
+        }
+      >
+        <Pencil />
+        {t('firstRound.edit')}
+      </Button>
+    );
+  }
+  if (state === 'CLOSED') {
+    return (
+      <Button asChild variant="outline">
+        <Link to="/first-round">{t('firstRound.view')}</Link>
+      </Button>
+    );
+  }
+  return null;
 }

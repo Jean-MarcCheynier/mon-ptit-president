@@ -243,6 +243,6 @@
     "closed": "First-round predictions are closed. Here is your prediction, validated on {{date}}.",
     "notParticipated": "First-round predictions are closed, you did not take part.",
     "predict": "Predict the first round",
-    "view": "View my first-round prediction"
+    "view": "See my prediction"
   }
 }

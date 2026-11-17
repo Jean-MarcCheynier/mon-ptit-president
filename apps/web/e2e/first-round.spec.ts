@@ -134,4 +134,11 @@ test('share out the scores with sliders and fields, survive a reload, validate, 
   await page.getByRole('button', { name: 'Modifier' }).click();
   await expect(fields.nth(0)).toHaveValue('45,5');
   await expect(page.getByText(/Ton pronostic reste celui validé le/)).toBeVisible();
+
+  // From the journey too: editable, the first round offers to edit, straight into the form.
+  await page.goto('/');
+  await expect(page.getByRole('link', { name: 'Voir mon pronostic' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Modifier' }).click();
+  await expect(page.getByRole('heading', { name: 'Pronostic du 1er tour' })).toBeVisible();
+  await expect(fields.nth(0)).toHaveValue('45,5');
 });
