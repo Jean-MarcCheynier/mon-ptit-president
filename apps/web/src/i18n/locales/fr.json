@@ -76,9 +76,7 @@
   },
   "election": {
     "rounds": "1er tour le {{first}}, 2nd tour le {{second}}",
-    "predict": "Fais ton pronostic",
     "none": "Aucune élection à venir pour le moment.",
-    "resume": "Reprendre ton brouillon ({{decided}}/{{total}})",
     "notParticipated": "Pronostics clos, tu n’as pas participé.",
     "resultsNotParticipated": "Liste officielle publiée. Tu n’avais pas validé de pronostic."
   },
@@ -101,7 +99,15 @@
     "soon": "Bientôt",
     "closesOn": "clôture le {{date}}",
     "closedOn": "close le {{date}}",
-    "closesIn": "clôture dans {{days}} j {{hours}} h {{minutes}} min"
+    "deadline": "avant le {{date}}, {{time}}",
+    "actions": {
+      "PREDICT": "Fais ton prono !",
+      "RESUME": "Reprends ton prono",
+      "resumeProgress": "Reprends ton prono ({{decided}}/{{total}})",
+      "EDIT": "Modifie ton prono",
+      "VIEW": "Voir ton prono",
+      "RESULTS": "Regarde tes résultats !"
+    }
   },
   "settings": {
     "title": "Paramètres",
@@ -186,8 +192,6 @@
   "ballot": {
     "validatedOn": "Pronostic validé le {{date}}",
     "edit": "Modifier",
-    "resumeEdit": "Reprendre ta modification",
-    "view": "Voir mon pronostic",
     "newProfiles_one": "{{count}} nouveau profil à trancher",
     "newProfiles_other": "{{count}} nouveaux profils à trancher"
   },
@@ -216,8 +220,7 @@
     "agreement": "{{percent}} des autres joueurs étaient d’accord avec toi",
     "alone": "Aucun autre joueur ne l’a tranché",
     "right": "Juste",
-    "wrong": "Faux",
-    "view": "Voir le détail"
+    "wrong": "Faux"
   },
   "scoring": {
     "title": "Comment marquer des points",
@@ -243,9 +246,7 @@
     "upcoming": "Le pronostic du vainqueur ouvrira une fois tes qualifiés validés.",
     "closed": "Pronostics du vainqueur clos. Voici ton pronostic, validé le {{date}}.",
     "notParticipated": "Pronostics du vainqueur clos, tu n’as pas participé.",
-    "points": "Tu marques {{value}} points.",
-    "predict": "Pronostique le vainqueur",
-    "view": "Voir mon pronostic"
+    "points": "Tu marques {{value}} points."
   },
   "firstRound": {
     "title": "Pronostic du 1er tour",
@@ -264,8 +265,6 @@
     "provisional": "Liste provisoire : tu scores les candidats que tu as retenus dans ton pronostic des qualifiés (tous les candidats si tu n’en as pas validé). À la publication de la liste officielle, seuls les qualifiés compteront et tu pourras ajuster tes scores.",
     "reviewAfterList": "La liste officielle est publiée : ton pronostic reste valable sur les qualifiés, mais pense à le revoir.",
     "closed": "Pronostics du 1er tour clos. Voici ton pronostic, validé le {{date}}.",
-    "notParticipated": "Pronostics du 1er tour clos, tu n’as pas participé.",
-    "predict": "Pronostique le 1er tour",
-    "view": "Voir mon pronostic"
+    "notParticipated": "Pronostics du 1er tour clos, tu n’as pas participé."
   }
 }

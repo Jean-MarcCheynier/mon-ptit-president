@@ -76,9 +76,7 @@
   },
   "election": {
     "rounds": "First round on {{first}}, second round on {{second}}",
-    "predict": "Make your prediction",
     "none": "No upcoming election for now.",
-    "resume": "Resume your draft ({{decided}}/{{total}})",
     "notParticipated": "Predictions are closed, you didn’t take part.",
     "resultsNotParticipated": "Official list published. You hadn't validated a prediction."
   },
@@ -101,7 +99,15 @@
     "soon": "Coming soon",
     "closesOn": "closes on {{date}}",
     "closedOn": "closed on {{date}}",
-    "closesIn": "closes in {{days}}d {{hours}}h {{minutes}}m"
+    "deadline": "by {{date}}, {{time}}",
+    "actions": {
+      "PREDICT": "Make your prediction!",
+      "RESUME": "Resume your prediction",
+      "resumeProgress": "Resume your prediction ({{decided}}/{{total}})",
+      "EDIT": "Edit your prediction",
+      "VIEW": "View your prediction",
+      "RESULTS": "See your results!"
+    }
   },
   "settings": {
     "title": "Settings",
@@ -186,8 +192,6 @@
   "ballot": {
     "validatedOn": "Prediction validated on {{date}}",
     "edit": "Edit",
-    "resumeEdit": "Resume your edit",
-    "view": "See my prediction",
     "newProfiles_one": "{{count}} new profile to decide on",
     "newProfiles_other": "{{count}} new profiles to decide on"
   },
@@ -216,8 +220,7 @@
     "agreement": "{{percent}} of the other players agreed with you",
     "alone": "No other player decided on them",
     "right": "Right",
-    "wrong": "Wrong",
-    "view": "See the details"
+    "wrong": "Wrong"
   },
   "scoring": {
     "title": "How to score points",
@@ -243,9 +246,7 @@
     "upcoming": "The winner prediction opens once your qualifiers are validated.",
     "closed": "Winner predictions are closed. Here is your prediction, validated on {{date}}.",
     "notParticipated": "Winner predictions are closed, you did not take part.",
-    "points": "You score {{value}} points.",
-    "predict": "Predict the winner",
-    "view": "See my prediction"
+    "points": "You score {{value}} points."
   },
   "firstRound": {
     "title": "First-round prediction",
@@ -264,8 +265,6 @@
     "provisional": "Provisional list: you score the candidates you kept in your qualifiers' prediction (every candidate if you haven't validated one). Once the official list is published, only the qualified ones count and you can adjust your scores.",
     "reviewAfterList": "The official list is published: your prediction still counts on the qualified candidates, but you may want to review it.",
     "closed": "First-round predictions are closed. Here is your prediction, validated on {{date}}.",
-    "notParticipated": "First-round predictions are closed, you did not take part.",
-    "predict": "Predict the first round",
-    "view": "See my prediction"
+    "notParticipated": "First-round predictions are closed, you did not take part."
   }
 }

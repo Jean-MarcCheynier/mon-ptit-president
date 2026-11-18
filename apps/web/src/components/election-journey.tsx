@@ -1,19 +1,20 @@
 import type {
   CurrentElectionDto,
+  PhaseState,
   PlayerPhaseDto,
   ResultDto,
   ValidatedBallotDto,
 } from '@presidency-bingo/shared';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { EditBallotButton } from '@/components/edit-ballot-button';
+import { usePhaseActionButton } from '@/components/phase-action';
 import { PhaseTrail } from '@/components/phase-trail';
 import { Button } from '@/components/ui/button';
+import { newProfiles } from '@/lib/ballot';
 import { usePredictionsLocked } from '@/lib/elections';
 import { useStartFirstRoundDraft } from '@/lib/first-round';
-import { usePhaseState } from '@/lib/phases';
-import { formatDateTime } from '@/lib/time';
+import { phaseAction, usePhaseState } from '@/lib/phases';
 
 interface ElectionJourneyProps {
   election: CurrentElectionDto;
@@ -58,6 +59,7 @@ export function ElectionJourney({
           QUALIFIERS: (
             <QualifiersAction
               election={election}
+              phase={phases.find((p) => p.phase === 'QUALIFIERS')}
               decided={decided}
               ballot={ballot}
               result={result}
@@ -73,127 +75,105 @@ export function ElectionJourney({
 
 function QualifiersAction({
   election,
+  phase,
   decided,
   ballot,
   result,
-}: Omit<ElectionJourneyProps, 'phases'>) {
-  const { t, i18n } = useTranslation();
+}: Omit<ElectionJourneyProps, 'phases'> & { phase: PlayerPhaseDto | undefined }) {
+  const { t } = useTranslation();
   const locked = usePredictionsLocked(election);
+  // From the bet and the lock, as the qualifiers' own page does.
+  const state: PhaseState = ballot ? (locked ? 'CLOSED' : 'DONE') : locked ? 'SKIPPED' : 'TODO';
+  const action =
+    election.officialListPublished && !result
+      ? null
+      : phaseAction(state, { draft: decided > 0, results: result !== null });
+  const count = ballot ? newProfiles(election.candidates, ballot).length : 0;
+  const button = usePhaseActionButton(
+    action,
+    phase?.closesAt ?? election.predictionsLockAt,
+    action === 'RESUME'
+      ? t('phases.actions.resumeProgress', { decided, total: election.candidates.length })
+      : action === 'EDIT' && count > 0
+        ? t('ballot.newProfiles', { count })
+        : undefined,
+  );
 
-  if (result) {
-    return (
-      <>
-        <div className="grid w-full gap-1">
-          <p className="text-sm font-medium">{t('results.home', { ...result })}</p>
-          <p className="text-2xl font-semibold tabular-nums">
-            {t('results.points', { count: result.points })}
-          </p>
-        </div>
-        <Button asChild>
-          <Link to="/predict">{t('results.view')}</Link>
-        </Button>
-      </>
-    );
-  }
-  if (election.officialListPublished) {
+  if (election.officialListPublished && !result) {
     return <p className="text-sm text-muted-foreground">{t('election.resultsNotParticipated')}</p>;
   }
-  if (ballot) {
+  if (!button) return null;
+  if (action === 'EDIT' && ballot) {
     return (
-      <>
-        <p className="w-full text-sm font-medium">
-          {t('ballot.validatedOn', {
-            date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage),
-          })}
-        </p>
-        {locked ? (
-          <Button asChild variant="outline">
-            <Link to="/predict">{t('ballot.view')}</Link>
-          </Button>
-        ) : decided > 0 ? (
-          <Button asChild>
-            <Link to="/review">{t('ballot.resumeEdit')}</Link>
-          </Button>
-        ) : (
-          <EditBallotButton candidates={election.candidates} ballot={ballot} />
-        )}
-      </>
+      <EditBallotButton
+        candidates={election.candidates}
+        ballot={ballot}
+        // New profiles to decide on: it moves the journey on, as a filled button.
+        button={{
+          ...button,
+          props: { ...button.props, variant: count > 0 ? 'default' : button.props.variant },
+        }}
+      />
     );
   }
-  if (locked) return null;
-  return (
-    <Button asChild>
-      <Link to="/predict">
-        {decided > 0
-          ? t('election.resume', { decided, total: election.candidates.length })
-          : t('election.predict')}
-      </Link>
+  const link = (
+    <Button asChild {...button.props}>
+      <Link to={action === 'RESUME' && ballot ? '/review' : '/predict'}>{button.content}</Link>
     </Button>
+  );
+  if (!result) return link;
+  return (
+    <>
+      <div className="grid w-full gap-1">
+        <p className="text-sm font-medium">{t('results.home', { ...result })}</p>
+        <p className="text-2xl font-semibold tabular-nums">
+          {t('results.points', { count: result.points })}
+        </p>
+      </div>
+      {link}
+    </>
   );
 }
 
 function WinnerAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
-  const { t } = useTranslation();
-  const state = usePhaseState(phase);
-  if (state === 'TODO') {
-    return (
-      <Button asChild>
-        <Link to="/winner">{t('winner.predict')}</Link>
-      </Button>
-    );
-  }
-  if (state === 'DONE') {
-    return (
-      <Button asChild variant="outline">
+  const action = phaseAction(usePhaseState(phase));
+  const button = usePhaseActionButton(action, phase?.closesAt);
+  if (!button) return null;
+  return (
+    <Button asChild {...button.props}>
+      {action === 'EDIT' ? (
         <Link to="/winner" search={{ edit: true }}>
-          <Pencil />
-          {t('winner.edit')}
+          {button.content}
         </Link>
-      </Button>
-    );
-  }
-  if (state === 'CLOSED') {
-    return (
-      <Button asChild variant="outline">
-        <Link to="/winner">{t('winner.view')}</Link>
-      </Button>
-    );
-  }
-  return null;
+      ) : (
+        <Link to="/winner">{button.content}</Link>
+      )}
+    </Button>
+  );
 }
 
 function FirstRoundAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
-  const { t } = useTranslation();
-  const state = usePhaseState(phase);
+  const action = phaseAction(usePhaseState(phase));
+  const button = usePhaseActionButton(action, phase?.closesAt);
   const navigate = useNavigate();
   const startDraft = useStartFirstRoundDraft();
-  if (state === 'TODO') {
-    return (
-      <Button asChild>
-        <Link to="/first-round">{t('firstRound.predict')}</Link>
-      </Button>
-    );
-  }
-  if (state === 'DONE') {
+  if (!button) return null;
+  if (action === 'EDIT') {
     return (
       <Button
-        variant="outline"
+        {...button.props}
         disabled={startDraft.isPending}
         onClick={() =>
           startDraft.mutate(undefined, { onSuccess: () => navigate({ to: '/first-round' }) })
         }
       >
-        <Pencil />
-        {t('firstRound.edit')}
+        {button.content}
       </Button>
     );
   }
-  if (state === 'CLOSED') {
-    return (
-      <Button asChild variant="outline">
-        <Link to="/first-round">{t('firstRound.view')}</Link>
-      </Button>
-    );
-  }
-  return null;
+  return (
+    <Button asChild {...button.props}>
+      <Link to="/first-round">{button.content}</Link>
+    </Button>
+  );
 }

@@ -17,6 +17,10 @@ async function signUp(page: Page) {
 
 const progress = (page: Page) => page.getByText(/^\d+ \/ \d+$/);
 
+/** A step of the journey, on the home page. */
+const step = (page: Page, name: string) =>
+  page.getByRole('list', { name: 'Ton parcours' }).getByRole('listitem').filter({ hasText: name });
+
 /** Drags the card horizontally with the mouse and releases it. */
 async function dragCard(page: Page, dx: number) {
   // The current card: the next one is stacked under it, hidden.
@@ -61,7 +65,7 @@ test('swipe with the keyboard and the mouse, survive a reload, undo, resume from
   page,
 }) => {
   await signUp(page);
-  await page.getByRole('link', { name: 'Fais ton pronostic' }).click();
+  await page.getByRole('link', { name: 'Fais ton prono !' }).click();
   await expect(page.getByRole('heading', { name: 'Mon pronostic' })).toBeVisible();
   await expect(progress(page)).toHaveText(/^0 \//);
 
@@ -103,14 +107,12 @@ test('swipe with the keyboard and the mouse, survive a reload, undo, resume from
   await expect(progress(page)).toHaveText(/^5 \//);
 
   await page.getByRole('link', { name: 'Accueil' }).click();
-  await expect(
-    page.getByRole('link', { name: /Reprendre ton brouillon \(5\/\d+\)/ }),
-  ).toBeVisible();
+  await expect(page.getByRole('link', { name: /Reprends ton prono \(5\/\d+\)/ })).toBeVisible();
 });
 
 test('swipe everything, review, validate, then edit the bet', async ({ page }) => {
   await signUp(page);
-  await page.getByRole('link', { name: 'Fais ton pronostic' }).click();
+  await page.getByRole('link', { name: 'Fais ton prono !' }).click();
   const total = Number((await progress(page).textContent())?.split('/')[1]);
 
   // Keep only the first candidate: not enough to validate yet.
@@ -134,10 +136,15 @@ test('swipe everything, review, validate, then edit the bet', async ({ page }) =
   await validate.click();
 
   await expect(page.getByRole('heading', { name: /^Bienvenue/ })).toBeVisible();
-  await expect(page.getByText(/^Pronostic validé le/)).toBeVisible();
+  // The step only says it is done; its button carries the deadline.
+  await expect(step(page, 'Qualifiés').getByText('Faite', { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Pronostic validé le/)).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: /^Modifie ton prono avant le \d+ \S+, \d+ h/ }),
+  ).toBeVisible();
 
   // Editing starts from the bet, which stays current until revalidated.
-  await page.getByRole('button', { name: 'Modifier' }).click();
+  await page.getByRole('button', { name: 'Modifie ton prono' }).click();
   await expect(page.getByRole('heading', { name: 'Qualifiés (2)' })).toBeVisible();
   await expect(page.getByText(/^Ton pari reste celui validé le/)).toBeVisible();
   await page
@@ -147,10 +154,10 @@ test('swipe everything, review, validate, then edit the bet', async ({ page }) =
   await expect(page.getByRole('heading', { name: 'Qualifiés (3)' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Accueil' }).click();
-  await page.getByRole('link', { name: 'Reprendre ta modification' }).click();
+  await page.getByRole('link', { name: 'Reprends ton prono' }).click();
   await expect(page.getByRole('heading', { name: 'Qualifiés (3)' })).toBeVisible();
   await page.getByRole('button', { name: 'Valider mon pronostic' }).click();
-  await expect(page.getByRole('button', { name: 'Modifier' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Modifie ton prono' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Mon pronostic' }).click();
   await expect(page.getByText('Ton pronostic est validé')).toBeVisible();
@@ -159,8 +166,8 @@ test('swipe everything, review, validate, then edit the bet', async ({ page }) =
   await lockPredictions(page);
   await page.goto('/');
   await expect(page.getByText(/^Close · close le/)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Modifier' })).toHaveCount(0);
-  await page.getByRole('link', { name: 'Voir mon pronostic' }).click();
+  await expect(page.getByRole('button', { name: 'Modifie ton prono' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Voir ton prono' }).click();
   await expect(page.getByText(/^Pronostics clos\. Voici ton pronostic/)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Qualifiés (3)' })).toBeVisible();
   await expect(page.getByRole('button', { name: /^Passer .* en / })).toHaveCount(0);
@@ -170,10 +177,10 @@ test('swipe everything, review, validate, then edit the bet', async ({ page }) =
 
 test('the first round opens once the qualifiers are validated', async ({ page }) => {
   await signUp(page);
-  await expect(page.getByRole('link', { name: 'Pronostique le 1er tour' })).toHaveCount(0);
+  await expect(step(page, '1er tour').getByRole('link')).toHaveCount(0);
   await page.goto('/first-round');
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole('link', { name: 'Fais ton pronostic' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Fais ton prono !' })).toBeVisible();
 });
 
 test('after the deadline, a user who never validated cannot take part', async ({ page }) => {
@@ -182,7 +189,7 @@ test('after the deadline, a user who never validated cannot take part', async ({
   await page.reload();
   // Skipped (that it opens the first round is covered by the API's tests).
   await expect(page.getByText(/^Sautée · close le/).first()).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Fais ton pronostic' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Fais ton prono !' })).toHaveCount(0);
 
   await page.getByRole('link', { name: 'Mon pronostic' }).click();
   await expect(page.getByText('Pronostics clos, tu n’as pas participé.')).toBeVisible();
@@ -191,7 +198,7 @@ test('after the deadline, a user who never validated cannot take part', async ({
 
 test('a page opened before the deadline turns read-only on the next action', async ({ page }) => {
   await signUp(page);
-  await page.getByRole('link', { name: 'Fais ton pronostic' }).click();
+  await page.getByRole('link', { name: 'Fais ton prono !' }).click();
   await expect(page.getByRole('button', { name: 'Qualifié' })).toBeVisible();
 
   // The deadline passes while the page is open (as seen by the server).
@@ -259,7 +266,7 @@ test('before the official list, the scoring is explained but no result is shown'
   page,
 }) => {
   await signUp(page);
-  await page.getByRole('link', { name: 'Fais ton pronostic' }).click();
+  await page.getByRole('link', { name: 'Fais ton prono !' }).click();
   await page.getByText('Comment marquer des points').click();
   await expect(page.getByText('Tu es seul contre tous')).toBeVisible();
   await expect(page.getByText('100 points')).toBeVisible();
@@ -275,7 +282,7 @@ test('once the official list is published, home and prediction show the result',
   await expect(page.getByText('Résultats : 1 / 2 décisions justes')).toBeVisible();
   await expect(page.getByText('58 points')).toBeVisible();
 
-  await page.getByRole('link', { name: 'Voir le détail' }).click();
+  await page.getByRole('link', { name: 'Regarde tes résultats !' }).click();
   await expect(page.getByRole('heading', { name: 'Résultats' })).toBeVisible();
   await expect(page.getByText('Ton choix : Qualifié · Réalité : Recalé')).toBeVisible();
   await expect(page.getByText(/12\s?% des autres joueurs étaient d’accord avec toi/)).toBeVisible();

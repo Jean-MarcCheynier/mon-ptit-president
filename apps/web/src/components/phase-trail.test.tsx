@@ -46,11 +46,12 @@ describe('PhaseTrail', () => {
     expect(within(step('First round')).getByText(/^Upcoming · closes on/)).toBeInTheDocument();
   });
 
-  it('puts the next phase forward, with its countdown and action', () => {
+  it('puts the next phase forward, with its action', () => {
     render(<PhaseTrail phases={journey()} actions={actions} />);
     const qualifiers = step('Qualifiers');
     expect(qualifiers).toHaveAttribute('aria-current', 'step');
-    expect(within(qualifiers).getByText(/^To do · closes in \d+d \d+h \d+m$/)).toBeInTheDocument();
+    // Its action carries the deadline: the step only says its state.
+    expect(within(qualifiers).getByText('To do', { exact: true })).toBeInTheDocument();
     expect(within(qualifiers).getByRole('button', { name: 'Qualifiers action' })).toBeVisible();
     // An upcoming phase has no action.
     expect(screen.queryByRole('button', { name: 'First-round action' })).not.toBeInTheDocument();
@@ -65,9 +66,22 @@ describe('PhaseTrail', () => {
     );
     expect(step('First round')).toHaveAttribute('aria-current', 'step');
     expect(step('Qualifiers')).not.toHaveAttribute('aria-current');
-    expect(within(step('Qualifiers')).getByText(/^Done · closes on/)).toBeInTheDocument();
+    expect(within(step('Qualifiers')).getByText('Done', { exact: true })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Qualifiers action' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'First-round action' })).toBeVisible();
+  });
+
+  it('keeps the closing of a writable phase without an action', () => {
+    render(
+      <PhaseTrail
+        phases={journey({
+          QUALIFIERS: { state: 'DONE' },
+          WINNER: { state: 'TODO', playable: true },
+        })}
+        actions={actions}
+      />,
+    );
+    expect(within(step('Winner')).getByText(/^To do · closes on/)).toBeInTheDocument();
   });
 
   it('shows closed and skipped phases', () => {

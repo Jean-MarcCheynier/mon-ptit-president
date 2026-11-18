@@ -1,6 +1,6 @@
 import type { GamePhase, PhaseState, PlayerPhaseDto } from '@presidency-bingo/shared';
 import { describe, expect, it } from 'vitest';
-import { currentPhasePage } from './phases';
+import { currentPhasePage, phaseAction } from './phases';
 
 const phase = (phase: GamePhase, state: PhaseState, playable = true): PlayerPhaseDto => ({
   phase,
@@ -85,5 +85,24 @@ describe('currentPhasePage', () => {
   it('falls back to the qualifiers when no phase applies', () => {
     expect(currentPhasePage([])).toBe('/predict');
     expect(currentPhasePage([phase('QUALIFIERS', 'UPCOMING')])).toBe('/predict');
+  });
+});
+
+describe('phaseAction', () => {
+  it('offers to predict, resume or edit while the phase is writable', () => {
+    expect(phaseAction('TODO')).toBe('PREDICT');
+    expect(phaseAction('TODO', { draft: true })).toBe('RESUME');
+    expect(phaseAction('DONE')).toBe('EDIT');
+    expect(phaseAction('DONE', { draft: true })).toBe('RESUME');
+  });
+
+  it('offers to view a closed phase, and nothing for a skipped or upcoming one', () => {
+    expect(phaseAction('CLOSED')).toBe('VIEW');
+    expect(phaseAction('SKIPPED')).toBeNull();
+    expect(phaseAction('UPCOMING')).toBeNull();
+  });
+
+  it('offers the results once published', () => {
+    expect(phaseAction('CLOSED', { results: true })).toBe('RESULTS');
   });
 });

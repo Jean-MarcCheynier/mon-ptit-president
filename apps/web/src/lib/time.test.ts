@@ -1,21 +1,22 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { timeUntil, useIsPast } from './time';
+import { formatDeadline, useIsPast } from './time';
 
-describe('timeUntil', () => {
-  const now = new Date('2026-10-26T12:00:00Z');
-
-  it('splits the remaining time into days, hours and minutes', () => {
-    expect(timeUntil(new Date('2026-10-28T15:30:59Z'), now)).toEqual({
-      days: 2,
-      hours: 3,
-      minutes: 30,
-    });
+describe('formatDeadline', () => {
+  it('gives the day and the hour, without the year', () => {
+    const at = '2099-03-12T19:00:00Z';
+    expect(formatDeadline(at, 'fr', 'Europe/Paris')).toEqual({ date: '12 mars', time: '20 h' });
+    expect(formatDeadline(at, 'en', 'Europe/Paris')).toEqual({ date: 'March 12', time: '8 PM' });
   });
 
-  it('returns null once the target has passed', () => {
-    expect(timeUntil(now, now)).toBeNull();
-    expect(timeUntil(new Date('2026-10-25T00:00:00Z'), now)).toBeNull();
+  it('adds the minutes when the time is not round', () => {
+    const at = '2099-04-16T21:59:59Z';
+    expect(formatDeadline(at, 'fr', 'Europe/Paris')).toEqual({ date: '16 avril', time: '23 h 59' });
+    // ICU may space "PM" with a narrow no-break space.
+    expect(formatDeadline(at, 'en', 'Europe/Paris')).toEqual({
+      date: 'April 16',
+      time: expect.stringMatching(/^11:59\sPM$/),
+    });
   });
 });
 

@@ -2,13 +2,16 @@ import type { GamePhase, PhaseState, PlayerPhaseDto } from '@presidency-bingo/sh
 import { Check, ChevronDown, CircleDashed, Lock, SkipForward } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { nextPhase, usePhaseState } from '@/lib/phases';
-import { formatDateTime, timeUntil, useNow } from '@/lib/time';
+import { isWritable, nextPhase, usePhaseState } from '@/lib/phases';
+import { formatDateTime } from '@/lib/time';
 import { cn } from '@/lib/utils';
 
 interface PhaseTrailProps {
   phases: PlayerPhaseDto[];
-  /** What a reachable phase offers to do (open, resume, view…); none for the others. */
+  /**
+   * What a reachable phase offers to do (open, resume, view…); none for the others. A writable
+   * phase's action shows its deadline, which its step then leaves out.
+   */
   actions: Partial<Record<GamePhase, ReactNode>>;
 }
 
@@ -82,19 +85,16 @@ function PhaseStep({
   action: ReactNode;
 }) {
   const { t, i18n } = useTranslation();
-  const now = useNow();
   const state = usePhaseState(phase);
   const soon = !phase.playable && state === 'UPCOMING';
-  const remaining = current && phase.closesAt ? timeUntil(new Date(phase.closesAt), now) : null;
   const label = soon ? t('phases.soon') : t(`phases.states.${state}`);
+  // While writable, the action's button carries the deadline.
   const closing =
-    !phase.closesAt || soon
+    !phase.closesAt || soon || (isWritable(state) && action)
       ? null
-      : remaining
-        ? t('phases.closesIn', { ...remaining })
-        : t(state === 'CLOSED' || state === 'SKIPPED' ? 'phases.closedOn' : 'phases.closesOn', {
-            date: formatDateTime(phase.closesAt, i18n.resolvedLanguage),
-          });
+      : t(state === 'CLOSED' || state === 'SKIPPED' ? 'phases.closedOn' : 'phases.closesOn', {
+          date: formatDateTime(phase.closesAt, i18n.resolvedLanguage),
+        });
 
   return (
     <li aria-current={current ? 'step' : undefined} data-state={state} className="relative">
