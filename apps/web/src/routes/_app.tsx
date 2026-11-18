@@ -3,6 +3,7 @@ import { createFileRoute, Link, Outlet, redirect } from '@tanstack/react-router'
 import { House, LogOut, type LucideIcon, Settings, Vote } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Logo } from '@/components/logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { meQuery, useLogout } from '@/lib/auth';
@@ -46,8 +47,8 @@ function AppLayout() {
     <div className="min-h-svh overflow-x-clip">
       <header className="border-b mobile:hidden">
         <div className="mx-auto flex h-14 max-w-4xl items-center gap-4 px-4">
-          <Link to="/" className="font-semibold">
-            {t('app.name')}
+          <Link to="/">
+            <Logo />
           </Link>
           <nav className="flex flex-1 gap-3 text-sm text-muted-foreground">
             {NAV.map((item) => (
