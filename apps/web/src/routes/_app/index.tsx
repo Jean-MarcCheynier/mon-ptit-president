@@ -2,7 +2,7 @@ import type { CurrentElectionDto, DraftBallotDto } from '@presidency-bingo/share
 import { noop, useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { ElectionCard } from '@/components/election-card';
+import { ElectionJourney } from '@/components/election-journey';
 import { FormAlert } from '@/components/form-alert';
 import { meQuery } from '@/lib/auth';
 import { currentBallotQuery, draftQuery } from '@/lib/ballot';
@@ -13,7 +13,7 @@ import { resultsQuery } from '@/lib/results';
 
 /**
  * Home: the election and the user's journey through its phases. It stays up when the prediction
- * API fails: errors are shown in place of the election card.
+ * API fails: errors are shown in place of the journey.
  */
 export const Route = createFileRoute('/_app/')({
   loader: ({ context }) =>
@@ -35,7 +35,7 @@ function HomePage() {
   const ballot = useQuery(currentBallotQuery);
   const results = useQuery(resultsQuery);
   const phases = useQuery(phasesQuery);
-  // Without the draft, the bet or the phases, the card would offer the wrong action.
+  // Without the draft, the bet or the phases, the journey would offer the wrong action.
   const error = election.error ?? draft.error ?? ballot.error ?? results.error ?? phases.error;
 
   return (
@@ -51,7 +51,7 @@ function HomePage() {
         ballot.data !== undefined &&
         results.data &&
         phases.data ? (
-        <ElectionCard
+        <ElectionJourney
           election={election.data}
           phases={phases.data}
           decided={decidedIn(election.data, draft.data)}
