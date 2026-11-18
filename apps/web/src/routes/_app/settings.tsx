@@ -8,6 +8,7 @@ import {
 } from '@presidency-bingo/shared';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
+import { LogOut } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -213,7 +214,17 @@ function SessionsCard() {
         <CardTitle>{t('settings.sessions.title')}</CardTitle>
         <CardDescription>{t('settings.sessions.description')}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-wrap gap-3">
+        {/* On phones there is no header: signing out of this device happens here. */}
+        <Button
+          variant="outline"
+          className="hidden mobile:inline-flex"
+          onClick={() => logout.mutate(false)}
+          disabled={logout.isPending}
+        >
+          <LogOut />
+          {t('nav.logout')}
+        </Button>
         <Button
           variant="destructive"
           onClick={() => logout.mutate(true)}

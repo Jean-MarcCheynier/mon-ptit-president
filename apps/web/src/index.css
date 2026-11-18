@@ -3,6 +3,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Phone layout (bottom bar, no header): a narrow screen, or a touch screen too short for the
+ * desktop layout (phone in landscape). Tablets and touch laptops keep the desktop layout.
+ */
+@custom-variant mobile {
+  @media (max-width: 639px), (pointer: coarse) and (max-height: 500px) {
+    @slot;
+  }
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -77,5 +87,8 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    /* viewport-fit=cover: keep content clear of the notch and rounded corners. */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+      env(safe-area-inset-left);
   }
 }

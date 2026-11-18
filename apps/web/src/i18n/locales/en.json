@@ -63,6 +63,7 @@
     "missingToken": "Incomplete link. Request a new reset email."
   },
   "nav": {
+    "label": "Main navigation",
     "home": "Home",
     "settings": "Settings",
     "logout": "Sign out",
