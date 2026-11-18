@@ -88,6 +88,64 @@ describe('PhaseTrail', () => {
     expect(screen.queryByRole('listitem', { current: 'step' })).not.toBeInTheDocument();
   });
 
+  it('colors each step by its state', () => {
+    const past = '2020-03-12T17:00:00Z';
+    render(
+      <PhaseTrail
+        phases={journey({
+          QUALIFIERS: { state: 'DONE' },
+          WINNER: { state: 'SKIPPED', closesAt: past, playable: true },
+          FIRST_ROUND: { state: 'TODO' },
+        })}
+        actions={actions}
+      />,
+    );
+    expect(step('Qualifiers')).toHaveAttribute('data-state', 'DONE');
+    expect(step('Winner')).toHaveAttribute('data-state', 'SKIPPED');
+    expect(step('First round')).toHaveAttribute('data-state', 'TODO');
+    expect(step('Second round')).toHaveAttribute('data-state', 'UPCOMING');
+  });
+
+  it('draws the timeline solid up to the current step, dotted after, in its color', () => {
+    render(
+      <PhaseTrail
+        phases={journey({ QUALIFIERS: { state: 'DONE' }, FIRST_ROUND: { state: 'TODO' } })}
+        actions={actions}
+      />,
+    );
+    // The line below each step, towards the next one; below the last, its end.
+    const line = (name: string) => step(name).querySelector('[data-slot^="phase-line"]');
+    expect(line('Introduction')).toHaveAttribute('data-slot', 'phase-line-start');
+    const below = (name: string) => step(name).querySelector('[data-style]');
+    expect(below('Introduction')).toHaveAttribute('data-style', 'solid');
+    expect(below('Qualifiers')).toHaveAttribute('data-style', 'solid');
+    expect(below('Winner')).toHaveAttribute('data-style', 'solid');
+    expect(below('First round')).toHaveAttribute('data-style', 'dotted');
+    expect(below('Second round')).toHaveAttribute('data-slot', 'phase-line-end');
+    expect(below('Second round')).toHaveAttribute('data-style', 'dotted');
+    for (const stretch of document.querySelectorAll('.border-l-4'))
+      expect(stretch).toHaveClass('border-phase-todo');
+  });
+
+  it('draws a solid neutral timeline once there is no current step', () => {
+    const past = '2020-03-12T17:00:00Z';
+    render(
+      <PhaseTrail
+        phases={journey({
+          QUALIFIERS: { state: 'CLOSED', closesAt: past },
+          FIRST_ROUND: { state: 'DONE' },
+        })}
+        actions={actions}
+      />,
+    );
+    const lines = [...document.querySelectorAll('[data-style]')];
+    expect(lines).toHaveLength(5);
+    for (const line of lines) expect(line).toHaveAttribute('data-style', 'solid');
+    const stretches = [...document.querySelectorAll('.border-l-4')];
+    expect(stretches).toHaveLength(6);
+    for (const stretch of stretches) expect(stretch).toHaveClass('border-phase-closed');
+  });
+
   it('closes a phase whose closing passed while the page was open', () => {
     const past = '2020-03-12T17:00:00Z';
     render(

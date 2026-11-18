@@ -10,13 +10,12 @@ import { useTranslation } from 'react-i18next';
 import { EditBallotButton } from '@/components/edit-ballot-button';
 import { PhaseTrail } from '@/components/phase-trail';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePredictionsLocked } from '@/lib/elections';
 import { useStartFirstRoundDraft } from '@/lib/first-round';
 import { usePhaseState } from '@/lib/phases';
 import { formatDateTime } from '@/lib/time';
 
-interface ElectionCardProps {
+interface ElectionJourneyProps {
   election: CurrentElectionDto;
   /** The user's journey through the election. */
   phases: PlayerPhaseDto[];
@@ -28,41 +27,47 @@ interface ElectionCardProps {
   result: ResultDto | null;
 }
 
-/** The current election and the user's journey through its phases. */
-export function ElectionCard({ election, phases, decided, ballot, result }: ElectionCardProps) {
+/** The current election, as a section heading, and the user's journey through its phases. */
+export function ElectionJourney({
+  election,
+  phases,
+  decided,
+  ballot,
+  result,
+}: ElectionJourneyProps) {
   const { t, i18n } = useTranslation();
   const formatDate = (iso: string) =>
     new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' }).format(new Date(iso));
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">{election.name}</CardTitle>
-        <CardDescription>
+    <section aria-labelledby="election-name" className="grid gap-4">
+      <div className="grid gap-1">
+        <h2 id="election-name" className="text-xl font-semibold">
+          {election.name}
+        </h2>
+        <p className="text-sm text-muted-foreground">
           {t('election.rounds', {
             first: formatDate(election.firstRoundAt),
             second: formatDate(election.secondRoundAt),
           })}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <PhaseTrail
-          phases={phases}
-          actions={{
-            QUALIFIERS: (
-              <QualifiersAction
-                election={election}
-                decided={decided}
-                ballot={ballot}
-                result={result}
-              />
-            ),
-            WINNER: <WinnerAction phase={phases.find((p) => p.phase === 'WINNER')} />,
-            FIRST_ROUND: <FirstRoundAction phase={phases.find((p) => p.phase === 'FIRST_ROUND')} />,
-          }}
-        />
-      </CardContent>
-    </Card>
+        </p>
+      </div>
+      <PhaseTrail
+        phases={phases}
+        actions={{
+          QUALIFIERS: (
+            <QualifiersAction
+              election={election}
+              decided={decided}
+              ballot={ballot}
+              result={result}
+            />
+          ),
+          WINNER: <WinnerAction phase={phases.find((p) => p.phase === 'WINNER')} />,
+          FIRST_ROUND: <FirstRoundAction phase={phases.find((p) => p.phase === 'FIRST_ROUND')} />,
+        }}
+      />
+    </section>
   );
 }
 
@@ -71,7 +76,7 @@ function QualifiersAction({
   decided,
   ballot,
   result,
-}: Omit<ElectionCardProps, 'phases'>) {
+}: Omit<ElectionJourneyProps, 'phases'>) {
   const { t, i18n } = useTranslation();
   const locked = usePredictionsLocked(election);
 
