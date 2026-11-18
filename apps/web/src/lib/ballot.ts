@@ -117,6 +117,8 @@ export function useRemoveEntry() {
 export interface Deck {
   /** The next card to decide; null once every card is decided. */
   current: ElectionCandidateDto | null;
+  /** The card after it, stacked under the current one; null for the last one. */
+  next: ElectionCandidateDto | null;
   decided: number;
   total: number;
   /**
@@ -131,10 +133,12 @@ export function deckState(deck: ElectionCandidateDto[], entries: BallotEntryDto[
   const decidedIds = new Set(entries.map((e) => e.politicianId));
   const isDecided = (c: ElectionCandidateDto) => decidedIds.has(c.politicianId);
   const index = deck.findIndex((c) => !isDecided(c));
+  const next = index < 0 ? undefined : deck.slice(index + 1).find((c) => !isDecided(c));
   const byId = new Map(deck.map((c) => [c.politicianId, c]));
   const latest = entries.findLast((e) => byId.has(e.politicianId));
   return {
     current: deck[index] ?? null,
+    next: next ?? null,
     decided: deck.filter(isDecided).length,
     total: deck.length,
     previous: (latest && byId.get(latest.politicianId)) ?? null,

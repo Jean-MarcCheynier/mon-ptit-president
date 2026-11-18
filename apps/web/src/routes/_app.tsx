@@ -42,7 +42,8 @@ function AppLayout() {
   if (!user) return null;
 
   return (
-    <div className="min-h-svh">
+    // Clipped: a swiped card flies off the screen without making the page scroll sideways.
+    <div className="min-h-svh overflow-x-clip">
       <header className="border-b mobile:hidden">
         <div className="mx-auto flex h-14 max-w-4xl items-center gap-4 px-4">
           <Link to="/" className="font-semibold">

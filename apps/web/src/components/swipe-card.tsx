@@ -25,16 +25,23 @@ import { cn } from '@/lib/utils';
  * the cards show nor what a swipe means.
  *
  *   <SwipeCard onSwipeLeft={…} onSwipeRight={…} onUndo={…} canUndo keyboard>
- *     <SwipeCardItem key={item.id}>
- *       …content…
- *       <SwipeCardStamp direction="right">Yes</SwipeCardStamp>
- *     </SwipeCardItem>
+ *     <SwipeCardStack>
+ *       <SwipeCardItem key={current.id}>
+ *         …content…
+ *         <SwipeCardStamp direction="right">Yes</SwipeCardStamp>
+ *       </SwipeCardItem>
+ *       <SwipeCardItem key={next.id} behind>…content…</SwipeCardItem>
+ *     </SwipeCardStack>
  *     <SwipeCardTrigger direction="left" asChild><Button>No</Button></SwipeCardTrigger>
  *     <SwipeCardUndo asChild><Button>Undo</Button></SwipeCardUndo>
  *   </SwipeCard>
  *
- * Key each item: a new item mounts centered. Triggers and arrow keys throw the current item out
- * like a drag; the swipe callback runs once it is gone. With reduced motion, nothing animates.
+ * Key each item: a new item mounts centered. The next item, `behind`, is already rendered under the
+ * current one (so its images are loaded): once the current item is gone, the same node comes to the
+ * front. Triggers and arrow keys throw the current item out like a drag; the swipe callback runs
+ * once it is gone. With reduced motion, nothing animates.
+ *
+ * A thrown item flies past the edge of the screen: give an ancestor `overflow-x: clip`.
  */
 
 export type SwipeDirection = 'left' | 'right';
@@ -142,17 +149,41 @@ function SwipeCard({
   );
 }
 
-const SwipeCardItemContext = createContext<MotionValue<number> | null>(null);
+/** Lays its items on top of each other, in a single grid cell. */
+function SwipeCardStack({ className, ...props }: ComponentProps<'div'>) {
+  return (
+    <div
+      data-slot="swipe-card-stack"
+      // minmax(0, 1fr): an item's long unwrapped text (truncated) must not widen the stack.
+      className={cn('grid grid-cols-[minmax(0,1fr)] *:col-start-1 *:row-start-1', className)}
+      {...props}
+    />
+  );
+}
+
+interface SwipeCardItemContextValue {
+  x: MotionValue<number>;
+  behind: boolean;
+}
+
+const SwipeCardItemContext = createContext<SwipeCardItemContextValue | null>(null);
+
+interface SwipeCardItemProps {
+  /** The next item, under the current one: slightly smaller, not draggable, hidden from AT. */
+  behind?: boolean;
+  className?: string;
+  children: ReactNode;
+}
 
 /** The draggable card. Rotation and stamps follow the drag. */
-function SwipeCardItem({ className, children }: { className?: string; children: ReactNode }) {
+function SwipeCardItem({ behind = false, className, children }: SwipeCardItemProps) {
   const { register, swiped, returning } = useSwipeCard();
   const reduced = useReducedMotion() ?? false;
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], reduced ? [0, 0] : [-12, 12]);
   const leaving = useRef(false);
-  // Read once: the side this item comes back from after an undo.
-  const [enterFrom] = useState(returning);
+  // Read once: the side this item comes back from after an undo (never one mounted behind).
+  const [enterFrom] = useState(() => (behind ? null : returning));
 
   const throwOut = (direction: SwipeDirection) => {
     if (leaving.current) return;
@@ -164,7 +195,11 @@ function SwipeCardItem({ className, children }: { className?: string; children: 
   // The registered function always calls the latest throwOut.
   const latest = useRef(throwOut);
   latest.current = throwOut;
-  useEffect(() => register((direction) => latest.current(direction)), [register]);
+  // Only the current item can be thrown out; one behind registers once it comes to the front.
+  useEffect(
+    () => (behind ? undefined : register((direction) => latest.current(direction))),
+    [register, behind],
+  );
 
   useEffect(() => {
     if (enterFrom === null || reduced) return;
@@ -180,19 +215,23 @@ function SwipeCardItem({ className, children }: { className?: string; children: 
   };
 
   return (
-    <SwipeCardItemContext value={x}>
+    <SwipeCardItemContext value={{ x, behind }}>
       <motion.div
         data-slot="swipe-card-item"
+        aria-hidden={behind || undefined}
+        inert={behind}
         className={cn(
-          'relative cursor-grab touch-pan-y select-none active:cursor-grabbing [&_img]:pointer-events-none',
+          'relative touch-pan-y select-none [&_img]:pointer-events-none',
+          behind ? 'z-0' : 'z-10 cursor-grab active:cursor-grabbing',
           className,
         )}
         style={{ x, rotate }}
-        drag="x"
+        drag={behind ? false : 'x'}
         onDragEnd={onDragEnd}
-        initial={reduced || enterFrom !== null ? false : { opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.15 }}
+        // No fade: an item shows up behind the current one, then grows to the front.
+        initial={false}
+        animate={behind ? { scale: 0.95, y: 12 } : { scale: 1, y: 0 }}
+        transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 35 }}
       >
         {children}
       </motion.div>
@@ -210,13 +249,14 @@ function SwipeCardStamp({
   className?: string;
   children: ReactNode;
 }) {
-  const x = use(SwipeCardItemContext);
-  if (!x) throw new Error('SwipeCardStamp must be used inside <SwipeCardItem>');
+  const item = use(SwipeCardItemContext);
+  if (!item) throw new Error('SwipeCardStamp must be used inside <SwipeCardItem>');
   const opacity = useTransform(
-    x,
+    item.x,
     direction === 'right' ? [20, THRESHOLD] : [-THRESHOLD, -20],
     direction === 'right' ? [0, 1] : [1, 0],
   );
+  if (item.behind) return null;
   return (
     <motion.span
       aria-hidden
@@ -280,4 +320,11 @@ function SwipeCardUndo({ asChild = false, onClick, disabled, ...props }: ButtonP
   );
 }
 
-export { SwipeCard, SwipeCardItem, SwipeCardStamp, SwipeCardTrigger, SwipeCardUndo };
+export {
+  SwipeCard,
+  SwipeCardItem,
+  SwipeCardStack,
+  SwipeCardStamp,
+  SwipeCardTrigger,
+  SwipeCardUndo,
+};
