@@ -141,7 +141,17 @@ function PhaseStep({
           </div>
         </div>
         {state !== 'UPCOMING' && action ? (
-          <div className="flex flex-wrap gap-3">{action}</div>
+          <div
+            className={cn(
+              'flex flex-wrap gap-3',
+              // The current step's buttons take its color.
+              current
+                ? '[--primary-foreground:var(--phase-todo-foreground)] [--primary:var(--phase-todo)]'
+                : null,
+            )}
+          >
+            {action}
+          </div>
         ) : null}
       </div>
     </li>
@@ -176,7 +186,7 @@ function StateIcon({ state, index }: { state: PhaseState; index: number }) {
       return (
         <span
           aria-hidden
-          className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-phase-todo text-xs font-semibold text-white"
+          className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-phase-todo text-xs font-semibold text-phase-todo-foreground"
         >
           {index}
         </span>
