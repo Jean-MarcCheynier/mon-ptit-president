@@ -31,6 +31,34 @@ export const isReachable = (state: PhaseState) => state !== 'UPCOMING';
 /** Whether the user can still write their prediction of the phase. */
 export const isWritable = (state: PhaseState) => state === 'TODO' || state === 'DONE';
 
+/** What a phase offers to do from the journey. */
+export type PhaseAction = 'PREDICT' | 'RESUME' | 'EDIT' | 'VIEW' | 'RESULTS';
+
+/**
+ * A phase's action, by its state: predict, resume the draft or edit while writable, view once
+ * closed, see the results once published; none when skipped or not reachable yet.
+ */
+export function phaseAction(
+  state: PhaseState,
+  { draft = false, results = false }: { draft?: boolean; results?: boolean } = {},
+): PhaseAction | null {
+  if (results) return 'RESULTS';
+  switch (state) {
+    case 'TODO':
+      return draft ? 'RESUME' : 'PREDICT';
+    case 'DONE':
+      return draft ? 'RESUME' : 'EDIT';
+    case 'CLOSED':
+      return 'VIEW';
+    default:
+      return null;
+  }
+}
+
+/** Whether the action writes the prediction, before the phase's closing. */
+export const isWriting = (action: PhaseAction) =>
+  action === 'PREDICT' || action === 'RESUME' || action === 'EDIT';
+
 /** The phase to put forward: the first one with nothing validated yet. */
 export function nextPhase(phases: PlayerPhaseDto[]): GamePhase | null {
   return phases.find((p) => p.playable && p.state === 'TODO')?.phase ?? null;

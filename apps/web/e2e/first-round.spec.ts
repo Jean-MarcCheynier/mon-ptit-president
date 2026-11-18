@@ -18,6 +18,10 @@ async function signUp(page: Page) {
   await expect(page.getByRole('heading', { name: 'Bienvenue, Scorer !' })).toBeVisible();
 }
 
+/** A step of the journey, on the home page. */
+const step = (page: Page, name: string) =>
+  page.getByRole('list', { name: 'Ton parcours' }).getByRole('listitem').filter({ hasText: name });
+
 interface Entry {
   politicianId: string;
   score: number;
@@ -96,7 +100,7 @@ test('share out the scores with sliders and fields, survive a reload, validate, 
 }) => {
   await openFirstRound(page);
   await signUp(page);
-  await page.getByRole('link', { name: 'Pronostique le 1er tour' }).click();
+  await step(page, '1er tour').getByRole('link', { name: 'Fais ton prono !' }).click();
   await expect(page.getByRole('heading', { name: 'Pronostic du 1er tour' })).toBeVisible();
 
   const fields = page.getByRole('textbox', { name: /^Score de / });
@@ -137,8 +141,8 @@ test('share out the scores with sliders and fields, survive a reload, validate, 
 
   // From the journey too: editable, the first round offers to edit, straight into the form.
   await page.goto('/');
-  await expect(page.getByRole('link', { name: 'Voir mon pronostic' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Modifier' }).click();
+  await expect(page.getByRole('link', { name: 'Voir ton prono' })).toHaveCount(0);
+  await step(page, '1er tour').getByRole('button', { name: 'Modifie ton prono' }).click();
   await expect(page.getByRole('heading', { name: 'Pronostic du 1er tour' })).toBeVisible();
   await expect(fields.nth(0)).toHaveValue('45,5');
 });

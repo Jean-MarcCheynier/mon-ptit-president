@@ -1,38 +1,32 @@
 import { useEffect, useState } from 'react';
 
-export interface Remaining {
-  days: number;
-  hours: number;
-  minutes: number;
-}
-
-/** Time left until `target`, or null once it has passed. */
-export function timeUntil(target: Date, now: Date): Remaining | null {
-  const ms = target.getTime() - now.getTime();
-  if (ms <= 0) return null;
-  const totalMinutes = Math.floor(ms / 60_000);
-  return {
-    days: Math.floor(totalMinutes / (24 * 60)),
-    hours: Math.floor((totalMinutes % (24 * 60)) / 60),
-    minutes: totalMinutes % 60,
-  };
-}
-
-/** Current time, refreshed every `intervalMs`. */
-export function useNow(intervalMs = 60_000): Date {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), intervalMs);
-    return () => clearInterval(id);
-  }, [intervalMs]);
-  return now;
-}
-
 /** Date and time, e.g. "29 octobre 2026 à 19:35". */
 export function formatDateTime(iso: string, locale: string | undefined): string {
   return new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short' }).format(
     new Date(iso),
   );
+}
+
+/**
+ * A deadline's day and time, short and without the year: "12 mars" and "20 h" (fr), "March 12"
+ * and "8 PM" (en). The minutes only show when not round: "23 h 59", "11:59 PM".
+ */
+export function formatDeadline(
+  iso: string,
+  locale: string | undefined,
+  timeZone?: string,
+): { date: string; time: string } {
+  const at = new Date(iso);
+  const format = (options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat(locale, { ...options, timeZone });
+  const date = format({ day: 'numeric', month: 'long' }).format(at);
+  const parts = format({ hour: 'numeric', minute: '2-digit' }).formatToParts(at);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value;
+  const minute = part('minute');
+  if (minute === '00') return { date, time: format({ hour: 'numeric' }).format(at) };
+  // French typography: "23 h 59" rather than "23:59".
+  if (locale?.startsWith('fr')) return { date, time: `${part('hour')} h ${minute}` };
+  return { date, time: parts.map((p) => p.value).join('') };
 }
 
 // setTimeout overflows past ~24.8 days: longer waits are done in steps.

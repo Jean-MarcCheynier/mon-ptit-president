@@ -18,6 +18,10 @@ async function signUp(page: Page) {
   await expect(page.getByRole('heading', { name: 'Bienvenue, Winner !' })).toBeVisible();
 }
 
+/** A step of the journey, on the home page. */
+const step = (page: Page, name: string) =>
+  page.getByRole('list', { name: 'Ton parcours' }).getByRole('listitem').filter({ hasText: name });
+
 async function openWinner(page: Page) {
   let draft: string | null = null;
   let ballot: { validatedAt: string; favoriteId: string } | null = null;
@@ -61,7 +65,7 @@ async function openWinner(page: Page) {
 test('pick a favorite with its odds, validate, change it from home', async ({ page }) => {
   await openWinner(page);
   await signUp(page);
-  await page.getByRole('link', { name: 'Pronostique le vainqueur' }).click();
+  await step(page, 'Vainqueur').getByRole('link', { name: 'Fais ton prono !' }).click();
   await expect(page.getByRole('heading', { name: 'Pronostic du vainqueur' })).toBeVisible();
 
   const choices = page.getByRole('radio');
@@ -82,7 +86,7 @@ test('pick a favorite with its odds, validate, change it from home', async ({ pa
 
   // From the journey: still editable, the winner offers to edit, straight into the choices.
   await page.goto('/');
-  await page.getByRole('link', { name: 'Modifier' }).click();
+  await step(page, 'Vainqueur').getByRole('link', { name: 'Modifie ton prono' }).click();
   await expect(glucksmann).toHaveAttribute('aria-checked', 'true');
   await expect(page.getByText(/Ton pronostic reste celui validé le/)).toBeVisible();
   await page.getByRole('radio', { name: /Autre candidat/ }).click();
