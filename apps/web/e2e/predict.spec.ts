@@ -19,7 +19,8 @@ const progress = (page: Page) => page.getByText(/^\d+ \/ \d+$/);
 
 /** Drags the card horizontally with the mouse and releases it. */
 async function dragCard(page: Page, dx: number) {
-  const box = await page.locator('[data-slot="swipe-card-item"]').boundingBox();
+  // The current card: the next one is stacked under it, hidden.
+  const box = await page.locator('[data-slot="swipe-card-item"]:not([aria-hidden])').boundingBox();
   if (!box) throw new Error('No card to drag');
   const x = box.x + box.width / 2;
   const y = box.y + box.height / 2;

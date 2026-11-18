@@ -19,6 +19,7 @@ describe('deckState', () => {
   it('starts on the first card with nothing to undo', () => {
     expect(deckState(deck, [])).toMatchObject({
       current: deck[0],
+      next: deck[1],
       decided: 0,
       total: 3,
       previous: null,
@@ -28,6 +29,7 @@ describe('deckState', () => {
   it('moves to the first undecided card', () => {
     expect(deckState(deck, decided('a', 'b'))).toMatchObject({
       current: deck[2],
+      next: null,
       decided: 2,
       previous: deck[1],
     });
@@ -36,6 +38,7 @@ describe('deckState', () => {
   it('has no current card once every card is decided', () => {
     expect(deckState(deck, decided('a', 'b', 'c'))).toMatchObject({
       current: null,
+      next: null,
       decided: 3,
       previous: deck[2],
     });
@@ -51,6 +54,11 @@ describe('deckState', () => {
       current: deck[0],
       previous: deck[2],
     });
+  });
+
+  it('stacks the next undecided card under the current one', () => {
+    // 'b' was decided before (pre-filled draft): 'c' comes after 'a'.
+    expect(deckState(deck, decided('b'))).toMatchObject({ current: deck[0], next: deck[2] });
   });
 
   it('ignores entries for politicians no longer in the deck', () => {

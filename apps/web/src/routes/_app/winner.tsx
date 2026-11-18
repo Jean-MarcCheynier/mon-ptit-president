@@ -1,7 +1,7 @@
 import type { CurrentWinnerDto, FavoriteDto } from '@presidency-bingo/shared';
 import { useSuspenseQueries } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Check, Pencil, UserRound } from 'lucide-react';
+import { Check, CircleCheck, Pencil, UserRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { FormAlert } from '@/components/form-alert';
@@ -145,18 +145,21 @@ function ChooseWinner({
           );
         })}
       </div>
-      <div className="flex flex-wrap gap-3">
-        <Button
-          disabled={draft === null || validate.isPending}
-          onClick={() => validate.mutate(undefined, { onSuccess: () => navigate({ search: {} }) })}
-        >
-          {t('winner.validate')}
-        </Button>
+      {/* Like the qualifiers' review: full width on phones (validate first), on the right above. */}
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         {ballot && draft === null ? (
-          <Button variant="outline" onClick={() => navigate({ search: {} })}>
+          <Button size="lg" variant="outline" onClick={() => navigate({ search: {} })}>
             {t('winner.cancel')}
           </Button>
         ) : null}
+        <Button
+          size="lg"
+          disabled={draft === null || validate.isPending}
+          onClick={() => validate.mutate(undefined, { onSuccess: () => navigate({ search: {} }) })}
+        >
+          <CircleCheck />
+          {t('winner.validate')}
+        </Button>
       </div>
       {error ? <FormAlert variant="error">{errorMessage(t, error)}</FormAlert> : null}
     </>

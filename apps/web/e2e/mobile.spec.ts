@@ -119,3 +119,72 @@ test('phones get a bottom bar instead of the header; desktop keeps the header', 
     await page.context().close();
   });
 });
+
+const PORTRAIT_PHONES = PHONES.filter((screen) => screen.height > screen.width);
+
+test('the swipe deck stays in place: fixed card, fixed buttons, no sideways scroll', async ({
+  browser,
+}) => {
+  const session = await signUp(browser);
+
+  for (const screen of [...PORTRAIT_PHONES, DESKTOP]) {
+    await test.step(screen.name, async () => {
+      const page = await open(browser, screen, session);
+      await page.goto('/predict');
+      const no = page.getByRole('button', { name: 'Recalé' });
+      const yes = page.getByRole('button', { name: 'Qualifié' });
+      const current = page.locator('[data-slot="swipe-card-item"]:not([aria-hidden])');
+      const behind = page.locator('[data-slot="swipe-card-item"][aria-hidden="true"]');
+      const progress = page.getByText(/^\d+ \/ \d+$/);
+
+      // Without scrolling.
+      for (const button of [no, yes]) await expect(button).toBeInViewport({ ratio: 1 });
+      await expect(behind).toHaveCount(1);
+      await expectNoHorizontalScroll(page);
+
+      const boxes = async () => ({
+        no: await no.boundingBox(),
+        yes: await yes.boundingBox(),
+        card: await current.boundingBox(),
+      });
+      const before = await boxes();
+
+      for (const button of [yes, no, yes]) {
+        const decided = Number((await progress.textContent())?.split(' / ')[0]);
+        await button.click();
+        // Mid-flight, the card thrown out is clipped.
+        await expectNoHorizontalScroll(page);
+        await expect(progress).toHaveText(new RegExp(`^${decided + 1} /`));
+        await expect(page.locator('[data-slot="swipe-card-item"]')).toHaveCount(2);
+        // Once the next card has grown to the front.
+        await expect.poll(boxes).toEqual(before);
+      }
+      await page.context().close();
+    });
+  }
+
+  await test.step('last card, then done', async () => {
+    const page = await open(browser, PHONE, session);
+    await page.goto('/predict');
+    const progress = page.getByText(/^\d+ \/ \d+$/);
+    const [decided, total] = ((await progress.textContent()) ?? '').split(' / ').map(Number);
+    const card = page.locator('[data-slot="swipe-card-item"]:not([aria-hidden])');
+    const size = await card.boundingBox();
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    for (let n = (decided ?? 0) + 1; n < (total ?? 0); n++) {
+      await page.keyboard.press('ArrowLeft');
+      await expect(progress).toHaveText(`${n} / ${total}`);
+    }
+    // Nothing left to stack under the last card.
+    await expect(page.locator('[data-slot="swipe-card-item"]')).toHaveCount(1);
+    await expect(page.locator('[data-slot="swipe-card-item"][aria-hidden]')).toHaveCount(0);
+
+    await page.keyboard.press('ArrowLeft');
+    await expect(page.getByRole('link', { name: 'Passer à la revue' })).toBeVisible();
+    const done = page.locator('[data-slot="swipe-card-stack"] > [data-slot="card"]');
+    expect(await done.boundingBox()).toEqual(size);
+    await expectNoHorizontalScroll(page);
+    await page.context().close();
+  });
+});

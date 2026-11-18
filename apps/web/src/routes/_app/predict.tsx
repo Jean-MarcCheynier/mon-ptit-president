@@ -2,7 +2,7 @@ import type { ElectionCandidateDto, ValidatedBallotDto } from '@presidency-bingo
 import { useSuspenseQueries } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Check, Undo2, X } from 'lucide-react';
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BallotColumn } from '@/components/ballot-column';
 import { EditBallotButton } from '@/components/edit-ballot-button';
@@ -13,6 +13,7 @@ import { ScoringRules } from '@/components/scoring-rules';
 import {
   SwipeCard,
   SwipeCardItem,
+  SwipeCardStack,
   SwipeCardStamp,
   SwipeCardTrigger,
   SwipeCardUndo,
@@ -53,10 +54,17 @@ function PredictPage() {
       queries: [currentElectionQuery, draftQuery, currentBallotQuery, resultsQuery],
     });
   const locked = usePredictionsLocked(election);
+  const title = (
+    <h1 className="truncate text-2xl font-semibold mobile:text-xl">{t('predict.title')}</h1>
+  );
+  const swiping =
+    election && !results.published && !locked && !(ballot && draft.entries.length === 0);
 
   return (
-    <div className={`mx-auto grid gap-6 ${locked ? 'max-w-3xl' : 'max-w-sm'}`}>
-      <h1 className="text-2xl font-semibold">{t('predict.title')}</h1>
+    <div
+      className={`mx-auto grid grid-cols-[minmax(0,1fr)] gap-6 ${locked ? 'max-w-3xl' : 'max-w-sm'}`}
+    >
+      {swiping ? null : title}
       {election && results.published ? (
         results.result ? (
           <ResultsView result={results.result} />
@@ -69,7 +77,7 @@ function PredictPage() {
       ) : election && ballot && draft.entries.length === 0 ? (
         <ValidatedCard candidates={election.candidates} ballot={ballot} />
       ) : election ? (
-        <Swipe electionId={election.id} candidates={election.candidates} />
+        <Swipe title={title} electionId={election.id} candidates={election.candidates} />
       ) : (
         <p className="text-muted-foreground">{t('election.none')}</p>
       )}
@@ -79,10 +87,16 @@ function PredictPage() {
   );
 }
 
+/**
+ * The deck, at a fixed size so the buttons never move: Yes / No are always clicked at the same
+ * spot. On phones it fills the screen above the bottom bar (the scoring rules come after it).
+ */
 function Swipe({
+  title,
   electionId,
   candidates,
 }: {
+  title: ReactNode;
   electionId: string;
   candidates: ElectionCandidateDto[];
 }) {
@@ -98,7 +112,7 @@ function Swipe({
     () => stableShuffle(candidates, (c) => c.politicianId, seed),
     [candidates, seed],
   );
-  const { current, decided, total, previous } = deckState(deck, draft.entries);
+  const { current, next, decided, total, previous } = deckState(deck, draft.entries);
 
   const save = (isCandidate: boolean) => {
     if (current) setEntry.mutate({ politicianId: current.politicianId, isCandidate });
@@ -107,13 +121,15 @@ function Swipe({
 
   return (
     <SwipeCard
-      className="grid gap-4"
+      // Phones: the screen height, minus the safe areas, main's top padding and the bottom bar.
+      className="grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-4 mobile:h-[calc(100svh-6rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] mobile:min-h-[26rem] mobile:gap-3"
       onSwipeLeft={() => save(false)}
       onSwipeRight={() => save(true)}
       onUndo={() => previous && removeEntry.mutate(previous.politicianId)}
       canUndo={previous !== null}
       keyboard
     >
+      {title}
       <div className="grid gap-1">
         <div className="flex justify-between text-sm text-muted-foreground">
           <span>{t('predict.progressLabel')}</span>
@@ -127,18 +143,34 @@ function Swipe({
         />
       </div>
 
-      {current ? (
-        <SwipeCardItem key={current.politicianId}>
-          <CandidateCard candidate={current} />
-          <SwipeCardStamp direction="right">{t('predict.yes')}</SwipeCardStamp>
-          <SwipeCardStamp direction="left">{t('predict.no')}</SwipeCardStamp>
-        </SwipeCardItem>
-      ) : (
-        <DoneCard total={total} />
-      )}
+      {/* Desktop: about 3:4, capped. Phones: whatever the screen leaves. */}
+      <SwipeCardStack className="aspect-[3/4] max-h-[560px] mobile:aspect-auto mobile:max-h-none">
+        {current ? (
+          // Same order on every render: the card behind keeps its node when it comes to the front.
+          [current, next].map((candidate) =>
+            candidate ? (
+              <SwipeCardItem
+                key={candidate.politicianId}
+                behind={candidate !== current}
+                className="min-h-0"
+              >
+                <CandidateCard candidate={candidate} />
+                <SwipeCardStamp direction="right">{t('predict.yes')}</SwipeCardStamp>
+                <SwipeCardStamp direction="left">{t('predict.no')}</SwipeCardStamp>
+              </SwipeCardItem>
+            ) : null,
+          )
+        ) : (
+          <DoneCard total={total} />
+        )}
+      </SwipeCardStack>
+      <p aria-live="polite" className="sr-only">
+        {current?.name}
+      </p>
 
-      {current ? (
-        <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3">
+        {/* Kept in place once done, so the "done" card is the size of a candidate's. */}
+        <div className={`grid grid-cols-2 gap-3 ${current ? '' : 'invisible'}`}>
           <SwipeCardTrigger direction="left" asChild>
             <Button size="lg" variant="outline">
               <X />
@@ -152,47 +184,61 @@ function Swipe({
             </Button>
           </SwipeCardTrigger>
         </div>
-      ) : null}
 
-      <div className="flex items-center justify-between gap-3">
-        <SwipeCardUndo asChild>
-          <Button variant="ghost" size="sm">
-            <Undo2 />
-            {t('predict.undo')}
-          </Button>
-        </SwipeCardUndo>
-        <p className="text-right text-xs text-muted-foreground">{t('predict.shortcuts')}</p>
+        <div className="flex items-center justify-between gap-3">
+          <SwipeCardUndo asChild>
+            <Button variant="ghost" size="sm">
+              <Undo2 />
+              {t('predict.undo')}
+            </Button>
+          </SwipeCardUndo>
+          <p className="text-right text-xs text-muted-foreground mobile:hidden">
+            {t('predict.shortcuts')}
+          </p>
+        </div>
+
+        {error ? <FormAlert variant="error">{errorMessage(t, error)}</FormAlert> : null}
       </div>
-
-      {error ? <FormAlert variant="error">{errorMessage(t, error)}</FormAlert> : null}
     </SwipeCard>
   );
 }
 
+/** Same size whatever the candidate: texts are cut, the photo credit's line is always kept. */
 function CandidateCard({ candidate }: { candidate: ElectionCandidateDto }) {
   const { t } = useTranslation();
   return (
-    <Card aria-live="polite">
-      <CardContent className="grid justify-items-center gap-4 text-center">
-        <figure className="grid justify-items-center gap-1">
-          <Avatar className="size-48 rounded-2xl">
-            {candidate.photoUrl ? (
-              <AvatarImage src={candidate.photoUrl} alt={candidate.name} className="object-cover" />
-            ) : null}
-            <AvatarFallback className="rounded-2xl text-5xl font-medium">
-              {initials(candidate.name)}
-            </AvatarFallback>
-          </Avatar>
-          {candidate.photoCredit ? (
-            <figcaption className="max-w-48 text-[10px] leading-tight text-muted-foreground">
-              {t('predict.photoCredit', { credit: candidate.photoCredit })}
-            </figcaption>
-          ) : null}
+    <Card className="h-full gap-3 py-4">
+      <CardContent className="flex min-h-0 flex-1 flex-col items-center gap-3 px-4 text-center">
+        <figure className="flex min-h-0 w-full flex-1 flex-col gap-1">
+          <div className="relative min-h-0 flex-1">
+            <Avatar className="absolute inset-y-0 left-1/2 aspect-square h-full w-auto max-w-full -translate-x-1/2 rounded-2xl">
+              {candidate.photoUrl ? (
+                <AvatarImage
+                  src={candidate.photoUrl}
+                  alt={candidate.name}
+                  className="object-cover"
+                />
+              ) : null}
+              <AvatarFallback className="rounded-2xl text-5xl font-medium">
+                {initials(candidate.name)}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+          <figcaption className="h-[1lh] truncate text-[10px] leading-tight text-muted-foreground">
+            {candidate.photoCredit
+              ? t('predict.photoCredit', { credit: candidate.photoCredit })
+              : null}
+          </figcaption>
         </figure>
-        <div className="grid gap-1">
-          <h2 className="text-xl font-semibold">{candidate.name}</h2>
-          <p className="text-sm font-medium">{candidate.partyLabel}</p>
-          <p className="text-sm text-muted-foreground">{candidate.tagline}</p>
+        <div className="grid w-full gap-1">
+          <h2 className="truncate text-xl font-semibold">{candidate.name}</h2>
+          <p className="truncate text-sm font-medium">{candidate.partyLabel}</p>
+          <p
+            className="line-clamp-2 h-[2lh] text-sm text-muted-foreground"
+            title={candidate.tagline}
+          >
+            {candidate.tagline}
+          </p>
         </div>
         <p className="font-medium">{t('predict.question')}</p>
       </CardContent>
@@ -203,7 +249,7 @@ function CandidateCard({ candidate }: { candidate: ElectionCandidateDto }) {
 function DoneCard({ total }: { total: number }) {
   const { t } = useTranslation();
   return (
-    <Card>
+    <Card className="h-full justify-center">
       <CardHeader>
         <CardTitle>{t('predict.doneTitle')}</CardTitle>
         <CardDescription>{t('predict.doneDescription', { count: total })}</CardDescription>
