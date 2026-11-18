@@ -51,6 +51,10 @@ CI (`.github/workflows/ci.yml`) runs lint, build, typecheck, unit, e2e and smoke
 
 Issues live in GitHub Issues for `Jean-MarcCheynier/mon-ptit-president` (via `gh.exe`). See `docs/agents/issue-tracker.md`.
 
+### Triage labels
+
+Default triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
 ### Domain docs
 
 Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

@@ -13,7 +13,11 @@
       "!**/generated",
       "!**/components/ui",
       "!pnpm-workspace.yaml",
-      "!pnpm-lock.yaml"
+      "!pnpm-lock.yaml",
+      "!.agents/skills",
+      "!.claude/skills",
+      "!skills",
+      "!skills-lock.json"
     ]
   },
   "formatter": {
