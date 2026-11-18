@@ -1,0 +1,121 @@
+import { type Browser, expect, type Page, test } from '@playwright/test';
+import { linkFromLatestEmail } from './mailpit';
+
+type Screen = { name: string; width: number; height: number; touch: boolean };
+
+/** Phones in portrait and landscape: bottom bar, no header. */
+const PHONE: Screen = { name: 'phone', width: 360, height: 640, touch: true };
+const PHONES: Screen[] = [
+  { name: 'small phone', width: 320, height: 568, touch: true },
+  PHONE,
+  { name: 'large phone', width: 390, height: 844, touch: true },
+  { name: 'phone in landscape', width: 844, height: 390, touch: true },
+];
+const DESKTOP: Screen = { name: 'desktop', width: 1280, height: 800, touch: false };
+
+/** Signs a new player up and returns their session, to reuse across screen sizes. */
+async function signUp(browser: Browser) {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const email = `mobile+${Date.now()}@example.com`;
+  await page.goto('/register');
+  await page.getByLabel('Nom').fill('Mobile');
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Mot de passe').fill('correct horse battery');
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await expect(page.getByText('Vérifie ta boîte mail')).toBeVisible();
+  await page.goto(await linkFromLatestEmail(email, '/verify-email'));
+  await expect(page.getByRole('heading', { name: 'Bienvenue, Mobile !' })).toBeVisible();
+  const state = await context.storageState();
+  await context.close();
+  return state;
+}
+
+async function open(
+  browser: Browser,
+  screen: Screen,
+  storageState: Awaited<ReturnType<typeof signUp>>,
+) {
+  const context = await browser.newContext({
+    storageState,
+    viewport: { width: screen.width, height: screen.height },
+    hasTouch: screen.touch,
+    isMobile: screen.touch,
+    locale: 'fr-FR',
+  });
+  return context.newPage();
+}
+
+async function expectNoHorizontalScroll(page: Page) {
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(0);
+}
+
+test('phones get a bottom bar instead of the header; desktop keeps the header', async ({
+  browser,
+}) => {
+  const session = await signUp(browser);
+
+  for (const screen of PHONES) {
+    await test.step(screen.name, async () => {
+      const page = await open(browser, screen, session);
+      await page.goto('/');
+      const bar = page.getByRole('navigation', { name: 'Navigation principale' });
+
+      await expect(page.getByRole('banner')).toBeHidden();
+      await expect(bar).toBeVisible();
+      await expect(bar.getByRole('link', { name: 'Accueil' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      await expectNoHorizontalScroll(page);
+
+      // The bar stays within the screen, at the bottom.
+      const box = await bar.boundingBox();
+      expect(box && box.y + box.height).toBeLessThanOrEqual(screen.height);
+
+      await bar.getByRole('link', { name: 'Mon pronostic' }).click();
+      await expect(page).toHaveURL(/\/predict$/);
+      await expect(bar.getByRole('link', { name: 'Mon pronostic' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      await expect(bar.getByRole('link', { name: 'Accueil' })).not.toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      await expectNoHorizontalScroll(page);
+
+      await bar.getByRole('link', { name: 'Paramètres' }).click();
+      await expect(page).toHaveURL(/\/settings$/);
+      await expect(page.getByRole('button', { name: 'Déconnexion' })).toBeVisible();
+      await expectNoHorizontalScroll(page);
+
+      await page.context().close();
+    });
+  }
+
+  await test.step(DESKTOP.name, async () => {
+    const page = await open(browser, DESKTOP, session);
+    await page.goto('/settings');
+    await expect(page.getByRole('banner')).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Navigation principale' })).toBeHidden();
+    // Signing out lives in the header only.
+    await expect(page.getByRole('button', { name: 'Déconnexion' })).toHaveCount(1);
+    await expect(
+      page.getByRole('banner').getByRole('button', { name: 'Déconnexion' }),
+    ).toBeVisible();
+    await page.context().close();
+  });
+
+  // Last: signing out ends the shared session.
+  await test.step('sign out from the settings on a phone', async () => {
+    const page = await open(browser, PHONE, session);
+    await page.goto('/settings');
+    await page.getByRole('button', { name: 'Déconnexion' }).click();
+    await expect(page).toHaveURL(/\/login/);
+    await page.context().close();
+  });
+});

@@ -63,6 +63,7 @@
     "missingToken": "Lien incomplet. Redemande un email de réinitialisation."
   },
   "nav": {
+    "label": "Navigation principale",
     "home": "Accueil",
     "settings": "Paramètres",
     "logout": "Déconnexion",
