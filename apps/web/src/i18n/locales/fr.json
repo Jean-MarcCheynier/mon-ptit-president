@@ -67,7 +67,8 @@
     "home": "Accueil",
     "settings": "Paramètres",
     "logout": "Déconnexion",
-    "predict": "Mon pronostic"
+    "predict": "Mon pronostic",
+    "myPrediction": "Mon prono"
   },
   "home": {
     "title": "Bienvenue, {{name}} !",

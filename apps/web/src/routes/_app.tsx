@@ -1,11 +1,13 @@
-import { useSuspenseQuery } from '@tanstack/react-query';
-import { createFileRoute, Link, Outlet, redirect } from '@tanstack/react-router';
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { createFileRoute, Link, Outlet, redirect, useLocation } from '@tanstack/react-router';
 import { House, LogOut, type LucideIcon, Settings, Vote } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { meQuery, useLogout } from '@/lib/auth';
+import { currentPhasePage, PHASE_PAGES, type PhasePage, phasesQuery } from '@/lib/phases';
+import { cn } from '@/lib/utils';
 
 type NavPath = '/' | '/predict' | '/settings';
 
@@ -85,21 +87,50 @@ function AppLayout() {
   );
 }
 
+/** Pages of a phase's prediction: the bottom bar's middle tab is active on all of them. */
+const PHASE_PATHS: string[] = [...Object.values(PHASE_PAGES), '/review'];
+
 /** Phone navigation, within thumb's reach; replaces the header. */
 function BottomBar() {
   const { t } = useTranslation();
+  const pathname = useLocation({ select: (location) => location.pathname });
+  // Not suspended: while loading, on failure or without an election, the tab leads to the qualifiers.
+  const { data: phases } = useQuery(phasesQuery);
+  const phasePage = phases ? currentPhasePage(phases) : PHASE_PAGES.QUALIFIERS;
+
+  const items: {
+    to: '/' | PhasePage | '/settings';
+    label: 'nav.home' | 'nav.myPrediction' | 'nav.settings';
+    icon: LucideIcon;
+    active?: boolean;
+  }[] = [
+    { to: '/', label: 'nav.home', icon: House },
+    // Fixed label: the tab keeps its width and place whatever the step.
+    {
+      to: phasePage,
+      label: 'nav.myPrediction',
+      icon: Vote,
+      active: PHASE_PATHS.includes(pathname),
+    },
+    { to: '/settings', label: 'nav.settings', icon: Settings },
+  ];
+
   return (
     <nav
       aria-label={t('nav.label')}
       className="fixed inset-x-0 bottom-0 z-40 hidden border-t bg-background/95 pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] backdrop-blur mobile:block"
     >
       <ul className="mx-auto grid h-16 max-w-md grid-cols-3">
-        {NAV.map(({ to, label, icon: Icon }) => (
-          <li key={to} className="grid">
+        {items.map(({ to, label, icon: Icon, active }) => (
+          <li key={label} className="grid">
             <Link
               to={to}
               activeOptions={{ exact: to === '/' }}
-              className="flex flex-col items-center justify-center gap-1 text-xs text-muted-foreground [&.active]:font-medium [&.active]:text-foreground [&.active_svg]:stroke-[2.5]"
+              aria-current={active ? 'page' : undefined}
+              className={cn(
+                'flex flex-col items-center justify-center gap-1 text-xs text-muted-foreground [&.active]:font-medium [&.active]:text-foreground [&.active_svg]:stroke-[2.5]',
+                active && 'active',
+              )}
             >
               <Icon aria-hidden className="size-5" />
               {t(label)}
