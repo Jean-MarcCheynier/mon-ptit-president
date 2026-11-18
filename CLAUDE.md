@@ -59,3 +59,5 @@ Default triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-f
 
 Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 Use the glossary's terms (joueur, phase, pool, vainqueur…) in code names, issues and UI copy.
+
+coucou
