@@ -76,9 +76,9 @@ test('phones get a bottom bar instead of the header; desktop keeps the header', 
       const box = await bar.boundingBox();
       expect(box && box.y + box.height).toBeLessThanOrEqual(screen.height);
 
-      await bar.getByRole('link', { name: 'Mon pronostic' }).click();
+      await bar.getByRole('link', { name: 'Mon prono' }).click();
       await expect(page).toHaveURL(/\/predict$/);
-      await expect(bar.getByRole('link', { name: 'Mon pronostic' })).toHaveAttribute(
+      await expect(bar.getByRole('link', { name: 'Mon prono' })).toHaveAttribute(
         'aria-current',
         'page',
       );
@@ -118,6 +118,52 @@ test('phones get a bottom bar instead of the header; desktop keeps the header', 
     await expect(page).toHaveURL(/\/login/);
     await page.context().close();
   });
+});
+
+test("the bottom bar's middle tab leads to the current step: the winner once the qualifiers are validated", async ({
+  browser,
+}) => {
+  const session = await signUp(browser);
+  const page = await open(browser, PHONE, session);
+
+  // Validating the qualifiers takes too long to swipe here: the phases say they are, and the
+  // winner's draft and ballot are empty.
+  await page.route('**/api/elections/current/phases', async (route) => {
+    const response = await route.fetch();
+    const { phases } = (await response.json()) as { phases: { phase: string }[] };
+    await route.fulfill({
+      response,
+      json: {
+        phases: phases.map((p) =>
+          p.phase === 'QUALIFIERS'
+            ? { ...p, state: 'DONE' }
+            : p.phase === 'WINNER'
+              ? { ...p, playable: true, state: 'TODO' }
+              : p,
+        ),
+      },
+    });
+  });
+  await page.route('**/api/elections/current/winner/{draft,ballot}', (route) =>
+    route.fulfill({
+      json: route.request().url().endsWith('/ballot')
+        ? { ballot: null, points: null }
+        : { favoriteId: null },
+    }),
+  );
+
+  await page.goto('/');
+  const bar = page.getByRole('navigation', { name: 'Navigation principale' });
+  const tab = bar.getByRole('link', { name: 'Mon prono' });
+  await expect(tab).toHaveAttribute('href', '/winner');
+  await expect(tab).not.toHaveAttribute('aria-current', 'page');
+
+  await tab.click();
+  await expect(page).toHaveURL(/\/winner$/);
+  await expect(page.getByRole('heading', { name: 'Pronostic du vainqueur' })).toBeVisible();
+  await expect(tab).toHaveAttribute('aria-current', 'page');
+  await expectNoHorizontalScroll(page);
+  await page.context().close();
 });
 
 const PORTRAIT_PHONES = PHONES.filter((screen) => screen.height > screen.width);

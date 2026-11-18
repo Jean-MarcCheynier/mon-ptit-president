@@ -67,7 +67,8 @@
     "home": "Home",
     "settings": "Settings",
     "logout": "Sign out",
-    "predict": "My prediction"
+    "predict": "My prediction",
+    "myPrediction": "My pick"
   },
   "home": {
     "title": "Welcome, {{name}}!",

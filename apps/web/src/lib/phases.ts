@@ -36,6 +36,35 @@ export function nextPhase(phases: PlayerPhaseDto[]): GamePhase | null {
   return phases.find((p) => p.playable && p.state === 'TODO')?.phase ?? null;
 }
 
+/** The page where the player writes (or reviews) a phase's prediction; not every phase has one. */
+export const PHASE_PAGES = {
+  QUALIFIERS: '/predict',
+  WINNER: '/winner',
+  FIRST_ROUND: '/first-round',
+} as const satisfies Partial<Record<GamePhase, string>>;
+
+export type PhasePage = (typeof PHASE_PAGES)[keyof typeof PHASE_PAGES];
+
+const pageOf = (phase: GamePhase): PhasePage | undefined =>
+  (PHASE_PAGES as Partial<Record<GamePhase, PhasePage>>)[phase];
+
+/**
+ * The page of the step to put forward: the current one (see nextPhase); without one, the last
+ * phase still writable; otherwise the last closed one, to see one's prediction and its results.
+ * The qualifiers when none applies (no election, nothing open yet).
+ */
+export function currentPhasePage(phases: PlayerPhaseDto[]): PhasePage {
+  const next = nextPhase(phases);
+  const nextPage = next ? pageOf(next) : undefined;
+  if (nextPage) return nextPage;
+
+  const withPage = phases.filter((p) => p.playable && pageOf(p.phase));
+  const writable = withPage.findLast((p) => isWritable(p.state));
+  const closed = withPage.findLast((p) => p.state === 'CLOSED' || p.state === 'SKIPPED');
+  const target = writable ?? closed;
+  return (target && pageOf(target.phase)) ?? PHASE_PAGES.QUALIFIERS;
+}
+
 /**
  * A phase's state: as reported by the server, or closed since its closing passed while the page
  * was open. A refused write refetches the phases (see query-client), which fixes a skewed local
