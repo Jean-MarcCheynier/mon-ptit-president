@@ -14,7 +14,7 @@ async function bootstrap() {
   if (config.get('NODE_ENV') !== 'production') {
     const document = SwaggerModule.createDocument(
       app,
-      new DocumentBuilder().setTitle('Presidency Bingo API').build(),
+      new DocumentBuilder().setTitle('Mon p’tit président API').build(),
     );
     SwaggerModule.setup('api/docs', app, document);
   }

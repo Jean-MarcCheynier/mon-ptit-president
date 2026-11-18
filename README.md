@@ -1,4 +1,4 @@
-# Presidency Bingo
+# Mon p’tit président
 
 Monorepo web : **NestJS** + **PostgreSQL** (Prisma) côté API, **React** (Vite) côté front.
 Authentification complète : inscription avec validation par email, connexion, connexion Google,

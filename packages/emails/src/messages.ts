@@ -1,6 +1,6 @@
 import type { Locale } from '@presidency-bingo/shared';
 
-export const APP_NAME = 'Presidency Bingo';
+export const APP_NAME = 'Mon p’tit président';
 
 const fr = {
   greeting: (name: string) => `Bonjour ${name},`,

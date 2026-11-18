@@ -15,7 +15,7 @@ modules:
 
 styleguide:
   product: |
-    Presidency Bingo: a web game where friends predict the outcome of the French
+    Mon p’tit président: a web game where friends predict the outcome of the French
     presidential election (2027) and score points based on their predictions.
     Used on mobile and desktop, casually, between friends.
   voice: |
@@ -39,7 +39,7 @@ styleguide:
       Sentence case for headings and buttons ("Create my account", not "Create My Account").
       Contractions are fine.
   doNotTranslate:
-    - term: Presidency Bingo
+    - term: Mon p’tit président
       definition: App name
       caseSensitive: true
     - term: Google
