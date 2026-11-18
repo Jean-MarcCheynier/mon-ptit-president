@@ -13,3 +13,8 @@ playwright-report
 test-results
 .DS_Store
 !.env.test
+
+
+// Gitea setup
+gitea
+docker-compose.gitea.yml
