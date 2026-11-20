@@ -58,6 +58,8 @@ async function expectNoHorizontalScroll(page: Page) {
 test('phones get a bottom bar instead of the header; desktop keeps the header', async ({
   browser,
 }) => {
+  // One pass per screen size.
+  test.slow();
   const session = await signUp(browser);
 
   for (const screen of PHONES) {
@@ -173,6 +175,8 @@ const PORTRAIT_PHONES = PHONES.filter((screen) => screen.height > screen.width);
 test('the swipe deck stays in place: fixed card, fixed buttons, no sideways scroll', async ({
   browser,
 }) => {
+  // One pass per screen size.
+  test.slow();
   const session = await signUp(browser);
 
   for (const screen of [...PORTRAIT_PHONES, DESKTOP]) {
