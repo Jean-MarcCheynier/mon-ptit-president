@@ -89,8 +89,8 @@ function decidedIn(election: CurrentElectionDto, draft: DraftBallotDto): number 
 }
 
 /**
- * Proposes a new version of the presentation to a player who saw an older one (or none, if they
- * played before it existed), without blocking anything; dismissing it counts as seen.
+ * Proposes a new version of the presentation to a player who saw an older one, without blocking
+ * anything; dismissing it counts as seen. One who never saw it is sent to it instead.
  */
 function NewPresentation({
   versionSeen,

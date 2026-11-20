@@ -13,7 +13,6 @@ import {
   type PlayerPhase,
   phaseScheduleSelect,
   playerPhases,
-  presentationCleared,
   toPhaseSchedule,
 } from './phases.js';
 
@@ -71,9 +70,8 @@ export class ElectionsService {
       }),
     ]);
     const validated = new Set<GamePhase>(ballots.map((b) => b.phase));
-    if (presentationCleared(user?.onboardingVersionSeen ?? 0, validated.size > 0)) {
-      validated.add('PRESENTATION');
-    }
+    // Any version seen clears it: a newer one is only proposed (see isOnboardingOutdated).
+    if ((user?.onboardingVersionSeen ?? 0) > 0) validated.add('PRESENTATION');
     const phases = playerPhases(toPhaseSchedule(election), validated);
     return { id: election.id, phases };
   }
