@@ -72,10 +72,16 @@
   },
   "home": {
     "title": "Bienvenue, {{name}} !",
-    "description": "Parie sur la présidentielle et marque des points selon tes pronostics."
+    "nextStep": {
+      "QUALIFIERS": "Parie sur les qualifiés !",
+      "WINNER": "Choisis ton futur président !",
+      "FIRST_ROUND": "Parie sur le 1er tour !",
+      "SECOND_ROUND": "Parie sur le 2nd tour !",
+      "rendezvous": "Rendez-vous le {{date}} pour la suite",
+      "rendezvousSoon": "Rendez-vous bientôt pour la suite"
+    }
   },
   "election": {
-    "rounds": "1er tour le {{first}}, 2nd tour le {{second}}",
     "none": "Aucune élection à venir pour le moment.",
     "notParticipated": "Pronostics clos, tu n’as pas participé.",
     "resultsNotParticipated": "Liste officielle publiée. Tu n’avais pas validé de pronostic."

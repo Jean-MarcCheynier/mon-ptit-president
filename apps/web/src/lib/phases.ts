@@ -1,4 +1,5 @@
 import {
+  type CurrentElectionDto,
   ErrorCode,
   type GamePhase,
   type PhaseState,
@@ -62,6 +63,44 @@ export const isWriting = (action: PhaseAction) =>
 /** The phase to put forward: the first one with nothing validated yet. */
 export function nextPhase(phases: PlayerPhaseDto[]): GamePhase | null {
   return phases.find((p) => p.playable && p.state === 'TODO')?.phase ?? null;
+}
+
+/**
+ * What the home's sentence reminds the player of: the phase to bet on, a rendez-vous for the
+ * next one (on a date, or null while unknown or already past), or nothing at the journey's end.
+ */
+export type NextStepHint =
+  | { kind: 'TODO'; phase: Exclude<GamePhase, 'PRESENTATION'> }
+  | { kind: 'RENDEZVOUS'; date: string | null }
+  | null;
+
+/**
+ * The home's next step: the first phase to do; without one, a rendez-vous for the next upcoming
+ * phase. The presentation never counts (a new player is sent there), nor a winner phase that
+ * isn't playable: it lets the journey through, so the rendez-vous is the first round's. The
+ * rendez-vous has a date when one is known: the first round opens with the official list, the
+ * second one after the first round.
+ */
+export function nextStepHint(
+  phases: PlayerPhaseDto[],
+  election: Pick<CurrentElectionDto, 'officialListPublishedAt' | 'firstRoundAt'>,
+  now = new Date(),
+): NextStepHint {
+  const steps = phases.filter(
+    (p): p is PlayerPhaseDto & { phase: Exclude<GamePhase, 'PRESENTATION'> } =>
+      p.phase !== 'PRESENTATION' && (p.phase !== 'WINNER' || p.playable),
+  );
+  const todo = steps.find((p) => p.playable && p.state === 'TODO');
+  if (todo) return { kind: 'TODO', phase: todo.phase };
+  const upcoming = steps.find((p) => p.state === 'UPCOMING');
+  if (!upcoming) return null;
+  const date =
+    upcoming.phase === 'FIRST_ROUND'
+      ? election.officialListPublishedAt
+      : upcoming.phase === 'SECOND_ROUND'
+        ? election.firstRoundAt
+        : null;
+  return { kind: 'RENDEZVOUS', date: date && new Date(date) > now ? date : null };
 }
 
 /** The page where the player writes (or reviews) a phase's prediction; not every phase has one. */

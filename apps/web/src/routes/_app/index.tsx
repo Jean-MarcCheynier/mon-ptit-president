@@ -21,7 +21,7 @@ import { phasesQuery } from '@/lib/phases';
 import { resultsQuery } from '@/lib/results';
 
 /**
- * Home: the election and the user's journey through its phases. It stays up when the prediction
+ * Home: the user's journey through the election's phases, and what to do next. It stays up when the prediction
  * API fails: errors are shown in place of the journey. A new player first goes through the
  * presentation.
  */
