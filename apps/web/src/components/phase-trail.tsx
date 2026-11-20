@@ -16,7 +16,7 @@ interface PhaseTrailProps {
 }
 
 /** Each state's color, as Tailwind classes (tokens `--phase-*` in index.css). */
-const COLORS: Record<PhaseState, { border: string; text: string; bg: string }> = {
+export const PHASE_COLORS: Record<PhaseState, { border: string; text: string; bg: string }> = {
   TODO: { border: 'border-phase-todo', text: 'text-phase-todo', bg: 'bg-phase-todo' },
   DONE: { border: 'border-phase-done', text: 'text-phase-done', bg: 'bg-phase-done' },
   CLOSED: { border: 'border-phase-closed', text: 'text-phase-closed', bg: 'bg-phase-closed' },
@@ -104,7 +104,7 @@ function PhaseStep({
           data-slot="phase-line-start"
           className="absolute bottom-full left-1/2 flex h-6 -translate-x-1/2 flex-col items-center"
         >
-          <span className={cn('size-3 shrink-0 rounded-full', COLORS[start.color].bg)} />
+          <span className={cn('size-3 shrink-0 rounded-full', PHASE_COLORS[start.color].bg)} />
           <LineStretch line={start} />
         </span>
       ) : null}
@@ -118,7 +118,7 @@ function PhaseStep({
         <LineStretch line={line} />
         {last ? (
           <ChevronDown
-            className={cn('-mt-2 size-5 shrink-0', COLORS[line.color].text)}
+            className={cn('-mt-2 size-5 shrink-0', PHASE_COLORS[line.color].text)}
             strokeWidth={3.5}
           />
         ) : null}
@@ -126,7 +126,7 @@ function PhaseStep({
       <div
         className={cn(
           'grid gap-3 rounded-lg border bg-card p-4 shadow-xs',
-          COLORS[state].border,
+          PHASE_COLORS[state].border,
           current ? 'ring-1 ring-phase-todo' : null,
           state === 'UPCOMING' || state === 'SKIPPED' ? 'text-muted-foreground' : null,
         )}
@@ -164,7 +164,7 @@ function LineStretch({ line }: { line: Line }) {
       className={cn(
         'w-0 flex-1 border-l-4',
         line.dotted ? 'border-dotted' : 'border-solid',
-        COLORS[line.color].border,
+        PHASE_COLORS[line.color].border,
       )}
     />
   );
@@ -172,7 +172,7 @@ function LineStretch({ line }: { line: Line }) {
 
 /** The step's icon, in its state's color; the step's number while it is to do. */
 function StateIcon({ state, index }: { state: PhaseState; index: number }) {
-  const className = cn('mt-0.5 size-5 shrink-0', COLORS[state].text);
+  const className = cn('mt-0.5 size-5 shrink-0', PHASE_COLORS[state].text);
   switch (state) {
     case 'DONE':
       return <Check className={className} strokeWidth={3} aria-hidden />;
