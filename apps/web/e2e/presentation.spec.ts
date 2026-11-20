@@ -35,6 +35,18 @@ test('a new player goes through the presentation before the qualifiers', async (
   await expect(slide.getByRole('heading')).toHaveText('Les qualifiés');
   await expect(slide).toContainText('100 points');
 
+  // On desktop, three slides are seen whole: the current one between its neighbours, which
+  // stay out of the accessibility tree. Clicking a neighbour brings it to the center.
+  const slides = page.locator('[aria-roledescription="diapositive"]');
+  for (const i of [0, 1, 2]) await expect(slides.nth(i)).toBeInViewport({ ratio: 1 });
+  await expect(slides.nth(3)).not.toBeInViewport({ ratio: 0.1 });
+  await slides.nth(2).click();
+  await expect(slide.getByRole('heading')).toHaveText('Le vainqueur');
+  await slide.click();
+  await expect(slide.getByRole('heading')).toHaveText('Le vainqueur');
+  await slides.nth(1).click();
+  await expect(slide.getByRole('heading')).toHaveText('Les qualifiés');
+
   // The arrow keys move too, and the dots jump to a slide.
   await page.getByRole('region', { name: 'Présentation du jeu' }).focus();
   await page.keyboard.press('ArrowRight');
@@ -92,4 +104,72 @@ test('a new version of the presentation is proposed, not imposed', async ({ page
   await page.unroute('**/api/me');
   await page.getByRole('button', { name: 'Plus tard' }).click();
   await expect(page.getByText('La présentation du jeu a changé')).toHaveCount(0);
+});
+
+test('on a phone: the slide centered between its peeking neighbours, swiped or tapped, without the bottom bar', async ({
+  browser,
+}) => {
+  const height = 640;
+  const context = await browser.newContext({
+    viewport: { width: 360, height },
+    hasTouch: true,
+    isMobile: true,
+    locale: 'fr-FR',
+  });
+  const page = await context.newPage();
+  await register(page);
+
+  const carousel = page.getByRole('region', { name: 'Présentation du jeu' });
+  const heading = page.getByRole('article').getByRole('heading');
+  await expect(heading).toHaveText('Bienvenue dans Mon p’tit président');
+  await expect(page.getByRole('navigation', { name: 'Navigation principale' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Précédent' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Suivant' })).toBeHidden();
+
+  const box = await carousel.boundingBox();
+  if (!box) throw new Error('no carousel');
+  expect(Math.abs(box.y + box.height / 2 - height / 2)).toBeLessThan(8);
+
+  // The slide itself is centered too, its neighbour peeking.
+  const slide = page.getByRole('article');
+  const slideBox = await slide.boundingBox();
+  if (!slideBox) throw new Error('no slide');
+  expect(Math.abs(slideBox.x + slideBox.width / 2 - 360 / 2)).toBeLessThan(8);
+
+  // Tapping the slide's right half moves on, the left half back.
+  const tapSide = async (right: boolean) => {
+    const current = await slide.boundingBox();
+    if (!current) throw new Error('no slide');
+    await slide.tap({ position: { x: right ? current.width - 20 : 20, y: current.height / 2 } });
+  };
+  await tapSide(true);
+  await expect(heading).toHaveText('Les qualifiés');
+  await tapSide(false);
+  await expect(heading).toHaveText('Bienvenue dans Mon p’tit président');
+
+  // Swiping to the left moves on, to the right back.
+  const swipe = async (dx: number) => {
+    const y = box.y + box.height / 2;
+    const x = box.x + box.width / 2;
+    await page.mouse.move(x - dx / 2, y);
+    await page.mouse.down();
+    await page.mouse.move(x + dx / 2, y, { steps: 5 });
+    await page.mouse.up();
+  };
+  await swipe(-150);
+  await expect(heading).toHaveText('Les qualifiés');
+  await swipe(150);
+  await expect(heading).toHaveText('Bienvenue dans Mon p’tit président');
+
+  await expect(page.getByRole('button', { name: 'C’est parti !' })).toHaveCount(0);
+  for (const title of ['Les qualifiés', 'Le vainqueur', 'Le 1er et le 2nd tour']) {
+    await tapSide(true);
+    await expect(heading).toHaveText(title);
+  }
+  await tapSide(true);
+  await expect(heading).toHaveText('Clôture et classement');
+  await page.getByRole('button', { name: 'C’est parti !' }).click();
+  await expect(page.getByRole('heading', { name: 'Bienvenue, Novice !' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Navigation principale' })).toBeVisible();
+  await context.close();
 });

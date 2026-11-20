@@ -35,6 +35,8 @@ function AppLayout() {
   const { t, i18n } = useTranslation();
   const { data: user } = useSuspenseQuery(meQuery);
   const logout = useLogout();
+  // The presentation takes the whole phone screen: no bottom bar.
+  const immersive = useLocation({ select: (location) => location.pathname === '/presentation' });
 
   // The account's language wins over the browser's.
   useEffect(() => {
@@ -71,10 +73,17 @@ function AppLayout() {
         </div>
       </header>
       {/* On phones: no header, the bottom bar (and its height) takes over. */}
-      <main className="mx-auto max-w-4xl px-4 py-8 mobile:pt-4 mobile:pb-24">
+      <main
+        className={cn(
+          'mx-auto max-w-4xl px-4 py-8 mobile:pt-4',
+          immersive
+            ? 'mobile:flex mobile:min-h-svh mobile:flex-col mobile:pb-[max(1rem,env(safe-area-inset-bottom))]'
+            : 'mobile:pb-24',
+        )}
+      >
         <Outlet />
       </main>
-      <BottomBar />
+      {immersive ? null : <BottomBar />}
     </div>
   );
 }

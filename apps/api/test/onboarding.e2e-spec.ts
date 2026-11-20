@@ -89,14 +89,22 @@ describe('Onboarding (e2e)', () => {
     expect(await states(ada)).toMatchObject({ PRESENTATION: 'DONE', QUALIFIERS: 'DONE' });
   });
 
-  it('only proposes a new version: an older one seen blocks nothing', async () => {
+  it('holds back a player who never saw it, even with a prediction validated', async () => {
     const ada = await t.signUp();
     await validateQualifiers(ada);
-    // As after a bump of ONBOARDING_VERSION, without touching the players' data.
-    await t.prisma.user.updateMany({ data: { onboardingVersionSeen: ONBOARDING_VERSION - 1 } });
+    await t.prisma.user.updateMany({ data: { onboardingVersionSeen: 0 } });
 
-    const me = await ada.get('/api/me').expect(200);
-    expect(me.body.onboardingVersionSeen).toBeLessThan(ONBOARDING_VERSION);
+    expect(await states(ada)).toMatchObject({ PRESENTATION: 'TODO', QUALIFIERS: 'UPCOMING' });
+    await ada.post(ONBOARDING).expect(200);
+    expect(await states(ada)).toMatchObject({ PRESENTATION: 'DONE', QUALIFIERS: 'DONE' });
+  });
+
+  it('only proposes a new version: any version seen, even the first, blocks nothing', async () => {
+    const ada = await t.signUp();
+    await validateQualifiers(ada);
+    // The oldest version: after a bump of ONBOARDING_VERSION, players keep theirs.
+    await t.prisma.user.updateMany({ data: { onboardingVersionSeen: 1 } });
+
     expect(await states(ada)).toMatchObject({
       PRESENTATION: 'DONE',
       QUALIFIERS: 'DONE',

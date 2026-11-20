@@ -103,10 +103,3 @@ export function playerPhases(
 }
 
 export const isPast = (date: Date | null, now = new Date()) => date !== null && now >= date;
-
-/**
- * Whether the player cleared the presentation: any version of it seen, even an older one (a new
- * version is only proposed), or a prediction validated before the presentation existed.
- */
-export const presentationCleared = (onboardingVersionSeen: number, validatedAny: boolean) =>
-  onboardingVersionSeen > 0 || validatedAny;

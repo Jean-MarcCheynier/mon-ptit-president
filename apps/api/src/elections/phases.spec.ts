@@ -1,5 +1,5 @@
 import type { GamePhase, PhaseState } from '@presidency-bingo/shared';
-import { type PhaseSchedule, playerPhases, presentationCleared } from './phases.js';
+import { type PhaseSchedule, playerPhases } from './phases.js';
 
 const at = (iso: string) => new Date(iso);
 
@@ -135,17 +135,5 @@ describe('player phases', () => {
     expect(states(AFTER_FIRST_ROUND, ['QUALIFIERS', 'FIRST_ROUND'])).toMatchObject({
       SECOND_ROUND: 'UPCOMING',
     });
-  });
-});
-
-describe('presentation cleared', () => {
-  it('takes any version seen, so that a new one does not block anything', () => {
-    expect(presentationCleared(0, false)).toBe(false);
-    expect(presentationCleared(1, false)).toBe(true);
-    expect(presentationCleared(7, false)).toBe(true);
-  });
-
-  it('lets through a player who validated a prediction before the presentation existed', () => {
-    expect(presentationCleared(0, true)).toBe(true);
   });
 });
