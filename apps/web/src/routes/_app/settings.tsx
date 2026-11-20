@@ -7,8 +7,8 @@ import {
   updateProfileSchema,
 } from '@presidency-bingo/shared';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
-import { LogOut } from 'lucide-react';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { BookOpen, LogOut } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -36,6 +36,7 @@ function SettingsPage() {
       <ProfileCard user={user} />
       <PasswordCard user={user} />
       <AccountsCard user={user} />
+      <PresentationCard />
       <SessionsCard />
     </div>
   );
@@ -200,6 +201,27 @@ function AccountsCard({ user }: { user: PublicUser }) {
         {googleLinked ? null : (
           <p className="text-sm text-muted-foreground">{t('settings.accounts.googleHint')}</p>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** The game's presentation, to read again at any time. */
+function PresentationCard() {
+  const { t } = useTranslation();
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('settings.presentation.title')}</CardTitle>
+        <CardDescription>{t('settings.presentation.description')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button asChild variant="outline">
+          <Link to="/presentation">
+            <BookOpen aria-hidden />
+            {t('presentation.again')}
+          </Link>
+        </Button>
       </CardContent>
     </Card>
   );

@@ -137,6 +137,10 @@
       "title": "Sessions",
       "description": "Déconnecte tous les appareils, y compris celui-ci.",
       "logoutAll": "Déconnecter partout"
+    },
+    "presentation": {
+      "title": "Présentation du jeu",
+      "description": "Le jeu, ses phases et son barème."
     }
   },
   "validation": {
@@ -266,5 +270,49 @@
     "reviewAfterList": "La liste officielle est publiée : ton pronostic reste valable sur les qualifiés, mais pense à le revoir.",
     "closed": "Pronostics du 1er tour clos. Voici ton pronostic, validé le {{date}}.",
     "notParticipated": "Pronostics du 1er tour clos, tu n’as pas participé."
+  },
+  "presentation": {
+    "title": "Présentation du jeu",
+    "carousel": "carrousel",
+    "slide": "diapositive",
+    "position": "{{index}} sur {{total}}",
+    "progress": "Avancement de la présentation",
+    "skip": "Passer",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "start": "C’est parti !",
+    "phases": {
+      "QUALIFIERS": "qui sera sur la ligne de départ ?",
+      "WINNER": "qui sera élu ?",
+      "FIRST_ROUND": "avec quels scores au 1er tour ?",
+      "SECOND_ROUND": "et au duel du 2nd tour ?"
+    },
+    "slides": {
+      "game": {
+        "title": "Bienvenue dans Mon p’tit président",
+        "body": "Entre amis, pronostique la présidentielle phase après phase. Chaque phase s’ouvre une fois la précédente validée, et tu peux modifier ton pronostic jusqu’à sa clôture."
+      },
+      "qualifiers": {
+        "title": "Les qualifiés",
+        "body": "Pour chaque candidat du pool, décide s’il sera qualifié ou recalé par la liste officielle. Une décision juste rapporte d’autant plus de points que les autres joueurs ont fait le choix inverse ; une décision fausse ne rapporte rien."
+      },
+      "winner": {
+        "title": "Le vainqueur",
+        "body": "Choisis le futur président parmi les favoris, ou « autre candidat ». Chaque choix a sa cote, fixée d’avance et la même pour tous : tu la marques s’il est élu. Plus le choix est improbable, plus la cote est élevée."
+      },
+      "rounds": {
+        "title": "Le 1er et le 2nd tour",
+        "body": "Donne le score de chaque candidat. Plus ton écart avec le score réel est faible, plus tu marques. Des bonus récompensent les bons finalistes au 1er tour et le bon gagnant du duel au 2nd."
+      },
+      "closing": {
+        "title": "Clôture et classement",
+        "body": "À la clôture d’une phase, les pronostics sont figés ; une phase close sans pronostic validé est sautée et ne rapporte rien. Les points s’additionnent au classement, et les tendances montrent ce qu’ont pensé les autres joueurs."
+      }
+    },
+    "updated": "La présentation du jeu a changé depuis ta dernière visite.",
+    "view": "Voir la présentation",
+    "later": "Plus tard",
+    "discover": "Découvre le jeu",
+    "again": "Revoir la présentation"
   }
 }

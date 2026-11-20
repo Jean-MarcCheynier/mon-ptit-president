@@ -1,4 +1,4 @@
-import { Controller, Get, Patch } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Patch, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   type PublicUser,
@@ -25,5 +25,12 @@ export class UsersController {
     @ZodBody(updateProfileSchema) body: UpdateProfileInput,
   ): Promise<PublicUser> {
     return this.users.updateProfile(user.id, body);
+  }
+
+  /** Records that the player went through (or skipped) the current presentation of the game. */
+  @Post('onboarding')
+  @HttpCode(HttpStatus.OK)
+  completeOnboarding(@CurrentUser() user: AuthUser): Promise<PublicUser> {
+    return this.users.completeOnboarding(user.id);
   }
 }

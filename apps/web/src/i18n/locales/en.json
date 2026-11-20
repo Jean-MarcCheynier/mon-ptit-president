@@ -137,6 +137,10 @@
       "title": "Sessions",
       "description": "Sign out of every device, including this one.",
       "logoutAll": "Sign out everywhere"
+    },
+    "presentation": {
+      "title": "How the game works",
+      "description": "The game, its phases and its scoring."
     }
   },
   "validation": {
@@ -266,5 +270,49 @@
     "reviewAfterList": "The official list is published: your prediction still counts on the qualified candidates, but you may want to review it.",
     "closed": "First-round predictions are closed. Here is your prediction, validated on {{date}}.",
     "notParticipated": "First-round predictions are closed, you did not take part."
+  },
+  "presentation": {
+    "title": "How the game works",
+    "carousel": "carousel",
+    "slide": "slide",
+    "position": "{{index}} of {{total}}",
+    "progress": "Presentation progress",
+    "skip": "Skip",
+    "previous": "Previous",
+    "next": "Next",
+    "start": "Let’s go!",
+    "phases": {
+      "QUALIFIERS": "who will be on the starting line?",
+      "WINNER": "who will be elected?",
+      "FIRST_ROUND": "with what scores in the 1st round?",
+      "SECOND_ROUND": "and in the 2nd round’s runoff?"
+    },
+    "slides": {
+      "game": {
+        "title": "Welcome to Mon p’tit président",
+        "body": "With friends, predict the presidential election phase after phase. Each phase opens once the previous one is validated, and you can change your prediction until it closes."
+      },
+      "qualifiers": {
+        "title": "The qualifiers",
+        "body": "For each candidate in the pool, decide whether the official list will qualify or reject them. A right decision earns more points the more other players chose the opposite; a wrong one earns nothing."
+      },
+      "winner": {
+        "title": "The winner",
+        "body": "Pick the next president among the favorites, or “other candidate”. Each choice has its odds, set in advance and the same for everyone: you score them if they are elected. The less likely the choice, the higher the odds."
+      },
+      "rounds": {
+        "title": "The 1st and 2nd rounds",
+        "body": "Give each candidate’s score. The closer you are to the actual score, the more you earn. Bonuses reward the right finalists in the 1st round and the right winner of the 2nd round’s runoff."
+      },
+      "closing": {
+        "title": "Closing and ranking",
+        "body": "When a phase closes, predictions are frozen; a phase closed without a validated prediction is skipped and earns nothing. Points add up in the ranking, and trends show what the other players thought."
+      }
+    },
+    "updated": "The game’s presentation has changed since your last visit.",
+    "view": "See the presentation",
+    "later": "Later",
+    "discover": "Discover the game",
+    "again": "See the presentation again"
   }
 }

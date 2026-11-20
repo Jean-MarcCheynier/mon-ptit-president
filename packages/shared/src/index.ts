@@ -2,4 +2,5 @@ export * from './auth.js';
 export * from './ballots.js';
 export * from './elections.js';
 export * from './locale.js';
+export * from './onboarding.js';
 export * from './results.js';

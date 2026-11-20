@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { linkFromLatestEmail } from './mailpit';
+import { skipPresentation } from './presentation';
 
 test('register → confirm email → sign out → sign in', async ({ page }) => {
   const email = `ada+${Date.now()}@example.com`;
@@ -21,6 +22,7 @@ test('register → confirm email → sign out → sign in', async ({ page }) => 
 
   // The link in the email confirms the address and signs in.
   await page.goto(await linkFromLatestEmail(email, '/verify-email'));
+  await skipPresentation(page);
   await expect(page.getByRole('heading', { name: 'Bienvenue, Ada !' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Déconnexion' }).click();

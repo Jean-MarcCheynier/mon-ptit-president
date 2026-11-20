@@ -15,9 +15,12 @@ import {
 } from '@/lib/ballot';
 import { currentElectionQuery, usePredictionsLocked } from '@/lib/elections';
 import { errorMessage, translate } from '@/lib/errors';
+import { requirePhase } from '@/lib/phases';
 import { formatDateTime } from '@/lib/time';
 
+/** Held back by the presentation for a new player; else always open (read-only once closed). */
 export const Route = createFileRoute('/_app/review')({
+  beforeLoad: ({ context }) => requirePhase(context.queryClient, 'QUALIFIERS'),
   loader: ({ context }) =>
     Promise.all([
       context.queryClient.query(currentElectionQuery),

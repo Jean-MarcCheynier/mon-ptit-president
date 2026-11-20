@@ -15,6 +15,7 @@ import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppFirstRoundRouteImport } from './routes/_app/first-round'
 import { Route as AppPredictRouteImport } from './routes/_app/predict'
+import { Route as AppPresentationRouteImport } from './routes/_app/presentation'
 import { Route as AppReviewRouteImport } from './routes/_app/review'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppWinnerRouteImport } from './routes/_app/winner'
@@ -50,6 +51,11 @@ const AppFirstRoundRoute = AppFirstRoundRouteImport.update({
 const AppPredictRoute = AppPredictRouteImport.update({
   id: '/predict',
   path: '/predict',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPresentationRoute = AppPresentationRouteImport.update({
+  id: '/presentation',
+  path: '/presentation',
   getParentRoute: () => AppRoute,
 } as any)
 const AppReviewRoute = AppReviewRouteImport.update({
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/first-round': typeof AppFirstRoundRoute
   '/predict': typeof AppPredictRoute
+  '/presentation': typeof AppPresentationRoute
   '/review': typeof AppReviewRoute
   '/settings': typeof AppSettingsRoute
   '/winner': typeof AppWinnerRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/first-round': typeof AppFirstRoundRoute
   '/predict': typeof AppPredictRoute
+  '/presentation': typeof AppPresentationRoute
   '/review': typeof AppReviewRoute
   '/settings': typeof AppSettingsRoute
   '/winner': typeof AppWinnerRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/_app/first-round': typeof AppFirstRoundRoute
   '/_app/predict': typeof AppPredictRoute
+  '/_app/presentation': typeof AppPresentationRoute
   '/_app/review': typeof AppReviewRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/winner': typeof AppWinnerRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/first-round'
     | '/predict'
+    | '/presentation'
     | '/review'
     | '/settings'
     | '/winner'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/first-round'
     | '/predict'
+    | '/presentation'
     | '/review'
     | '/settings'
     | '/winner'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/_app/first-round'
     | '/_app/predict'
+    | '/_app/presentation'
     | '/_app/review'
     | '/_app/settings'
     | '/_app/winner'
@@ -233,6 +245,13 @@ declare module '@tanstack/react-router' {
       path: '/predict'
       fullPath: '/predict'
       preLoaderRoute: typeof AppPredictRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/presentation': {
+      id: '/_app/presentation'
+      path: '/presentation'
+      fullPath: '/presentation'
+      preLoaderRoute: typeof AppPresentationRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/review': {
@@ -297,6 +316,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppFirstRoundRoute: typeof AppFirstRoundRoute
   AppPredictRoute: typeof AppPredictRoute
+  AppPresentationRoute: typeof AppPresentationRoute
   AppReviewRoute: typeof AppReviewRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppWinnerRoute: typeof AppWinnerRoute
@@ -306,6 +326,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppFirstRoundRoute: AppFirstRoundRoute,
   AppPredictRoute: AppPredictRoute,
+  AppPresentationRoute: AppPresentationRoute,
   AppReviewRoute: AppReviewRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppWinnerRoute: AppWinnerRoute,

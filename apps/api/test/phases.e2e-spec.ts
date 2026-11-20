@@ -71,7 +71,7 @@ describe('Phases (e2e)', () => {
     const ada = await t.signUp();
     const res = await ada.get(PHASES).expect(200);
     expect(res.body.phases).toEqual([
-      { phase: 'PRESENTATION', state: 'UPCOMING', closesAt: null, playable: false },
+      { phase: 'PRESENTATION', state: 'DONE', closesAt: null, playable: true },
       {
         phase: 'QUALIFIERS',
         state: 'TODO',

@@ -1,5 +1,6 @@
 import { type Browser, expect, type Page, test } from '@playwright/test';
 import { linkFromLatestEmail } from './mailpit';
+import { skipPresentation } from './presentation';
 
 type Screen = { name: string; width: number; height: number; touch: boolean };
 
@@ -25,6 +26,7 @@ async function signUp(browser: Browser) {
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await expect(page.getByText('Vérifie ta boîte mail')).toBeVisible();
   await page.goto(await linkFromLatestEmail(email, '/verify-email'));
+  await skipPresentation(page);
   await expect(page.getByRole('heading', { name: 'Bienvenue, Mobile !' })).toBeVisible();
   const state = await context.storageState();
   await context.close();
