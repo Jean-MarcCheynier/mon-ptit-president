@@ -15,8 +15,13 @@ export interface TestApp {
   agent: () => ReturnType<typeof request.agent>;
   http: () => ReturnType<typeof request>;
   reset: () => Promise<void>;
-  /** Registers and verifies a user; returns an agent signed in as them. */
-  signUp: (user?: Partial<TestUser>) => Promise<ReturnType<typeof request.agent>>;
+  /**
+   * Registers and verifies a user, who goes through the presentation unless `onboarded` is
+   * false; returns an agent signed in as them.
+   */
+  signUp: (
+    user?: Partial<TestUser> & { onboarded?: boolean },
+  ) => Promise<ReturnType<typeof request.agent>>;
 }
 
 export interface TestUser {
@@ -43,12 +48,16 @@ export async function createTestApp(): Promise<TestApp> {
   await app.init();
   const prisma = app.get(PrismaService);
 
-  const signUp = async (overrides: Partial<TestUser> = {}) => {
+  const signUp = async ({
+    onboarded = true,
+    ...overrides
+  }: Partial<TestUser> & { onboarded?: boolean } = {}) => {
     const user = { ...ada, ...overrides };
     await request(app.getHttpServer()).post('/api/auth/register').send(user).expect(202);
     const agent = request.agent(app.getHttpServer());
     const token = tokenFromEmail(mail.lastTo(user.email)?.text);
     await agent.post('/api/auth/verify-email').send({ token }).expect(200);
+    if (onboarded) await agent.post('/api/me/onboarding').expect(200);
     return agent;
   };
 

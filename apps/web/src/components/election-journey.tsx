@@ -6,6 +6,7 @@ import type {
   ValidatedBallotDto,
 } from '@presidency-bingo/shared';
 import { Link, useNavigate } from '@tanstack/react-router';
+import { BookOpen, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { EditBallotButton } from '@/components/edit-ballot-button';
 import { usePhaseActionButton } from '@/components/phase-action';
@@ -56,6 +57,9 @@ export function ElectionJourney({
       <PhaseTrail
         phases={phases}
         actions={{
+          PRESENTATION: (
+            <PresentationAction phase={phases.find((p) => p.phase === 'PRESENTATION')} />
+          ),
           QUALIFIERS: (
             <QualifiersAction
               election={election}
@@ -132,6 +136,23 @@ function QualifiersAction({
       </div>
       {link}
     </>
+  );
+}
+
+/** Discover the game while to do; read it again afterwards (it never closes). */
+function PresentationAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
+  const { t } = useTranslation();
+  const state = usePhaseState(phase);
+  if (state !== 'TODO' && state !== 'DONE') return null;
+  const todo = state === 'TODO';
+  const Icon = todo ? Sparkles : BookOpen;
+  return (
+    <Button asChild variant={todo ? 'default' : 'outline'}>
+      <Link to="/presentation">
+        <Icon aria-hidden />
+        {t(todo ? 'presentation.discover' : 'presentation.again')}
+      </Link>
+    </Button>
   );
 }
 

@@ -76,6 +76,8 @@ export interface PublicUser {
   emailVerifiedAt: string | null;
   hasPassword: boolean;
   providers: AuthProvider[];
+  /** Last version of the game's presentation the player went through (ONBOARDING_VERSION); 0: never. */
+  onboardingVersionSeen: number;
   createdAt: string;
 }
 

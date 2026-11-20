@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import {
   type CurrentElectionDto,
   ErrorCode,
+  type GamePhase,
   type Phase,
   type PlayerPhaseDto,
 } from '@presidency-bingo/shared';
@@ -12,6 +13,7 @@ import {
   type PlayerPhase,
   phaseScheduleSelect,
   playerPhases,
+  presentationCleared,
   toPhaseSchedule,
 } from './phases.js';
 
@@ -57,12 +59,22 @@ export class ElectionsService {
       select: { id: true, ...phaseScheduleSelect },
     });
     if (!election) throw noCurrentElection();
-    const validated = await this.prisma.ballot.findMany({
-      where: { userId, electionId: election.id, status: 'VALIDATED' },
-      distinct: ['phase'],
-      select: { phase: true },
-    });
-    const phases = playerPhases(toPhaseSchedule(election), new Set(validated.map((b) => b.phase)));
+    const [ballots, user] = await Promise.all([
+      this.prisma.ballot.findMany({
+        where: { userId, electionId: election.id, status: 'VALIDATED' },
+        distinct: ['phase'],
+        select: { phase: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { onboardingVersionSeen: true },
+      }),
+    ]);
+    const validated = new Set<GamePhase>(ballots.map((b) => b.phase));
+    if (presentationCleared(user?.onboardingVersionSeen ?? 0, validated.size > 0)) {
+      validated.add('PRESENTATION');
+    }
+    const phases = playerPhases(toPhaseSchedule(election), validated);
     return { id: election.id, phases };
   }
 

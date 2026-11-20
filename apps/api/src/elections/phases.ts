@@ -37,7 +37,7 @@ export interface PlayerPhase {
 }
 
 interface PhaseRule {
-  /** False until the phase is built (#25, #28) or set up for the election: it lets the player through. */
+  /** False until the phase is built (#28) or set up for the election: it lets the player through. */
   playable: (schedule: PhaseSchedule) => boolean;
   /** Its closing; null if it never closes or while unknown. */
   closesAt: (schedule: PhaseSchedule) => Date | null;
@@ -49,7 +49,8 @@ const always = () => true;
 const never = () => false;
 
 const RULES: Record<GamePhase, PhaseRule> = {
-  PRESENTATION: { playable: never, closesAt: () => null, scheduled: always },
+  // Never closes: it can be read again at any time.
+  PRESENTATION: { playable: always, closesAt: () => null, scheduled: always },
   QUALIFIERS: { playable: always, closesAt: (s) => s.predictionsLockAt, scheduled: always },
   WINNER: {
     playable: (s) => s.hasFavorites,
@@ -102,3 +103,10 @@ export function playerPhases(
 }
 
 export const isPast = (date: Date | null, now = new Date()) => date !== null && now >= date;
+
+/**
+ * Whether the player cleared the presentation: any version of it seen, even an older one (a new
+ * version is only proposed), or a prediction validated before the presentation existed.
+ */
+export const presentationCleared = (onboardingVersionSeen: number, validatedAny: boolean) =>
+  onboardingVersionSeen > 0 || validatedAny;

@@ -10,16 +10,18 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(uuid(7)) @db.Uuid
-  email           String    @unique
-  name            String
-  avatarUrl       String?   @map("avatar_url")
-  locale          String    @default("fr")
+  id                    String    @id @default(uuid(7)) @db.Uuid
+  email                 String    @unique
+  name                  String
+  avatarUrl             String?   @map("avatar_url")
+  locale                String    @default("fr")
   // Null for accounts created through an OAuth provider only.
-  passwordHash    String?   @map("password_hash")
-  emailVerifiedAt DateTime? @map("email_verified_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  passwordHash          String?   @map("password_hash")
+  emailVerifiedAt       DateTime? @map("email_verified_at")
+  // Last version of the game's presentation the player went through (ONBOARDING_VERSION); 0: never.
+  onboardingVersionSeen Int       @default(0) @map("onboarding_version_seen")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
   accounts           Account[]
   refreshTokens      RefreshToken[]

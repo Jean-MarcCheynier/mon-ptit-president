@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { linkFromLatestEmail } from './mailpit';
+import { skipPresentation } from './presentation';
 
 // Requires the seeded election (`pnpm --filter @presidency-bingo/api db:seed`). The seed doesn't
 // publish the official list, so the first round is opened by faking the API: the phases say it is
@@ -15,6 +16,7 @@ async function signUp(page: Page) {
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await expect(page.getByText('Vérifie ta boîte mail')).toBeVisible();
   await page.goto(await linkFromLatestEmail(email, '/verify-email'));
+  await skipPresentation(page);
   await expect(page.getByRole('heading', { name: 'Bienvenue, Scorer !' })).toBeVisible();
 }
 

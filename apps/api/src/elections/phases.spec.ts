@@ -1,5 +1,5 @@
 import type { GamePhase, PhaseState } from '@presidency-bingo/shared';
-import { type PhaseSchedule, playerPhases } from './phases.js';
+import { type PhaseSchedule, playerPhases, presentationCleared } from './phases.js';
 
 const at = (iso: string) => new Date(iso);
 
@@ -13,14 +13,19 @@ const BEFORE_LOCK = '2026-11-10T00:00:00Z';
 const AFTER_LOCK = '2027-03-20T00:00:00Z';
 const AFTER_FIRST_ROUND = '2027-04-17T00:00:00Z';
 
-/** Each phase's state, for a player who validated `validated`. */
+/** Each phase's state, for a player who went through the presentation and validated `validated`. */
 const states = (
   now: string,
   validated: GamePhase[] = [],
   schedule: PhaseSchedule = election,
+  { presented = true } = {},
 ): Record<GamePhase, PhaseState> =>
   Object.fromEntries(
-    playerPhases(schedule, new Set(validated), at(now)).map((p) => [p.phase, p.state]),
+    playerPhases(
+      schedule,
+      new Set<GamePhase>(presented ? ['PRESENTATION', ...validated] : validated),
+      at(now),
+    ).map((p) => [p.phase, p.state]),
   ) as Record<GamePhase, PhaseState>;
 
 describe('player phases', () => {
@@ -35,16 +40,35 @@ describe('player phases', () => {
     ]);
   });
 
-  it('starts a new player at the qualifiers', () => {
-    expect(states(BEFORE_LOCK)).toEqual({
-      PRESENTATION: 'UPCOMING',
-      QUALIFIERS: 'TODO',
+  it('starts a new player at the presentation, which holds the qualifiers back', () => {
+    expect(states(BEFORE_LOCK, [], election, { presented: false })).toEqual({
+      PRESENTATION: 'TODO',
+      QUALIFIERS: 'UPCOMING',
       WINNER: 'UPCOMING',
       FIRST_ROUND: 'UPCOMING',
       SECOND_ROUND: 'UPCOMING',
     });
     const playable = playerPhases(election, new Set(), at(BEFORE_LOCK)).map((p) => p.playable);
-    expect(playable).toEqual([false, true, true, true, false]);
+    expect(playable).toEqual([true, true, true, true, false]);
+  });
+
+  it('opens the qualifiers once the presentation is done, which never closes', () => {
+    expect(states(BEFORE_LOCK)).toEqual({
+      PRESENTATION: 'DONE',
+      QUALIFIERS: 'TODO',
+      WINNER: 'UPCOMING',
+      FIRST_ROUND: 'UPCOMING',
+      SECOND_ROUND: 'UPCOMING',
+    });
+    expect(states(AFTER_FIRST_ROUND)).toMatchObject({ PRESENTATION: 'DONE' });
+  });
+
+  it('does not hold back phases closed before the presentation is done', () => {
+    expect(states(AFTER_LOCK, [], election, { presented: false })).toMatchObject({
+      PRESENTATION: 'TODO',
+      QUALIFIERS: 'SKIPPED',
+      WINNER: 'SKIPPED',
+    });
   });
 
   it('opens each phase once the previous one is validated', () => {
@@ -111,5 +135,17 @@ describe('player phases', () => {
     expect(states(AFTER_FIRST_ROUND, ['QUALIFIERS', 'FIRST_ROUND'])).toMatchObject({
       SECOND_ROUND: 'UPCOMING',
     });
+  });
+});
+
+describe('presentation cleared', () => {
+  it('takes any version seen, so that a new one does not block anything', () => {
+    expect(presentationCleared(0, false)).toBe(false);
+    expect(presentationCleared(1, false)).toBe(true);
+    expect(presentationCleared(7, false)).toBe(true);
+  });
+
+  it('lets through a player who validated a prediction before the presentation existed', () => {
+    expect(presentationCleared(0, true)).toBe(true);
   });
 });
