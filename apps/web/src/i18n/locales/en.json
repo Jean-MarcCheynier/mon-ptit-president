@@ -71,10 +71,16 @@
   },
   "home": {
     "title": "Welcome, {{name}}!",
-    "description": "Bet on the presidential election and score points with your predictions."
+    "nextStep": {
+      "QUALIFIERS": "Bet on the qualifiers!",
+      "WINNER": "Pick your future president!",
+      "FIRST_ROUND": "Bet on the first round!",
+      "SECOND_ROUND": "Bet on the second round!",
+      "rendezvous": "See you on {{date}} for what’s next",
+      "rendezvousSoon": "See you soon for what’s next"
+    }
   },
   "election": {
-    "rounds": "First round on {{first}}, second round on {{second}}",
     "none": "No upcoming election for now.",
     "notParticipated": "Predictions are closed, you didn’t take part.",
     "resultsNotParticipated": "Official list published. You hadn't validated a prediction."

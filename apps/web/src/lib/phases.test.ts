@@ -1,6 +1,6 @@
 import type { GamePhase, PhaseState, PlayerPhaseDto } from '@presidency-bingo/shared';
 import { describe, expect, it } from 'vitest';
-import { currentPhasePage, phaseAction } from './phases';
+import { currentPhasePage, nextStepHint, phaseAction } from './phases';
 
 const phase = (phase: GamePhase, state: PhaseState, playable = true): PlayerPhaseDto => ({
   phase,
@@ -104,5 +104,107 @@ describe('phaseAction', () => {
 
   it('offers the results once published', () => {
     expect(phaseAction('CLOSED', { results: true })).toBe('RESULTS');
+  });
+});
+
+describe('nextStepHint', () => {
+  const now = new Date('2027-01-15T12:00:00Z');
+  const election = {
+    officialListPublishedAt: '2027-03-10T18:00:00Z',
+    firstRoundAt: '2027-04-10T06:00:00Z',
+  };
+  const journey = (states: [PhaseState, PhaseState, PhaseState, PhaseState], winner = true) => [
+    phase('PRESENTATION', 'DONE'),
+    phase('QUALIFIERS', states[0]),
+    phase('WINNER', states[1], winner),
+    phase('FIRST_ROUND', states[2]),
+    phase('SECOND_ROUND', states[3], false),
+  ];
+
+  it('points to the qualifiers to do', () => {
+    expect(
+      nextStepHint(journey(['TODO', 'UPCOMING', 'UPCOMING', 'UPCOMING']), election, now),
+    ).toEqual({ kind: 'TODO', phase: 'QUALIFIERS' });
+  });
+
+  it('points to the winner to do', () => {
+    expect(nextStepHint(journey(['DONE', 'TODO', 'UPCOMING', 'UPCOMING']), election, now)).toEqual({
+      kind: 'TODO',
+      phase: 'WINNER',
+    });
+  });
+
+  it('points to the first round to do', () => {
+    expect(nextStepHint(journey(['CLOSED', 'SKIPPED', 'TODO', 'UPCOMING']), election, now)).toEqual(
+      { kind: 'TODO', phase: 'FIRST_ROUND' },
+    );
+  });
+
+  it('points to the second round to do', () => {
+    const phases = journey(['CLOSED', 'CLOSED', 'CLOSED', 'TODO']);
+    phases[4] = phase('SECOND_ROUND', 'TODO');
+    expect(nextStepHint(phases, election, now)).toEqual({ kind: 'TODO', phase: 'SECOND_ROUND' });
+  });
+
+  it('ignores the presentation, even to do', () => {
+    const phases = journey(['TODO', 'UPCOMING', 'UPCOMING', 'UPCOMING']);
+    phases[0] = phase('PRESENTATION', 'TODO');
+    expect(nextStepHint(phases, election, now)).toEqual({ kind: 'TODO', phase: 'QUALIFIERS' });
+  });
+
+  it('ignores a winner phase that is not playable', () => {
+    expect(
+      nextStepHint(journey(['DONE', 'UPCOMING', 'TODO', 'UPCOMING'], false), election, now),
+    ).toEqual({ kind: 'TODO', phase: 'FIRST_ROUND' });
+    expect(
+      nextStepHint(journey(['DONE', 'UPCOMING', 'UPCOMING', 'UPCOMING'], false), election, now),
+    ).toEqual({ kind: 'RENDEZVOUS', date: election.officialListPublishedAt });
+  });
+
+  it('sets the first round rendez-vous at the official list', () => {
+    expect(nextStepHint(journey(['DONE', 'DONE', 'UPCOMING', 'UPCOMING']), election, now)).toEqual({
+      kind: 'RENDEZVOUS',
+      date: election.officialListPublishedAt,
+    });
+  });
+
+  it('sets the second round rendez-vous at the first round', () => {
+    expect(nextStepHint(journey(['CLOSED', 'CLOSED', 'DONE', 'UPCOMING']), election, now)).toEqual({
+      kind: 'RENDEZVOUS',
+      date: election.firstRoundAt,
+    });
+  });
+
+  it('gives no date to a rendez-vous while unknown', () => {
+    expect(
+      nextStepHint(
+        journey(['DONE', 'DONE', 'UPCOMING', 'UPCOMING']),
+        { ...election, officialListPublishedAt: null },
+        now,
+      ),
+    ).toEqual({ kind: 'RENDEZVOUS', date: null });
+  });
+
+  it('gives no date to a rendez-vous already past', () => {
+    expect(
+      nextStepHint(
+        journey(['CLOSED', 'CLOSED', 'DONE', 'UPCOMING']),
+        election,
+        new Date('2027-04-11T00:00:00Z'),
+      ),
+    ).toEqual({ kind: 'RENDEZVOUS', date: null });
+    expect(
+      nextStepHint(
+        journey(['DONE', 'DONE', 'UPCOMING', 'UPCOMING']),
+        election,
+        new Date(election.officialListPublishedAt),
+      ),
+    ).toEqual({ kind: 'RENDEZVOUS', date: null });
+  });
+
+  it('says nothing once no phase is upcoming', () => {
+    const phases = journey(['CLOSED', 'CLOSED', 'CLOSED', 'SKIPPED']);
+    expect(nextStepHint(phases, election, now)).toBeNull();
+    expect(nextStepHint([], election, now)).toBeNull();
   });
 });
