@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { newProfiles } from '@/lib/ballot';
 import { usePredictionsLocked } from '@/lib/elections';
 import { useStartFirstRoundDraft } from '@/lib/first-round';
-import { phaseAction, usePhaseState } from '@/lib/phases';
+import { type NextStepHint, nextStepHint, phaseAction, usePhaseState } from '@/lib/phases';
 
 interface ElectionJourneyProps {
   election: CurrentElectionDto;
@@ -29,7 +29,7 @@ interface ElectionJourneyProps {
   result: ResultDto | null;
 }
 
-/** The current election, as a section heading, and the user's journey through its phases. */
+/** The user's journey through the current election's phases, and what to do next. */
 export function ElectionJourney({
   election,
   phases,
@@ -37,23 +37,10 @@ export function ElectionJourney({
   ballot,
   result,
 }: ElectionJourneyProps) {
-  const { t, i18n } = useTranslation();
-  const formatDate = (iso: string) =>
-    new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' }).format(new Date(iso));
-
   return (
-    <section aria-labelledby="election-name" className="grid gap-4">
-      <div className="grid gap-1">
-        <h2 id="election-name" className="text-xl font-semibold">
-          {election.name}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {t('election.rounds', {
-            first: formatDate(election.firstRoundAt),
-            second: formatDate(election.secondRoundAt),
-          })}
-        </p>
-      </div>
+    // The election's name no longer shows on the home, but still names the section.
+    <section aria-label={election.name} className="grid gap-4">
+      <NextStep hint={nextStepHint(phases, election)} />
       <PhaseTrail
         phases={phases}
         actions={{
@@ -75,6 +62,23 @@ export function ElectionJourney({
       />
     </section>
   );
+}
+
+/** One sentence above the journey: what to bet on now, or when to come back; none at the end. */
+function NextStep({ hint }: { hint: NextStepHint }) {
+  const { t, i18n } = useTranslation();
+  if (!hint) return null;
+  const text =
+    hint.kind === 'TODO'
+      ? t(`home.nextStep.${hint.phase}`)
+      : hint.date
+        ? t('home.nextStep.rendezvous', {
+            date: new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' }).format(
+              new Date(hint.date),
+            ),
+          })
+        : t('home.nextStep.rendezvousSoon');
+  return <p className="text-lg font-medium text-balance">{text}</p>;
 }
 
 function QualifiersAction({

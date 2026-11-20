@@ -15,6 +15,8 @@ async function signUp(page: Page) {
   await page.goto(await linkFromLatestEmail(email, '/verify-email'));
   await skipPresentation(page);
   await expect(page.getByRole('heading', { name: 'Bienvenue, Swiper !' })).toBeVisible();
+  // The home recalls the next step: the qualifiers, for a new player.
+  await expect(page.getByText('Parie sur les qualifiés !')).toBeVisible();
 }
 
 const progress = (page: Page) => page.getByText(/^\d+ \/ \d+$/);
