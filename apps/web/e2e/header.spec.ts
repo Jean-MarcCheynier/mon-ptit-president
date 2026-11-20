@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { linkFromLatestEmail } from './mailpit';
+import { skipPresentation } from './presentation';
 
 // Requires the seeded election and its favorites (`pnpm --filter @presidency-bingo/api db:seed`):
 // a new player has the qualifiers to do, the winner and the first round ahead.
@@ -13,6 +14,7 @@ async function signUp(page: Page) {
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await expect(page.getByText('Vérifie ta boîte mail')).toBeVisible();
   await page.goto(await linkFromLatestEmail(email, '/verify-email'));
+  await skipPresentation(page);
   await expect(page.getByRole('heading', { name: 'Bienvenue, Header !' })).toBeVisible();
 }
 
@@ -21,7 +23,7 @@ test('the desktop header lists each phase, greying out those ahead', async ({ pa
   const header = page.getByRole('banner');
   const entries = header.getByRole('navigation').locator('a, button');
   await expect(entries).toHaveText(['Accueil', 'Qualifiés', 'Vainqueur', '1er tour', 'Paramètres']);
-  await expect(header.getByRole('link', { name: 'Accueil' })).toHaveAttribute(
+  await expect(header.getByRole('link', { name: 'Accueil', exact: true })).toHaveAttribute(
     'aria-current',
     'page',
   );
@@ -43,10 +45,19 @@ test('the desktop header lists each phase, greying out those ahead', async ({ pa
   await qualifiers.click();
   await expect(page).toHaveURL(/\/predict$/);
   await expect(qualifiers).toHaveAttribute('aria-current', 'page');
-  await expect(header.getByRole('link', { name: 'Accueil' })).not.toHaveAttribute(
+  await expect(header.getByRole('link', { name: 'Accueil', exact: true })).not.toHaveAttribute(
     'aria-current',
     'page',
   );
+
+  // Top right: the logo and the game's name lead back home.
+  const logo = header.getByRole('link', { name: 'Mon p’tit président, retour à l’accueil' });
+  await expect(logo).toHaveText('Mon p’tit président');
+  const logoBox = await logo.boundingBox();
+  const logoutBox = await header.getByRole('button', { name: 'Déconnexion' }).boundingBox();
+  expect(logoBox?.x).toBeGreaterThan(logoutBox?.x ?? Infinity);
+  await logo.click();
+  await expect(page).toHaveURL(/\/$/);
 
   // From the narrowest desktop width, on one line.
   await page.setViewportSize({ width: 640, height: 800 });
