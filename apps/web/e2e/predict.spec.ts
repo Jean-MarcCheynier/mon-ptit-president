@@ -159,7 +159,7 @@ test('swipe everything, review, validate, then edit the bet', async ({ page }) =
   await page.getByRole('button', { name: 'Valider mon pronostic' }).click();
   await expect(page.getByRole('button', { name: 'Modifie ton prono' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Mon pronostic' }).click();
+  await page.getByRole('banner').getByRole('link', { name: 'Qualifiés' }).click();
   await expect(page.getByText('Ton pronostic est validé')).toBeVisible();
 
   // After the deadline, the bet is read-only.
@@ -191,7 +191,7 @@ test('after the deadline, a user who never validated cannot take part', async ({
   await expect(page.getByText(/^Sautée · close le/).first()).toBeVisible();
   await expect(page.getByRole('link', { name: 'Fais ton prono !' })).toHaveCount(0);
 
-  await page.getByRole('link', { name: 'Mon pronostic' }).click();
+  await page.getByRole('banner').getByRole('link', { name: 'Qualifiés' }).click();
   await expect(page.getByText('Pronostics clos, tu n’as pas participé.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Qualifié' })).toHaveCount(0);
 });

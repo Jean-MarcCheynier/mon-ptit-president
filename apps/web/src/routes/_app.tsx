@@ -1,22 +1,23 @@
+import type { GamePhase, PlayerPhaseDto } from '@presidency-bingo/shared';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, Link, Outlet, redirect, useLocation } from '@tanstack/react-router';
 import { House, LogOut, type LucideIcon, Settings, Vote } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PHASE_COLORS } from '@/components/phase-trail';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { meQuery, useLogout } from '@/lib/auth';
-import { currentPhasePage, PHASE_PAGES, type PhasePage, phasesQuery } from '@/lib/phases';
+import {
+  currentPhasePage,
+  isReachable,
+  PHASE_PAGES,
+  type PhasePage,
+  phasesQuery,
+  usePhaseState,
+} from '@/lib/phases';
 import { cn } from '@/lib/utils';
-
-type NavPath = '/' | '/predict' | '/settings';
-
-const NAV: { to: NavPath; label: 'nav.home' | 'nav.predict' | 'nav.settings'; icon: LucideIcon }[] =
-  [
-    { to: '/', label: 'nav.home', icon: House },
-    { to: '/predict', label: 'nav.predict', icon: Vote },
-    { to: '/settings', label: 'nav.settings', icon: Settings },
-  ];
 
 /** Signed-in area: anonymous visitors are sent to /login and brought back afterwards. */
 export const Route = createFileRoute('/_app')({
@@ -48,22 +49,12 @@ function AppLayout() {
     <div className="min-h-svh overflow-x-clip">
       <header className="border-b mobile:hidden">
         <div className="mx-auto flex h-14 max-w-4xl items-center gap-4 px-4">
-          <Link to="/" className="font-semibold">
+          <Link to="/" className="shrink-0 font-semibold">
             {t('app.name')}
           </Link>
-          <nav className="flex flex-1 gap-3 text-sm text-muted-foreground">
-            {NAV.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                activeOptions={{ exact: item.to === '/' }}
-                className="hover:text-foreground [&.active]:text-foreground"
-              >
-                {t(item.label)}
-              </Link>
-            ))}
-          </nav>
-          <Avatar className="size-8">
+          <HeaderNav />
+          {/* Below md, its room goes to the phases. */}
+          <Avatar className="size-8 shrink-0 max-md:hidden">
             {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt="" /> : null}
             <AvatarFallback>{user.name.slice(0, 1).toUpperCase()}</AvatarFallback>
           </Avatar>
@@ -74,7 +65,8 @@ function AppLayout() {
             disabled={logout.isPending}
           >
             <LogOut />
-            <span className="sr-only sm:not-sr-only">{t('nav.logout')}</span>
+            {/* Below lg, its room goes to the phases. */}
+            <span className="sr-only lg:not-sr-only">{t('nav.logout')}</span>
           </Button>
         </div>
       </header>
@@ -89,6 +81,90 @@ function AppLayout() {
 
 /** Pages of a phase's prediction: the bottom bar's middle tab is active on all of them. */
 const PHASE_PATHS: string[] = [...Object.values(PHASE_PAGES), '/review'];
+
+/** The phases with a page, in the journey's order. */
+const PAGED_PHASES = Object.keys(PHASE_PAGES) as (keyof typeof PHASE_PAGES)[];
+
+const NAV_LINK =
+  'whitespace-nowrap hover:text-foreground [&.active]:font-medium [&.active]:text-foreground';
+
+/**
+ * Desktop navigation: home, each phase that has a page (with its state's color), then the
+ * settings. The phases keep their place before they open, greyed out.
+ */
+function HeaderNav() {
+  const { t } = useTranslation();
+  // Not suspended: while loading, on failure or without an election, the phases are plain links.
+  const { data: phases } = useQuery(phasesQuery);
+  return (
+    <TooltipProvider>
+      <nav className="flex min-w-0 flex-1 items-center gap-3 text-sm text-muted-foreground md:gap-4">
+        <Link to="/" activeOptions={{ exact: true }} className={NAV_LINK}>
+          {t('nav.home')}
+        </Link>
+        {PAGED_PHASES.map((phase) => (
+          <PhaseNavLink key={phase} phase={phase} player={phases?.find((p) => p.phase === phase)} />
+        ))}
+        <Link to="/settings" className={NAV_LINK}>
+          {t('nav.settings')}
+        </Link>
+      </nav>
+    </TooltipProvider>
+  );
+}
+
+function PhaseNavLink({
+  phase,
+  player,
+}: {
+  phase: keyof typeof PHASE_PAGES;
+  /** Where the player stands in it; unknown while loading or without an election. */
+  player: PlayerPhaseDto | undefined;
+}) {
+  const { t } = useTranslation();
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const state = usePhaseState(player);
+  const name = t(`phases.names.${phase satisfies GamePhase}`);
+  const dot = player ? (
+    <span aria-hidden className={cn('size-2 shrink-0 rounded-full', PHASE_COLORS[state].bg)} />
+  ) : null;
+  const content = (
+    <>
+      {dot}
+      {name}
+    </>
+  );
+  const className = cn(NAV_LINK, 'flex items-center gap-1.5');
+
+  if (player && !isReachable(state)) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {/* Not `disabled`: it stays focusable, for its tooltip to show from the keyboard too. */}
+          <button
+            type="button"
+            aria-disabled="true"
+            className={cn(className, 'cursor-not-allowed opacity-50 hover:text-muted-foreground')}
+          >
+            {content}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{t('phases.states.UPCOMING')}</TooltipContent>
+      </Tooltip>
+    );
+  }
+  // The qualifiers' review of a draft belongs to its phase.
+  const active = phase === 'QUALIFIERS' && pathname === '/review';
+  return (
+    <Link
+      to={PHASE_PAGES[phase]}
+      aria-current={active ? 'page' : undefined}
+      className={cn(className, active && 'active')}
+    >
+      {content}
+    </Link>
+  );
+}
 
 /** Phone navigation, within thumb's reach; replaces the header. */
 function BottomBar() {
