@@ -125,7 +125,7 @@ function Swipe({
   return (
     <SwipeCard
       // Phones: the screen height, minus the safe areas, main's top padding and the bottom bar.
-      className="grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-4 mobile:h-[calc(100svh-6rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] mobile:min-h-[26rem] mobile:gap-3"
+      className="grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-4 mobile:h-[calc(100svh-8rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] mobile:min-h-[26rem] mobile:gap-3"
       onSwipeLeft={() => save(false)}
       onSwipeRight={() => save(true)}
       onUndo={() => previous && removeEntry.mutate(previous.politicianId)}

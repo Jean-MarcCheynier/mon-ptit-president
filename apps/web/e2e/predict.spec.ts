@@ -108,7 +108,7 @@ test('swipe with the keyboard and the mouse, survive a reload, undo, resume from
   await dragCard(page, 200);
   await expect(progress(page)).toHaveText(/^5 \//);
 
-  await page.getByRole('link', { name: 'Accueil' }).click();
+  await page.getByRole('link', { name: 'Accueil', exact: true }).click();
   await expect(page.getByRole('link', { name: /Reprends ton prono \(5\/\d+\)/ })).toBeVisible();
 });
 
@@ -157,7 +157,7 @@ test('swipe everything, review, validate, then edit the bet', async ({ page }) =
     .click();
   await expect(page.getByRole('heading', { name: 'Qualifiés (3)' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Accueil' }).click();
+  await page.getByRole('link', { name: 'Accueil', exact: true }).click();
   await page.getByRole('link', { name: 'Reprends ton prono' }).click();
   await expect(page.getByRole('heading', { name: 'Qualifiés (3)' })).toBeVisible();
   await page.getByRole('button', { name: 'Valider mon pronostic' }).click();
