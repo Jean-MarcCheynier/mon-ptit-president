@@ -132,6 +132,10 @@ test('share out the scores with sliders and fields, survive a reload, validate, 
   await fields.nth(2).fill('10');
   await validate.click();
 
+  // Validated: back to the journey, like every phase.
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { name: /^Bienvenue/ })).toBeVisible();
+  await page.goto('/first-round');
   await expect(page.getByText('Ton pronostic du 1er tour est validé')).toBeVisible();
   await expect(page.getByText('45,5 %')).toBeVisible();
 

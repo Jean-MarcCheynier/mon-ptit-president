@@ -155,7 +155,8 @@ function ChooseWinner({
         <Button
           size="lg"
           disabled={draft === null || validate.isPending}
-          onClick={() => validate.mutate(undefined, { onSuccess: () => navigate({ search: {} }) })}
+          // Like every phase: back to the journey once validated.
+          onClick={() => validate.mutate(undefined, { onSuccess: () => navigate({ to: '/' }) })}
         >
           <CircleCheck />
           {t('winner.validate')}

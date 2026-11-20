@@ -5,7 +5,7 @@ import type {
   ValidatedScoresDto,
 } from '@presidency-bingo/shared';
 import { useSuspenseQueries } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Info, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form-alert';
@@ -124,6 +124,7 @@ function EditScores({
   const { t, i18n } = useTranslation();
   const setScore = useSetScore();
   const validate = useValidateScores();
+  const navigate = useNavigate();
   const error = setScore.error ?? validate.error;
 
   return (
@@ -139,7 +140,8 @@ function EditScores({
         candidates={candidates}
         entries={entries}
         onSave={(politicianId, score) => setScore.mutateAsync({ politicianId, score })}
-        onValidate={() => validate.mutate()}
+        // Like every phase: back to the journey once validated.
+        onValidate={() => validate.mutate(undefined, { onSuccess: () => navigate({ to: '/' }) })}
         validating={validate.isPending}
       />
       {error ? <FormAlert variant="error">{errorMessage(t, error)}</FormAlert> : null}

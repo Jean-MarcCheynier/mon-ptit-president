@@ -81,6 +81,10 @@ test('pick a favorite with its odds, validate, change it from home', async ({ pa
   await expect(glucksmann).toHaveAttribute('aria-checked', 'true');
   await validate.click();
 
+  // Validated: back to the journey, like every phase.
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { name: /^Bienvenue/ })).toBeVisible();
+  await page.goto('/winner');
   await expect(page.getByText('Ton pronostic du vainqueur est validé')).toBeVisible();
   await expect(page.getByText('Raphaël Glucksmann', { exact: true })).toBeVisible();
 
@@ -91,6 +95,8 @@ test('pick a favorite with its odds, validate, change it from home', async ({ pa
   await expect(page.getByText(/Ton pronostic reste celui validé le/)).toBeVisible();
   await page.getByRole('radio', { name: /Autre candidat/ }).click();
   await validate.click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto('/winner');
   await expect(page.getByText('Ton pronostic du vainqueur est validé')).toBeVisible();
   await expect(page.getByText('Autre candidat', { exact: true })).toBeVisible();
 });
