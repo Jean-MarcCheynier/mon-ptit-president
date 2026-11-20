@@ -40,6 +40,8 @@
   --phase-closed: oklch(0.552 0.016 285.938);
   --phase-skipped: oklch(0.72 0.11 75);
   --phase-upcoming: oklch(0.82 0.008 286);
+  /* The logo's armchair and bicorne: the same republican red in both themes. */
+  --logo-accent: #dc2626;
 }
 
 .dark {
@@ -67,6 +69,7 @@
   --phase-closed: oklch(0.6 0.016 286);
   --phase-skipped: oklch(0.7 0.09 75);
   --phase-upcoming: oklch(0.42 0.01 286);
+  --logo-accent: #dc2626;
 }
 
 @theme inline {
@@ -98,6 +101,7 @@
   --color-phase-closed: var(--phase-closed);
   --color-phase-skipped: var(--phase-skipped);
   --color-phase-upcoming: var(--phase-upcoming);
+  --color-logo-accent: var(--logo-accent);
 }
 
 @layer base {

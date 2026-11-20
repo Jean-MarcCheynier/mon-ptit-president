@@ -4,8 +4,8 @@ import { createFileRoute, Link, Outlet, redirect, useLocation } from '@tanstack/
 import { House, LogOut, type LucideIcon, Settings, Vote } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AppLogoLink } from '@/components/app-logo-link';
 import { PHASE_COLORS } from '@/components/phase-trail';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { meQuery, useLogout } from '@/lib/auth';
@@ -49,15 +49,7 @@ function AppLayout() {
     <div className="min-h-svh overflow-x-clip">
       <header className="border-b mobile:hidden">
         <div className="mx-auto flex h-14 max-w-4xl items-center gap-4 px-4">
-          <Link to="/" className="shrink-0 font-semibold">
-            {t('app.name')}
-          </Link>
           <HeaderNav />
-          {/* Below md, its room goes to the phases. */}
-          <Avatar className="size-8 shrink-0 max-md:hidden">
-            {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt="" /> : null}
-            <AvatarFallback>{user.name.slice(0, 1).toUpperCase()}</AvatarFallback>
-          </Avatar>
           <Button
             variant="ghost"
             size="sm"
@@ -68,10 +60,17 @@ function AppLayout() {
             {/* Below lg, its room goes to the phases. */}
             <span className="sr-only lg:not-sr-only">{t('nav.logout')}</span>
           </Button>
+          {/* Top right, where the eye ends its sweep. Below md, the name's room goes to the phases. */}
+          <AppLogoLink withName className="[&>span]:max-md:hidden" />
         </div>
       </header>
-      {/* On phones: no header, the bottom bar (and its height) takes over. */}
-      <main className="mx-auto max-w-4xl px-4 py-8 mobile:pt-4 mobile:pb-24">
+      {/*
+        On phones, no header: the logo floats in the top right, above a strip kept free for it
+        (pt-12), so it covers nothing until the page scrolls under it.
+      */}
+      <AppLogoLink className="fixed top-[calc(env(safe-area-inset-top)+0.25rem)] right-[calc(env(safe-area-inset-right)+0.5rem)] z-40 hidden size-11 justify-center rounded-full bg-background/90 backdrop-blur mobile:flex" />
+      {/* On phones: the bottom bar (and its height) takes over. */}
+      <main className="mx-auto max-w-4xl px-4 py-8 mobile:pt-12 mobile:pb-24">
         <Outlet />
       </main>
       <BottomBar />
