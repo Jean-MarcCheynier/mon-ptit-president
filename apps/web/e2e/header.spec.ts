@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { linkFromLatestEmail } from './mailpit';
+import { skipPresentation } from './presentation';
 
 // Requires the seeded election and its favorites (`pnpm --filter @presidency-bingo/api db:seed`):
 // a new player has the qualifiers to do, the winner and the first round ahead.
@@ -13,6 +14,7 @@ async function signUp(page: Page) {
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await expect(page.getByText('Vérifie ta boîte mail')).toBeVisible();
   await page.goto(await linkFromLatestEmail(email, '/verify-email'));
+  await skipPresentation(page);
   await expect(page.getByRole('heading', { name: 'Bienvenue, Header !' })).toBeVisible();
 }
 

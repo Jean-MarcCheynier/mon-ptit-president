@@ -113,6 +113,8 @@ test('swipe with the keyboard and the mouse, survive a reload, undo, resume from
 });
 
 test('swipe everything, review, validate, then edit the bet', async ({ page }) => {
+  // The whole journey of a bet, from the first swipe to the deadline.
+  test.slow();
   await signUp(page);
   await page.getByRole('link', { name: 'Fais ton prono !' }).click();
   const total = Number((await progress(page).textContent())?.split('/')[1]);
