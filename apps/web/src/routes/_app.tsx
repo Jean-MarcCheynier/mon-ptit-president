@@ -66,13 +66,15 @@ function AppLayout() {
           <AppLogoLink withName className="[&>span]:max-md:hidden" />
         </div>
       </header>
-      {/*
-        On phones, no header: the logo floats in the top right, above a strip kept free for it
-        (pt-12), so it covers nothing until the page scrolls under it.
-      */}
-      <AppLogoLink className="fixed top-[calc(env(safe-area-inset-top)+0.25rem)] right-[calc(env(safe-area-inset-right)+0.5rem)] z-40 hidden size-11 justify-center rounded-full bg-background/90 backdrop-blur mobile:flex" />
-      {/* On phones: the bottom bar (and its height) takes over. */}
-      <main className="mx-auto max-w-4xl px-4 py-8 mobile:pt-12 mobile:pb-24">
+      {/* On phones: no header, the bottom bar (and its height) takes over. */}
+      <main
+        className={cn(
+          'mx-auto max-w-4xl px-4 py-8 mobile:pt-4',
+          immersive
+            ? 'mobile:flex mobile:min-h-svh mobile:flex-col mobile:pb-[max(1rem,env(safe-area-inset-bottom))]'
+            : 'mobile:pb-24',
+        )}
+      >
         <Outlet />
       </main>
       {immersive ? null : <BottomBar />}
