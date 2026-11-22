@@ -50,12 +50,12 @@ test('the desktop header lists each phase, greying out those ahead', async ({ pa
     'page',
   );
 
-  // Top right: the logo and the game's name lead back home.
+  // Top left, ahead of the nav: the logo and the game's name lead back home.
   const logo = header.getByRole('link', { name: 'Mon p’tit président, retour à l’accueil' });
   await expect(logo).toHaveText('Mon p’tit président');
   const logoBox = await logo.boundingBox();
-  const logoutBox = await header.getByRole('button', { name: 'Déconnexion' }).boundingBox();
-  expect(logoBox?.x).toBeGreaterThan(logoutBox?.x ?? Infinity);
+  const homeBox = await header.getByRole('link', { name: 'Accueil', exact: true }).boundingBox();
+  expect(logoBox && logoBox.x + logoBox.width).toBeLessThanOrEqual(homeBox?.x ?? 0);
   await logo.click();
   await expect(page).toHaveURL(/\/$/);
 

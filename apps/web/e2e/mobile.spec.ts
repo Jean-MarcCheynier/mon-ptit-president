@@ -97,13 +97,13 @@ test('phones get a bottom bar instead of the header; desktop keeps the header', 
       await expect(page.getByRole('button', { name: 'Déconnexion' })).toBeVisible();
       await expectNoHorizontalScroll(page);
 
-      // The logo, alone in the top right, leads back home without covering the page's title.
+      // The logo leads the page's title, on its line, and takes the user back home.
       const logo = page.getByRole('link', { name: 'Mon p’tit président, retour à l’accueil' });
       const logoBox = await logo.boundingBox();
-      expect(logoBox && logoBox.x + logoBox.width).toBeLessThanOrEqual(screen.width);
-      expect(logoBox?.x).toBeGreaterThan(screen.width / 2);
       const title = await page.getByRole('heading', { level: 1 }).boundingBox();
-      expect(logoBox && title && logoBox.y + logoBox.height).toBeLessThanOrEqual(title?.y ?? 0);
+      expect(logoBox && title && logoBox.x + logoBox.width).toBeLessThanOrEqual(title?.x ?? 0);
+      expect(logoBox && title && logoBox.y).toBeLessThan((title?.y ?? 0) + (title?.height ?? 0));
+      expect(logoBox && title && logoBox.y + logoBox.height).toBeGreaterThan(title?.y ?? 0);
       await logo.click();
       await expect(page).toHaveURL(/\/$/);
 

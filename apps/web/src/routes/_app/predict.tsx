@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { BallotColumn } from '@/components/ballot-column';
 import { EditBallotButton } from '@/components/edit-ballot-button';
 import { FormAlert } from '@/components/form-alert';
+import { PageTitle } from '@/components/page-title';
 import { initials } from '@/components/politician-avatar';
 import { ResultsView } from '@/components/results-view';
 import { ScoringRules } from '@/components/scoring-rules';
@@ -57,9 +58,7 @@ function PredictPage() {
       queries: [currentElectionQuery, draftQuery, currentBallotQuery, resultsQuery],
     });
   const locked = usePredictionsLocked(election);
-  const title = (
-    <h1 className="truncate text-2xl font-semibold mobile:text-xl">{t('predict.title')}</h1>
-  );
+  const title = <PageTitle className="truncate mobile:text-xl">{t('predict.title')}</PageTitle>;
   const swiping =
     election && !results.published && !locked && !(ballot && draft.entries.length === 0);
 
@@ -125,7 +124,7 @@ function Swipe({
   return (
     <SwipeCard
       // Phones: the screen height, minus the safe areas, main's top padding and the bottom bar.
-      className="grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-4 mobile:h-[calc(100svh-8rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] mobile:min-h-[26rem] mobile:gap-3"
+      className="grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-4 mobile:h-[calc(100svh-6rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] mobile:min-h-[26rem] mobile:gap-3"
       onSwipeLeft={() => save(false)}
       onSwipeRight={() => save(true)}
       onUndo={() => previous && removeEntry.mutate(previous.politicianId)}

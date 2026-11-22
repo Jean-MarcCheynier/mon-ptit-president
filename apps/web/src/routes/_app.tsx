@@ -48,9 +48,18 @@ function AppLayout() {
 
   return (
     // Clipped: a swiped card flies off the screen without making the page scroll sideways.
-    <div className="min-h-svh overflow-x-clip">
+    <div
+      className={cn(
+        'min-h-svh overflow-x-clip',
+        // The presentation fills the screen (inside the body's safe areas), to center itself in it.
+        immersive &&
+          'flex min-h-[calc(100svh-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col',
+      )}
+    >
       <header className="border-b mobile:hidden">
         <div className="mx-auto flex h-14 max-w-4xl items-center gap-4 px-4">
+          {/* Top left, ahead of the nav. Below md, the name's room goes to the phases. */}
+          <AppLogoLink withName className="[&>span]:max-md:hidden" />
           <HeaderNav />
           <Button
             variant="ghost"
@@ -62,17 +71,16 @@ function AppLayout() {
             {/* Below lg, its room goes to the phases. */}
             <span className="sr-only lg:not-sr-only">{t('nav.logout')}</span>
           </Button>
-          {/* Top right, where the eye ends its sweep. Below md, the name's room goes to the phases. */}
-          <AppLogoLink withName className="[&>span]:max-md:hidden" />
         </div>
       </header>
-      {/*
-        On phones, no header: the logo floats in the top right, above a strip kept free for it
-        (pt-12), so it covers nothing until the page scrolls under it.
-      */}
-      <AppLogoLink className="fixed top-[calc(env(safe-area-inset-top)+0.25rem)] right-[calc(env(safe-area-inset-right)+0.5rem)] z-40 hidden size-11 justify-center rounded-full bg-background/90 backdrop-blur mobile:flex" />
-      {/* On phones: the bottom bar (and its height) takes over. */}
-      <main className="mx-auto max-w-4xl px-4 py-8 mobile:pt-12 mobile:pb-24">
+      {/* On phones: the bottom bar (and its height) takes over, and the logo leads each page's title. */}
+      <main
+        className={cn(
+          'mx-auto max-w-4xl px-4 py-8 mobile:pt-4 mobile:pb-24',
+          // Without the bottom bar, as much room below as above: the page centers on the screen.
+          immersive && 'flex w-full flex-1 flex-col mobile:pb-4',
+        )}
+      >
         <Outlet />
       </main>
       {immersive ? null : <BottomBar />}

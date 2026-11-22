@@ -9,6 +9,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Info, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form-alert';
+import { PageTitle } from '@/components/page-title';
 import { PoliticianAvatar } from '@/components/politician-avatar';
 import { ScoreForm } from '@/components/score-form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -48,7 +49,7 @@ function FirstRoundPage() {
 
   return (
     <div className="mx-auto grid max-w-xl gap-6">
-      <h1 className="text-2xl font-semibold">{t('firstRound.title')}</h1>
+      <PageTitle>{t('firstRound.title')}</PageTitle>
       {election ? (
         <FirstRound election={election} />
       ) : (
