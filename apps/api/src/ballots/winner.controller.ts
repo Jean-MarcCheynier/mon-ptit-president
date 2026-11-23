@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Post, Put } from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   type CurrentWinnerDto,
@@ -10,6 +10,7 @@ import {
 } from '@presidency-bingo/shared';
 import { type AuthUser, CurrentUser } from '../auth/auth.decorators.js';
 import { ZodBody } from '../common/zod-body.decorator.js';
+import { BallotsService } from './ballots.service.js';
 import { type ValidatedWinner, WinnerService } from './winner.service.js';
 
 /**
@@ -19,7 +20,10 @@ import { type ValidatedWinner, WinnerService } from './winner.service.js';
 @ApiTags('ballots')
 @Controller('elections/current/winner')
 export class WinnerController {
-  constructor(private readonly winner: WinnerService) {}
+  constructor(
+    private readonly winner: WinnerService,
+    private readonly ballots: BallotsService,
+  ) {}
 
   @Get('favorites')
   async favorites(): Promise<FavoritesDto> {
@@ -43,6 +47,13 @@ export class WinnerController {
     @ZodBody(winnerChoiceInputSchema) body: WinnerChoiceInput,
   ): Promise<WinnerDraftDto> {
     return { favoriteId: await this.winner.choose(user.id, body.favoriteId) };
+  }
+
+  /** Drops the draft: the validated choice counts again. */
+  @Delete('draft')
+  @HttpCode(204)
+  discardDraft(@CurrentUser() user: AuthUser): Promise<void> {
+    return this.ballots.discardDraft(user.id, 'WINNER');
   }
 
   @Post('draft/validate')

@@ -333,6 +333,22 @@ describe('Ballots (e2e)', () => {
       expect(sorted(second?.entries ?? [])).toEqual(sorted(entriesOf(['anne', 'chloe'])));
     });
 
+    it('discards an edit: the validated bet counts again, idempotently', async () => {
+      const agent = await t.signUp();
+      await decideAll(agent, ['anne', 'bruno']);
+      await agent.post(VALIDATE).expect(200);
+      await agent.post(DRAFT).expect(200);
+      await agent.put(entry('chloe')).send({ isCandidate: true }).expect(200);
+
+      await agent.delete(DRAFT).expect(204);
+      await agent.delete(DRAFT).expect(204);
+      expect((await agent.get(DRAFT).expect(200)).body).toEqual({ entries: [] });
+      const current = await agent.get(BALLOT).expect(200);
+      expect(sorted(current.body.ballot.entries)).toEqual(sorted(entriesOf(['anne', 'bruno'])));
+      expect(await draftCount()).toBe(0);
+      expect(await validatedBallots()).toHaveLength(1);
+    });
+
     it('does not pre-fill withdrawn politicians', async () => {
       const agent = await t.signUp();
       await decideAll(agent, ['anne', 'bruno', 'chloe']);
@@ -372,6 +388,7 @@ describe('Ballots (e2e)', () => {
       agent.put(entry('anne')).send({ isCandidate: false }),
       agent.delete(entry('bruno')),
       agent.post(DRAFT),
+      agent.delete(DRAFT),
       agent.post(VALIDATE),
     ];
 

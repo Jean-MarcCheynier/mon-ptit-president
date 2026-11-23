@@ -239,6 +239,22 @@ describe('First-round predictions (e2e)', () => {
     );
   });
 
+  it('discards an edit: the validated prediction counts again, idempotently', async () => {
+    const ada = await t.signUp();
+    await score(ada, { anne: 400, bruno: 400, chloe: 200 });
+    await ada.post(VALIDATE).expect(200);
+    await ada.post(DRAFT).expect(200);
+    await score(ada, { anne: 300 });
+
+    await ada.delete(DRAFT).expect(204);
+    await ada.delete(DRAFT).expect(204);
+    expect((await ada.get(DRAFT).expect(200)).body).toEqual({ entries: [] });
+    expect(sorted((await ada.get(BALLOT).expect(200)).body.ballot.entries)).toEqual(
+      asEntries({ anne: 400, bruno: 400, chloe: 200 }),
+    );
+    expect(await t.prisma.ballot.count({ where: { phase: 'FIRST_ROUND' } })).toBe(1);
+  });
+
   it('undoes a score, idempotently', async () => {
     const ada = await t.signUp();
     await score(ada, { anne: 400, bruno: 400 });
@@ -260,6 +276,7 @@ describe('First-round predictions (e2e)', () => {
       await ada.put(entry('anne')).send({ score: 500 }),
       await ada.delete(entry('anne')),
       await ada.post(DRAFT),
+      await ada.delete(DRAFT),
       await ada.post(VALIDATE),
     ]) {
       expect(res.status).toBe(403);

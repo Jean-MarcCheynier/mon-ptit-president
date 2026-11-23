@@ -21,9 +21,9 @@ import { phasesQuery } from '@/lib/phases';
 import { resultsQuery } from '@/lib/results';
 
 /**
- * Home: the user's journey through the election's phases, and what to do next. It stays up when the prediction
- * API fails: errors are shown in place of the journey. A new player first goes through the
- * presentation.
+ * Home: the user's journey through the election's phases, and what to do next. It stays up when
+ * the prediction API fails: errors are shown in place of the journey. A new player first goes
+ * through the presentation.
  */
 export const Route = createFileRoute('/_app/')({
   beforeLoad: async ({ context }) => {
@@ -55,10 +55,7 @@ function HomePage() {
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-2">
-        <PageTitle>{t('home.title', { name: user?.name })}</PageTitle>
-        <p className="text-muted-foreground">{t('home.description')}</p>
-      </div>
+      <PageTitle>{t('home.title', { name: user?.name })}</PageTitle>
       {user ? (
         <NewPresentation versionSeen={user.onboardingVersionSeen} phases={phases.data} />
       ) : null}
