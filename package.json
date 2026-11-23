@@ -20,7 +20,8 @@
     "test:smoke": "pnpm --filter @presidency-bingo/web test:e2e",
     "test:smoke:isolated": "pnpm --filter @presidency-bingo/web test:e2e:isolated",
     "db:seed": "pnpm --filter @presidency-bingo/api db:seed",
-    "db:reset": "pnpm --filter @presidency-bingo/api db:reset"
+    "db:reset": "pnpm --filter @presidency-bingo/api db:reset",
+    "db:simulate": "pnpm --filter @presidency-bingo/api db:simulate"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.3",
