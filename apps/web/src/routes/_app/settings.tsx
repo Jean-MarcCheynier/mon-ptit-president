@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { FormAlert } from '@/components/form-alert';
 import { FormField } from '@/components/form-field';
-import { PageTitle } from '@/components/page-title';
+import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -33,7 +33,7 @@ function SettingsPage() {
 
   return (
     <div className="grid gap-6">
-      <PageTitle>{t('settings.title')}</PageTitle>
+      <PageHeader title={t('settings.title')} />
       <ProfileCard user={user} />
       <PasswordCard user={user} />
       <AccountsCard user={user} />

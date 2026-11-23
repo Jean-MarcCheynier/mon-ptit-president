@@ -65,6 +65,15 @@ export function useChooseWinner() {
   });
 }
 
+/** Gives the draft up: the validated choice counts again. */
+export function useDiscardWinnerDraft() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<void>(DRAFT, { method: 'DELETE' }),
+    onSuccess: () => queryClient.setQueryData(winnerDraftQuery.queryKey, null),
+  });
+}
+
 /** Freezes the draft into the prediction that counts. */
 export function useValidateWinner() {
   const queryClient = useQueryClient();

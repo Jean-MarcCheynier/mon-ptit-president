@@ -87,6 +87,15 @@ export function useSetScore() {
   });
 }
 
+/** Gives the draft up: the validated prediction counts again. */
+export function useDiscardFirstRoundDraft() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<void>(DRAFT, { method: 'DELETE' }),
+    onSuccess: () => queryClient.setQueryData(firstRoundDraftQuery.queryKey, { entries: [] }),
+  });
+}
+
 /** Freezes the draft into the prediction that counts. */
 export function useValidateScores() {
   const queryClient = useQueryClient();

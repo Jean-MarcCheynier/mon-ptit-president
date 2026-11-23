@@ -4,8 +4,9 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Check, CircleCheck, Pencil, UserRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
+import { DraftActions } from '@/components/draft-actions';
 import { FormAlert } from '@/components/form-alert';
-import { PageTitle } from '@/components/page-title';
+import { PageHeader } from '@/components/page-header';
 import { PoliticianAvatar } from '@/components/politician-avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +17,7 @@ import { cn } from '@/lib/utils';
 import {
   favoritesQuery,
   useChooseWinner,
+  useDiscardWinnerDraft,
   useValidateWinner,
   winnerBallotQuery,
   winnerDraftQuery,
@@ -42,11 +44,13 @@ function WinnerPage() {
 
   return (
     <div className="mx-auto grid max-w-xl gap-6">
-      <PageTitle>{t('winner.title')}</PageTitle>
       {phases.length > 0 ? (
         <Winner />
       ) : (
-        <p className="text-muted-foreground">{t('election.none')}</p>
+        <>
+          <PageHeader title={t('winner.title')} />
+          <p className="text-muted-foreground">{t('election.none')}</p>
+        </>
       )}
     </div>
   );
@@ -64,21 +68,22 @@ function Winner() {
   const { ballot } = current;
   const chosen = favorites.find((f) => f.id === ballot?.favoriteId);
 
-  if (state === 'UPCOMING') {
-    return <p className="text-muted-foreground">{t('winner.upcoming')}</p>;
-  }
+  const header = (description: string) => (
+    <PageHeader title={t('winner.title')} description={description} />
+  );
+  if (state === 'UPCOMING') return header(t('winner.upcoming'));
   if (!isWritable(state)) {
-    if (!ballot || !chosen) {
-      return <p className="text-muted-foreground">{t('winner.notParticipated')}</p>;
-    }
+    if (!ballot || !chosen) return header(t('winner.notParticipated'));
     return (
-      <div className="grid gap-4">
-        <p className="text-muted-foreground">
-          {t('winner.closed', { date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage) })}
-        </p>
-        <FavoriteRow favorite={chosen} />
-        <Points points={current.points} />
-      </div>
+      <>
+        {header(
+          t('winner.closed', { date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage) }),
+        )}
+        <div className="grid gap-4">
+          <FavoriteRow favorite={chosen} />
+          <Points points={current.points} />
+        </div>
+      </>
     );
   }
 
@@ -86,16 +91,14 @@ function Winner() {
     ? t('winner.closesOn', { date: formatDateTime(phase.closesAt, i18n.resolvedLanguage) })
     : null;
   return (
-    <div className="grid gap-4">
-      <p className="text-muted-foreground">
-        {t('winner.description')} {closesOn}
-      </p>
+    <>
+      {header(closesOn ? `${t('winner.description')} ${closesOn}` : t('winner.description'))}
       {ballot && chosen && draft === null && !edit ? (
         <ValidatedWinner favorite={chosen} validatedAt={ballot.validatedAt} />
       ) : (
         <ChooseWinner favorites={favorites} draft={draft} ballot={ballot} />
       )}
-    </div>
+    </>
   );
 }
 
@@ -108,22 +111,21 @@ function ChooseWinner({
   draft: string | null;
   ballot: CurrentWinnerDto['ballot'];
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate({ from: Route.fullPath });
   const choose = useChooseWinner();
   const validate = useValidateWinner();
+  const discard = useDiscardWinnerDraft();
   const selected = draft ?? ballot?.favoriteId ?? null;
-  const error = choose.error ?? validate.error;
+  const error = choose.error ?? validate.error ?? discard.error;
+  // Back to the validated choice: nothing to discard while no new choice was made.
+  const cancel = () => {
+    if (draft === null) return navigate({ search: {} });
+    discard.mutate(undefined, { onSuccess: () => navigate({ search: {} }) });
+  };
 
   return (
-    <>
-      {ballot ? (
-        <p className="text-sm text-muted-foreground">
-          {t('winner.currentBet', {
-            date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage),
-          })}
-        </p>
-      ) : null}
+    <div className="grid gap-4">
       <div role="radiogroup" aria-label={t('winner.title')} className="grid gap-2">
         {favorites.map((favorite) => {
           const checked = favorite.id === selected;
@@ -146,25 +148,24 @@ function ChooseWinner({
           );
         })}
       </div>
-      {/* Like the qualifiers' review: full width on phones (validate first), on the right above. */}
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        {ballot && draft === null ? (
-          <Button size="lg" variant="outline" onClick={() => navigate({ search: {} })}>
-            {t('winner.cancel')}
+      <DraftActions
+        validatedAt={ballot?.validatedAt ?? null}
+        onCancel={() => void cancel()}
+        cancelling={discard.isPending}
+        validate={
+          <Button
+            size="lg"
+            disabled={draft === null || validate.isPending}
+            // Like every phase: back to the journey once validated.
+            onClick={() => validate.mutate(undefined, { onSuccess: () => navigate({ to: '/' }) })}
+          >
+            <CircleCheck />
+            {t('winner.validate')}
           </Button>
-        ) : null}
-        <Button
-          size="lg"
-          disabled={draft === null || validate.isPending}
-          // Like every phase: back to the journey once validated.
-          onClick={() => validate.mutate(undefined, { onSuccess: () => navigate({ to: '/' }) })}
-        >
-          <CircleCheck />
-          {t('winner.validate')}
-        </Button>
-      </div>
+        }
+      />
       {error ? <FormAlert variant="error">{errorMessage(t, error)}</FormAlert> : null}
-    </>
+    </div>
   );
 }
 

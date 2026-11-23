@@ -73,6 +73,10 @@ async function openFirstRound(page: Page) {
     if (path === '/candidates') return json({ politicianIds: qualified, official: true });
     if (path === '/ballot') return json({ ballot });
     if (path === '/draft' && method === 'GET') return json({ entries: draft ?? [] });
+    if (path === '/draft' && method === 'DELETE') {
+      draft = null;
+      return route.fulfill({ status: 204 });
+    }
     if (path === '/draft' && method === 'POST') {
       draft ??= ballot ? [...ballot.entries] : [];
       return json({ entries: draft });
@@ -100,6 +104,8 @@ async function openFirstRound(page: Page) {
 test('share out the scores with sliders and fields, survive a reload, validate, edit', async ({
   page,
 }) => {
+  // A whole cycle: write, validate, edit, cancel, edit again.
+  test.slow();
   await openFirstRound(page);
   await signUp(page);
   await step(page, '1er tour').getByRole('link', { name: 'Fais ton prono !' }).click();
@@ -145,9 +151,16 @@ test('share out the scores with sliders and fields, survive a reload, validate, 
   await expect(fields.nth(0)).toHaveValue('45,5');
   await expect(page.getByText(/Ton pronostic reste celui validé le/)).toBeVisible();
 
-  // From the journey too: editable, the first round offers to edit, straight into the form.
+  // An edit in progress: the journey offers to resume it.
   await page.goto('/');
   await expect(page.getByRole('link', { name: 'Voir ton prono' })).toHaveCount(0);
+  await step(page, '1er tour').getByRole('link', { name: 'Reprends ton prono' }).click();
+  await expect(fields.nth(0)).toHaveValue('45,5');
+
+  // Cancelled: the validated prediction is back, and the journey offers to edit it.
+  await page.getByRole('button', { name: 'Annuler' }).click();
+  await expect(page.getByText('Ton pronostic du 1er tour est validé')).toBeVisible();
+  await page.goto('/');
   await step(page, '1er tour').getByRole('button', { name: 'Modifie ton prono' }).click();
   await expect(page.getByRole('heading', { name: 'Pronostic du 1er tour' })).toBeVisible();
   await expect(fields.nth(0)).toHaveValue('45,5');

@@ -4,20 +4,21 @@ import { createFileRoute, Link, Navigate, useNavigate } from '@tanstack/react-ro
 import { CircleCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BallotColumn } from '@/components/ballot-column';
+import { DraftActions } from '@/components/draft-actions';
 import { FormAlert } from '@/components/form-alert';
-import { PageTitle } from '@/components/page-title';
+import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
   currentBallotQuery,
   draftQuery,
   reviewState,
+  useDiscardDraft,
   useSetEntry,
   useValidate,
 } from '@/lib/ballot';
 import { currentElectionQuery, usePredictionsLocked } from '@/lib/elections';
 import { errorMessage, translate } from '@/lib/errors';
 import { requirePhase } from '@/lib/phases';
-import { formatDateTime } from '@/lib/time';
 
 /** Held back by the presentation for a new player; else always open (read-only once closed). */
 export const Route = createFileRoute('/_app/review')({
@@ -32,19 +33,21 @@ export const Route = createFileRoute('/_app/review')({
 });
 
 function ReviewPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [{ data: election }, { data: draft }, { data: ballot }] = useSuspenseQueries({
     queries: [currentElectionQuery, draftQuery, currentBallotQuery],
   });
   const setEntry = useSetEntry();
   const validate = useValidate();
+  const discard = useDiscardDraft();
   const locked = usePredictionsLocked(election);
 
   // Locked: /predict shows the bet read-only.
   if (locked) return <Navigate to="/predict" replace />;
   // Nothing to review: swipe first (or see the validated bet there). Once validated, the
-  // draft is gone and the page waits for the redirect to home.
+  // draft is gone and the page waits for the redirect to home. Once given up, /predict shows the
+  // bet again.
   if (!election || draft.entries.length === 0) {
     return validate.isIdle ? <Navigate to="/predict" replace /> : null;
   }
@@ -52,21 +55,11 @@ function ReviewPage() {
   const { kept, dropped, undecided, blocker } = reviewState(election.candidates, draft.entries);
   const toggle = (candidate: ElectionCandidateDto, isCandidate: boolean) =>
     setEntry.mutate({ politicianId: candidate.politicianId, isCandidate });
-  const error = validate.error ?? setEntry.error;
+  const error = validate.error ?? setEntry.error ?? discard.error;
 
   return (
     <div className="mx-auto grid max-w-3xl gap-6">
-      <div className="grid gap-2">
-        <PageTitle>{t('review.title')}</PageTitle>
-        <p className="text-muted-foreground">{t('review.description')}</p>
-        {ballot ? (
-          <p className="text-sm text-muted-foreground">
-            {t('review.currentBet', {
-              date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage),
-            })}
-          </p>
-        ) : null}
-      </div>
+      <PageHeader title={t('review.title')} description={t('review.description')} />
 
       {undecided > 0 ? (
         <FormAlert variant="error">
@@ -99,15 +92,21 @@ function ReviewPage() {
           <p className="text-sm text-muted-foreground">{translate(t, `errors.${blocker}`, '')}</p>
         ) : null}
         {error ? <FormAlert variant="error">{errorMessage(t, error)}</FormAlert> : null}
-        <Button
-          size="lg"
-          className="sm:justify-self-end"
-          disabled={blocker !== null || validate.isPending}
-          onClick={() => validate.mutate(undefined, { onSuccess: () => navigate({ to: '/' }) })}
-        >
-          <CircleCheck />
-          {t('review.validate')}
-        </Button>
+        <DraftActions
+          validatedAt={ballot?.validatedAt ?? null}
+          onCancel={() => discard.mutate()}
+          cancelling={discard.isPending}
+          validate={
+            <Button
+              size="lg"
+              disabled={blocker !== null || validate.isPending}
+              onClick={() => validate.mutate(undefined, { onSuccess: () => navigate({ to: '/' }) })}
+            >
+              <CircleCheck />
+              {t('review.validate')}
+            </Button>
+          }
+        />
       </div>
     </div>
   );

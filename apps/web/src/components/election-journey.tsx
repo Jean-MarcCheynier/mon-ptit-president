@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { newProfiles } from '@/lib/ballot';
 import { usePredictionsLocked } from '@/lib/elections';
 import { useStartFirstRoundDraft } from '@/lib/first-round';
-import { type NextStepHint, nextStepHint, phaseAction, usePhaseState } from '@/lib/phases';
+import { phaseAction, usePhaseState } from '@/lib/phases';
 
 interface ElectionJourneyProps {
   election: CurrentElectionDto;
@@ -27,6 +27,8 @@ interface ElectionJourneyProps {
   ballot: ValidatedBallotDto | null;
   /** The user's result once the official list is published; null before, or without a bet. */
   result: ResultDto | null;
+  /** Phases after the qualifiers with an edit in progress, to resume. */
+  drafts: { WINNER: boolean; FIRST_ROUND: boolean };
 }
 
 /** The user's journey through the current election's phases, and what to do next. */
@@ -36,11 +38,11 @@ export function ElectionJourney({
   decided,
   ballot,
   result,
+  drafts,
 }: ElectionJourneyProps) {
   return (
     // The election's name no longer shows on the home, but still names the section.
     <section aria-label={election.name} className="grid gap-4">
-      <NextStep hint={nextStepHint(phases, election)} />
       <PhaseTrail
         phases={phases}
         actions={{
@@ -56,29 +58,19 @@ export function ElectionJourney({
               result={result}
             />
           ),
-          WINNER: <WinnerAction phase={phases.find((p) => p.phase === 'WINNER')} />,
-          FIRST_ROUND: <FirstRoundAction phase={phases.find((p) => p.phase === 'FIRST_ROUND')} />,
+          WINNER: (
+            <WinnerAction phase={phases.find((p) => p.phase === 'WINNER')} draft={drafts.WINNER} />
+          ),
+          FIRST_ROUND: (
+            <FirstRoundAction
+              phase={phases.find((p) => p.phase === 'FIRST_ROUND')}
+              draft={drafts.FIRST_ROUND}
+            />
+          ),
         }}
       />
     </section>
   );
-}
-
-/** One sentence above the journey: what to bet on now, or when to come back; none at the end. */
-function NextStep({ hint }: { hint: NextStepHint }) {
-  const { t, i18n } = useTranslation();
-  if (!hint) return null;
-  const text =
-    hint.kind === 'TODO'
-      ? t(`home.nextStep.${hint.phase}`)
-      : hint.date
-        ? t('home.nextStep.rendezvous', {
-            date: new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' }).format(
-              new Date(hint.date),
-            ),
-          })
-        : t('home.nextStep.rendezvousSoon');
-  return <p className="text-lg font-medium text-balance">{text}</p>;
 }
 
 function QualifiersAction({
@@ -87,7 +79,7 @@ function QualifiersAction({
   decided,
   ballot,
   result,
-}: Omit<ElectionJourneyProps, 'phases'> & { phase: PlayerPhaseDto | undefined }) {
+}: Omit<ElectionJourneyProps, 'phases' | 'drafts'> & { phase: PlayerPhaseDto | undefined }) {
   const { t } = useTranslation();
   const locked = usePredictionsLocked(election);
   // From the bet and the lock, as the qualifiers' own page does.
@@ -160,8 +152,14 @@ function PresentationAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
   );
 }
 
-function WinnerAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
-  const action = phaseAction(usePhaseState(phase));
+interface DraftableActionProps {
+  phase: PlayerPhaseDto | undefined;
+  /** An edit in progress: resume it. */
+  draft: boolean;
+}
+
+function WinnerAction({ phase, draft }: DraftableActionProps) {
+  const action = phaseAction(usePhaseState(phase), { draft });
   const button = usePhaseActionButton(action, phase?.closesAt);
   if (!button) return null;
   return (
@@ -177,8 +175,8 @@ function WinnerAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
   );
 }
 
-function FirstRoundAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
-  const action = phaseAction(usePhaseState(phase));
+function FirstRoundAction({ phase, draft }: DraftableActionProps) {
+  const action = phaseAction(usePhaseState(phase), { draft });
   const button = usePhaseActionButton(action, phase?.closesAt);
   const navigate = useNavigate();
   const startDraft = useStartFirstRoundDraft();

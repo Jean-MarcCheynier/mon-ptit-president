@@ -55,6 +55,15 @@ export function useStartDraft() {
   });
 }
 
+/** Gives the draft up: the current bet counts again. */
+export function useDiscardDraft() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<void>(DRAFT, { method: 'DELETE' }),
+    onSuccess: () => queryClient.setQueryData(draftQuery.queryKey, { entries: [] }),
+  });
+}
+
 /** Freezes the draft into the current bet. */
 export function useValidate() {
   const queryClient = useQueryClient();

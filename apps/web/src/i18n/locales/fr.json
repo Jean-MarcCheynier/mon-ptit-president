@@ -208,7 +208,6 @@
   "review": {
     "title": "Revue de ton pronostic",
     "description": "Clique sur un candidat pour le changer de colonne, puis valide.",
-    "currentBet": "Ton pari reste celui validé le {{date}} tant que tu ne valides pas cette modification.",
     "kept": "Qualifiés ({{count}})",
     "dropped": "Recalés ({{count}})",
     "empty": "Personne pour l’instant.",
@@ -218,6 +217,10 @@
     "undecided_other": "{{count}} candidats restent à trancher.",
     "continue": "Continuer le swipe",
     "validate": "Valider mon pronostic"
+  },
+  "draft": {
+    "currentBet": "Ton pronostic reste celui validé le {{date}} tant que tu ne valides pas cette modification.",
+    "cancel": "Annuler"
   },
   "results": {
     "title": "Résultats",
@@ -248,11 +251,9 @@
     "otherHint": "Gagne si l’élu n’est aucun des favoris",
     "odds": "{{value}} pts",
     "validate": "Valider mon pronostic",
-    "cancel": "Annuler",
     "validatedTitle": "Ton pronostic du vainqueur est validé",
     "validatedOn": "Validé le {{date}}",
     "edit": "Modifier",
-    "currentBet": "Ton pronostic reste celui validé le {{date}} tant que tu ne valides pas cette modification.",
     "upcoming": "Le pronostic du vainqueur ouvrira une fois tes qualifiés validés.",
     "closed": "Pronostics du vainqueur clos. Voici ton pronostic, validé le {{date}}.",
     "notParticipated": "Pronostics du vainqueur clos, tu n’as pas participé.",
@@ -269,10 +270,11 @@
     "validatedTitle": "Ton pronostic du 1er tour est validé",
     "validatedOn": "Validé le {{date}}",
     "edit": "Modifier",
-    "currentBet": "Ton pronostic reste celui validé le {{date}} tant que tu ne valides pas cette modification.",
     "closesOn": "Clôture le {{date}}.",
     "upcoming": "Le pronostic du 1er tour ouvrira bientôt.",
+    "provisionalTitle": "Liste provisoire",
     "provisional": "Liste provisoire : tu scores les candidats que tu as retenus dans ton pronostic des qualifiés (tous les candidats si tu n’en as pas validé). À la publication de la liste officielle, seuls les qualifiés compteront et tu pourras ajuster tes scores.",
+    "officialListTitle": "Liste officielle publiée",
     "reviewAfterList": "La liste officielle est publiée : ton pronostic reste valable sur les qualifiés, mais pense à le revoir.",
     "closed": "Pronostics du 1er tour clos. Voici ton pronostic, validé le {{date}}.",
     "notParticipated": "Pronostics du 1er tour clos, tu n’as pas participé."

@@ -6,13 +6,13 @@ import type {
 } from '@presidency-bingo/shared';
 import { useSuspenseQueries } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Info, Pencil } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form-alert';
-import { PageTitle } from '@/components/page-title';
+import { PageHeader } from '@/components/page-header';
+import { PageInfo } from '@/components/page-info';
 import { PoliticianAvatar } from '@/components/politician-avatar';
 import { ScoreForm } from '@/components/score-form';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { currentElectionQuery } from '@/lib/elections';
@@ -22,6 +22,7 @@ import {
   firstRoundCandidatesQuery,
   firstRoundDraftQuery,
   formatScore,
+  useDiscardFirstRoundDraft,
   useSetScore,
   useStartFirstRoundDraft,
   useValidateScores,
@@ -49,11 +50,13 @@ function FirstRoundPage() {
 
   return (
     <div className="mx-auto grid max-w-xl gap-6">
-      <PageTitle>{t('firstRound.title')}</PageTitle>
       {election ? (
         <FirstRound election={election} />
       ) : (
-        <p className="text-muted-foreground">{t('election.none')}</p>
+        <>
+          <PageHeader title={t('firstRound.title')} />
+          <p className="text-muted-foreground">{t('election.none')}</p>
+        </>
       )}
     </div>
   );
@@ -75,20 +78,21 @@ function FirstRound({ election }: { election: CurrentElectionDto }) {
     election.officialListPublishedAt !== null &&
     ballot.validatedAt < election.officialListPublishedAt;
 
-  if (state === 'UPCOMING') {
-    return <p className="text-muted-foreground">{t('firstRound.upcoming')}</p>;
-  }
+  const header = (description?: string) => (
+    <PageHeader title={t('firstRound.title')} description={description} />
+  );
+  if (state === 'UPCOMING') return header(t('firstRound.upcoming'));
   if (!isWritable(state)) {
-    if (!ballot) return <p className="text-muted-foreground">{t('firstRound.notParticipated')}</p>;
+    if (!ballot) return header(t('firstRound.notParticipated'));
     return (
-      <div className="grid gap-4">
-        <p className="text-muted-foreground">
-          {t('firstRound.closed', {
+      <>
+        {header(
+          t('firstRound.closed', {
             date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage),
-          })}
-        </p>
+          }),
+        )}
         <ScoresList candidates={candidates} entries={ballot.entries} />
-      </div>
+      </>
     );
   }
 
@@ -96,20 +100,27 @@ function FirstRound({ election }: { election: CurrentElectionDto }) {
     ? t('firstRound.closesOn', { date: formatDateTime(phase.closesAt, i18n.resolvedLanguage) })
     : null;
   return (
-    <div className="grid gap-4">
-      <p className="text-muted-foreground">
-        {t('firstRound.description')} {closesOn}
-      </p>
-      {pool.official ? null : <Notice>{t('firstRound.provisional')}</Notice>}
-      {listSinceBallot && draft.entries.length === 0 ? (
-        <Notice>{t('firstRound.reviewAfterList')}</Notice>
-      ) : null}
+    <>
+      {header(
+        closesOn ? `${t('firstRound.description')} ${closesOn}` : t('firstRound.description'),
+      )}
+      {pool.official ? (
+        listSinceBallot && draft.entries.length === 0 ? (
+          <PageInfo title={t('firstRound.officialListTitle')}>
+            <p>{t('firstRound.reviewAfterList')}</p>
+          </PageInfo>
+        ) : null
+      ) : (
+        <PageInfo title={t('firstRound.provisionalTitle')}>
+          <p>{t('firstRound.provisional')}</p>
+        </PageInfo>
+      )}
       {ballot && draft.entries.length === 0 ? (
         <ValidatedScores candidates={candidates} ballot={ballot} />
       ) : (
         <EditScores candidates={candidates} entries={draft.entries} ballot={ballot} />
       )}
-    </div>
+    </>
   );
 }
 
@@ -122,21 +133,15 @@ function EditScores({
   entries: ScoreEntryDto[];
   ballot: ValidatedScoresDto | null;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const setScore = useSetScore();
   const validate = useValidateScores();
+  const discard = useDiscardFirstRoundDraft();
   const navigate = useNavigate();
-  const error = setScore.error ?? validate.error;
+  const error = setScore.error ?? validate.error ?? discard.error;
 
   return (
     <>
-      {ballot ? (
-        <p className="text-sm text-muted-foreground">
-          {t('firstRound.currentBet', {
-            date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage),
-          })}
-        </p>
-      ) : null}
       <ScoreForm
         candidates={candidates}
         entries={entries}
@@ -144,6 +149,10 @@ function EditScores({
         // Like every phase: back to the journey once validated.
         onValidate={() => validate.mutate(undefined, { onSuccess: () => navigate({ to: '/' }) })}
         validating={validate.isPending}
+        validatedAt={ballot?.validatedAt ?? null}
+        // The validated prediction shows again in place of the form.
+        onCancel={() => discard.mutate()}
+        cancelling={discard.isPending}
       />
       {error ? <FormAlert variant="error">{errorMessage(t, error)}</FormAlert> : null}
     </>
@@ -219,14 +228,5 @@ function ScoresList({
         </li>
       ))}
     </ul>
-  );
-}
-
-function Notice({ children }: { children: React.ReactNode }) {
-  return (
-    <Alert>
-      <Info />
-      <AlertDescription>{children}</AlertDescription>
-    </Alert>
   );
 }

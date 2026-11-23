@@ -208,7 +208,6 @@
   "review": {
     "title": "Review your prediction",
     "description": "Click a candidate to move them to the other column, then validate.",
-    "currentBet": "Your bet stays the one validated on {{date}} until you validate this edit.",
     "kept": "Qualified ({{count}})",
     "dropped": "Out ({{count}})",
     "empty": "Nobody yet.",
@@ -218,6 +217,10 @@
     "undecided_other": "{{count}} candidates left to decide.",
     "continue": "Keep swiping",
     "validate": "Validate my prediction"
+  },
+  "draft": {
+    "currentBet": "Your prediction stays the one validated on {{date}} until you validate this change.",
+    "cancel": "Cancel"
   },
   "results": {
     "title": "Results",
@@ -248,11 +251,9 @@
     "otherHint": "Wins if none of the favorites is elected",
     "odds": "{{value}} pts",
     "validate": "Validate my prediction",
-    "cancel": "Cancel",
     "validatedTitle": "Your winner prediction is validated",
     "validatedOn": "Validated on {{date}}",
     "edit": "Edit",
-    "currentBet": "Your prediction stays the one validated on {{date}} until you validate this change.",
     "upcoming": "The winner prediction opens once your qualifiers are validated.",
     "closed": "Winner predictions are closed. Here is your prediction, validated on {{date}}.",
     "notParticipated": "Winner predictions are closed, you did not take part.",
@@ -269,10 +270,11 @@
     "validatedTitle": "Your first-round prediction is validated",
     "validatedOn": "Validated on {{date}}",
     "edit": "Edit",
-    "currentBet": "Your prediction remains the one validated on {{date}} until you validate this change.",
     "closesOn": "Closes on {{date}}.",
     "upcoming": "The first-round prediction opens soon.",
+    "provisionalTitle": "Provisional list",
     "provisional": "Provisional list: you score the candidates you kept in your qualifiers' prediction (every candidate if you haven't validated one). Once the official list is published, only the qualified ones count and you can adjust your scores.",
+    "officialListTitle": "Official list published",
     "reviewAfterList": "The official list is published: your prediction still counts on the qualified candidates, but you may want to review it.",
     "closed": "First-round predictions are closed. Here is your prediction, validated on {{date}}.",
     "notParticipated": "First-round predictions are closed, you did not take part."

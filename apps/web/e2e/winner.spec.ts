@@ -53,6 +53,10 @@ async function openWinner(page: Page) {
 
     if (path === '/ballot') return json({ ballot, points: null });
     if (path === '/draft' && request.method() === 'GET') return json({ favoriteId: draft });
+    if (path === '/draft' && request.method() === 'DELETE') {
+      draft = null;
+      return route.fulfill({ status: 204 });
+    }
     if (path === '/draft') {
       draft = request.postDataJSON().favoriteId as string;
       return json({ favoriteId: draft });
@@ -65,6 +69,8 @@ async function openWinner(page: Page) {
 }
 
 test('pick a favorite with its odds, validate, change it from home', async ({ page }) => {
+  // A whole cycle: choose, validate, change, cancel, change again.
+  test.slow();
   await openWinner(page);
   await signUp(page);
   await step(page, 'Vainqueur').getByRole('link', { name: 'Fais ton prono !' }).click();
@@ -95,7 +101,24 @@ test('pick a favorite with its odds, validate, change it from home', async ({ pa
   await step(page, 'Vainqueur').getByRole('link', { name: 'Modifie ton prono' }).click();
   await expect(glucksmann).toHaveAttribute('aria-checked', 'true');
   await expect(page.getByText(/Ton pronostic reste celui validé le/)).toBeVisible();
-  await page.getByRole('radio', { name: /Autre candidat/ }).click();
+  const other = page.getByRole('radio', { name: /Autre candidat/ });
+  await other.click();
+
+  // A change in progress: the journey offers to resume it; cancelling brings the choice back.
+  await page.goto('/');
+  await step(page, 'Vainqueur').getByRole('link', { name: 'Reprends ton prono' }).click();
+  await expect(other).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('button', { name: 'Annuler' }).click();
+  await expect(page.getByText('Ton pronostic du vainqueur est validé')).toBeVisible();
+  await expect(page.getByText('Raphaël Glucksmann', { exact: true })).toBeVisible();
+  await page.goto('/');
+  await expect(
+    step(page, 'Vainqueur').getByRole('link', { name: 'Modifie ton prono' }),
+  ).toBeVisible();
+
+  await page.goto('/winner');
+  await page.getByRole('button', { name: 'Modifier' }).click();
+  await other.click();
   await validate.click();
   await expect(page).toHaveURL(/\/$/);
   await page.goto('/winner');
