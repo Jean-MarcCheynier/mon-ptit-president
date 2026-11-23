@@ -72,6 +72,7 @@ async function openFirstRound(page: Page) {
 
     if (path === '/candidates') return json({ politicianIds: qualified, official: true });
     if (path === '/ballot') return json({ ballot });
+    if (path === '/results') return json({ published: false, final: false, result: null });
     if (path === '/draft' && method === 'GET') return json({ entries: draft ?? [] });
     if (path === '/draft' && method === 'DELETE') {
       draft = null;

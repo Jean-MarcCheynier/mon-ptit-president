@@ -1,0 +1,11 @@
+# Les tours se jouent à l'écart, sur des résultats provisoires puis officiels
+
+Le pronostic du 1er tour ne suit pas la règle de rareté de l'ADR 0001 : chaque score rapporte d'autant plus que l'écart au score réel est faible, indépendamment des autres joueurs. 30 points si l'écart est d'au plus 0,1 point, puis une décroissance quadratique jusqu'à 0 à un écart de 10 % du score réel, avec un plancher à 1 point (sinon un petit candidat à 2 % ne laisserait aucune marge). S'y ajoutent 50 points par finaliste juste, sans tenir compte de l'ordre. La courbe est concave : à mi-chemin du seuil, un score ne vaut plus qu'un quart des points, si bien que la précision paie bien plus que l'à-peu-près. L'échelle (jusqu'à ~460 points avec une douzaine de qualifiés, ~150 à 250 pour un bon joueur) place le 1er tour au niveau des cotes moyennes du vainqueur, la phase demandant une douzaine de pronostics précis là où le vainqueur n'en demande qu'un. Un barème relatif à la tolérance du score réel évite qu'un grand candidat, plus dur à viser au dixième près, rapporte moins qu'un petit.
+
+## Consequences
+
+- Les scores réels et la date de publication des résultats sont des données de l'élection, saisies dans le seed : d'abord les résultats provisoires du ministère de l'Intérieur, puis les officiels du Conseil constitutionnel (`firstRoundResultsFinal`). Les points sont calculés à la lecture et suivent donc seuls ce remplacement ; aucun point n'est exposé avant la publication.
+- Les scores réels sont stockés en centièmes de point (23,15 % → 2315), les scores prédits restent en dixièmes (ADR 0002).
+- Seuls comptent les candidats ayant un score réel : les lignes sur un non-qualifié ou sur un qualifié désisté avant le vote sont ignorées, sans renormaliser les autres. Un qualifié sans ligne dans le pronostic (validé avant la liste officielle) compte pour 0 %.
+- Les finalistes prédits sont les deux premiers scores du pronostic ; une égalité pour la 2e place, ou un score nul, ne désigne personne plutôt que de choisir à la place du joueur.
+- Les valeurs (`ROUND_SCORING` dans `apps/api/src/results/points.ts`) sont à recalibrer avant l'ouverture de la phase, au vu de la distribution des points des qualifiés.

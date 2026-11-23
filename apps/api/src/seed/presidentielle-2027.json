@@ -1,5 +1,5 @@
 {
-  "$comment": "Pool researched in October 2026 (issue #2). Dates: Council of Ministers, 1 July 2026. predictionsLockAt: end of the sponsorship period (12 March 2027, 18:00); the Constitutional Council publishes the official list afterwards, exact date not yet known. firstRoundClosesAt: Friday 16 April 2027, 23:59:59 Paris time (CEST), before the electoral silence. Candidates are never deleted: drop-outs stay in the file as WITHDRAWN. Favorites (issue #36): order and odds set early November 2026 from Polymarket and the polls (Votons, Ifop, Ipsos), then adjusted by hand; Jordan Bardella dropped out; null is \"autre candidat\".",
+  "$comment": "Pool researched in October 2026 (issue #2). Dates: Council of Ministers, 1 July 2026. predictionsLockAt: end of the sponsorship period (12 March 2027, 18:00); the Constitutional Council publishes the official list afterwards, exact date not yet known. firstRoundClosesAt: Friday 16 April 2027, 23:59:59 Paris time (CEST), before the electoral silence. Candidates are never deleted: drop-outs stay in the file as WITHDRAWN. Favorites (issue #36): order and odds set early November 2026 from Polymarket and the polls (Votons, Ifop, Ipsos), then adjusted by hand; Jordan Bardella dropped out; null is \"autre candidat\". First-round results (issue #27): set firstRoundResultsAt and each QUALIFIED candidate's firstRoundScore (in %, two decimals) from the Ministry of the Interior's provisional results, then replace them with the Constitutional Council's and set firstRoundResultsFinal; a qualified candidate who withdrew before the vote becomes WITHDRAWN, without a score.",
   "election": {
     "slug": "presidentielle-2027",
     "name": "Présidentielle 2027",
@@ -8,6 +8,8 @@
     "predictionsLockAt": "2027-03-12T22:59:59Z",
     "officialListPublishedAt": null,
     "firstRoundClosesAt": "2027-04-16T21:59:59Z",
+    "firstRoundResultsAt": null,
+    "firstRoundResultsFinal": false,
     "electedSlug": null
   },
   "favorites": [

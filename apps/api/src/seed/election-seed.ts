@@ -18,6 +18,11 @@ export const electionSeedSchema = z
       officialListPublishedAt: z.coerce.date().nullable().default(null),
       // Closing of the first-round predictions, which open at the official list's publication.
       firstRoundClosesAt: z.coerce.date().nullable().default(null),
+      // Publication of the first round's results (the candidates' firstRoundScore); null until
+      // known. Provisional ones first (Ministry of the Interior), then the official ones
+      // (Constitutional Council, firstRoundResultsFinal: true) replace them.
+      firstRoundResultsAt: z.coerce.date().nullable().default(null),
+      firstRoundResultsFinal: z.boolean().default(false),
       // The president elected at the second round, a candidate's slug; null until known.
       electedSlug: slugSchema.nullable().default(null),
     }),
@@ -35,13 +40,24 @@ export const electionSeedSchema = z
         partyLabel: z.string().min(1),
         tagline: z.string().min(1),
         status: z.enum(CANDIDATE_STATUSES),
+        // Real first-round score, a percentage with at most two decimals (23.15); qualified only.
+        firstRoundScore: z
+          .number()
+          .min(0)
+          .max(100)
+          .refine((score) => Math.abs(score * 100 - Math.round(score * 100)) < 1e-6, {
+            message: 'At most two decimals',
+          })
+          .nullable()
+          .default(null),
         // Where the status comes from; documentation only, not stored.
         source: z.string().min(1),
       }),
     ),
   })
   // Once published, every candidate still running is QUALIFIED or NOT_QUALIFIED (WITHDRAWN stays
-  // WITHDRAWN); before that, nobody is.
+  // WITHDRAWN); before that, nobody is. The first round's results score every qualified candidate
+  // still running, and nobody else.
   .superRefine(({ election, candidates, favorites }, ctx) => {
     const slugs = new Set(candidates.map((c) => c.slug));
     if (election.electedSlug !== null && !slugs.has(election.electedSlug)) {
@@ -74,6 +90,41 @@ export const electionSeedSchema = z
           : 'Official list not published yet: QUALIFIED and NOT_QUALIFIED are not allowed',
       });
     });
+
+    const results = election.firstRoundResultsAt !== null;
+    if (results && !published) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['election', 'firstRoundResultsAt'],
+        message: 'Results before the official list',
+      });
+    }
+    if (election.firstRoundResultsFinal && !results) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['election', 'firstRoundResultsFinal'],
+        message: 'Official results without a publication date',
+      });
+    }
+    candidates.forEach(({ status, firstRoundScore }, index) => {
+      const scored = firstRoundScore !== null;
+      if (scored === (results && status === 'QUALIFIED')) return;
+      ctx.addIssue({
+        code: 'custom',
+        path: ['candidates', index, 'firstRoundScore'],
+        message: scored
+          ? 'Only the qualified candidates have a score, once the results are published'
+          : 'Results published: every qualified candidate needs a score',
+      });
+    });
+    const total = candidates.reduce((sum, c) => sum + (c.firstRoundScore ?? 0), 0);
+    if (results && Math.abs(total - 100) > 0.5) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['candidates'],
+        message: `The first-round scores add up to ${total} %, not 100 %`,
+      });
+    }
   });
 export type ElectionSeed = z.input<typeof electionSeedSchema>;
 
@@ -102,7 +153,12 @@ export async function seedElection(prisma: PrismaClient, input: unknown) {
       update: politician,
     });
     politicianIds.set(politicianSlug, politicianId);
-    const { source: _source, ...candidacyFields } = candidacy;
+    const { source: _source, firstRoundScore, ...fields } = candidacy;
+    // Stored in hundredths of a point.
+    const candidacyFields = {
+      ...fields,
+      firstRoundScore: firstRoundScore === null ? null : Math.round(firstRoundScore * 100),
+    };
     await prisma.electionCandidate.upsert({
       where: { electionId_politicianId: { electionId, politicianId } },
       create: { electionId, politicianId, ...candidacyFields },

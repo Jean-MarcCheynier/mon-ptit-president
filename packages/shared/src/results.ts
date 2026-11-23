@@ -30,3 +30,46 @@ export interface ResultsDto {
   /** null before publication, or when the player never validated a bet. */
   result: ResultDto | null;
 }
+
+/** Real scores are in hundredths of a point: 23.15 % is 2315. */
+export const RESULT_SCORE_TOTAL = 10_000;
+
+/** One candidate of the first round: the player's score against the real one. */
+export interface RoundResultEntryDto {
+  politicianId: string;
+  name: string;
+  photoUrl: string | null;
+  /** Predicted score, in tenths of a point; 0 when the prediction didn't score them. */
+  predicted: number;
+  /** Real score, in hundredths of a point (see RESULT_SCORE_TOTAL). */
+  actual: number;
+  /** Gap between both, in hundredths of a point. */
+  gap: number;
+  /** Points of this score, rounded to a tenth. */
+  points: number;
+  /** Among the two first of the prediction. */
+  predictedFinalist: boolean;
+  /** Among the two first of the results. */
+  finalist: boolean;
+}
+
+/** The player's first-round prediction against the results. */
+export interface RoundResultDto {
+  /** Total points, the bonus included, rounded from the exact sum. */
+  points: number;
+  /** Right finalists, whatever the order: 0, 1 or 2. */
+  finalists: number;
+  /** Points of the right finalists. */
+  bonus: number;
+  /** Every candidate with a real score, by real score descending. */
+  entries: RoundResultEntryDto[];
+}
+
+export interface RoundResultsDto {
+  /** false until the round's results are published: nothing else is exposed. */
+  published: boolean;
+  /** The official results (Constitutional Council) rather than the provisional ones. */
+  final: boolean;
+  /** null before publication, or when the player never validated a prediction. */
+  result: RoundResultDto | null;
+}

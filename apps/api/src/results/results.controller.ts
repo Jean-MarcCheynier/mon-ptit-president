@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import type { ResultsDto } from '@presidency-bingo/shared';
+import type { ResultsDto, RoundResultsDto } from '@presidency-bingo/shared';
 import { type AuthUser, CurrentUser } from '../auth/auth.decorators.js';
 import { ResultsService } from './results.service.js';
 
@@ -12,5 +12,10 @@ export class ResultsController {
   @Get('results')
   results(@CurrentUser() user: AuthUser): Promise<ResultsDto> {
     return this.service.getResults(user.id);
+  }
+
+  @Get('first-round/results')
+  firstRoundResults(@CurrentUser() user: AuthUser): Promise<RoundResultsDto> {
+    return this.service.getFirstRoundResults(user.id);
   }
 }

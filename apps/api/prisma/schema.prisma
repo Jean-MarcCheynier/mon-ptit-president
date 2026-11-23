@@ -98,6 +98,12 @@ model Election {
   firstRoundClosesAt      DateTime? @map("first_round_closes_at")
   // The president elected at the second round; null until known. Scores the winner's predictions.
   electedPoliticianId     String?   @map("elected_politician_id") @db.Uuid
+  // Publication of the first round's results (candidates' firstRoundScore); the first-round
+  // predictions' points are shown from then. Null while unknown.
+  firstRoundResultsAt     DateTime? @map("first_round_results_at")
+  // False for the provisional results (Ministry of the Interior), true once replaced by the
+  // official ones (Constitutional Council). Points are computed on read: they follow.
+  firstRoundResultsFinal  Boolean   @default(false) @map("first_round_results_final")
   createdAt               DateTime  @default(now()) @map("created_at")
   updatedAt               DateTime  @updatedAt @map("updated_at")
 
@@ -138,14 +144,17 @@ enum CandidateStatus {
 
 // A politician's situation in a given election.
 model ElectionCandidate {
-  id           String          @id @default(uuid(7)) @db.Uuid
-  electionId   String          @map("election_id") @db.Uuid
-  politicianId String          @map("politician_id") @db.Uuid
-  status       CandidateStatus @default(POTENTIAL)
-  partyLabel   String          @map("party_label")
-  tagline      String
-  createdAt    DateTime        @default(now()) @map("created_at")
-  updatedAt    DateTime        @updatedAt @map("updated_at")
+  id              String          @id @default(uuid(7)) @db.Uuid
+  electionId      String          @map("election_id") @db.Uuid
+  politicianId    String          @map("politician_id") @db.Uuid
+  status          CandidateStatus @default(POTENTIAL)
+  partyLabel      String          @map("party_label")
+  tagline         String
+  // Real first-round score, in hundredths of a point of the votes cast (23.15 % → 2315), 0 to
+  // 10000: CHECK "election_candidates_first_round_score_range". Qualified candidates only.
+  firstRoundScore Int?            @map("first_round_score")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
 
   election   Election   @relation(fields: [electionId], references: [id], onDelete: Cascade)
   politician Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
