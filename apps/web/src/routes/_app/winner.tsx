@@ -5,6 +5,7 @@ import { Check, CircleCheck, Pencil, UserRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { FormAlert } from '@/components/form-alert';
+import { PageTitle } from '@/components/page-title';
 import { PoliticianAvatar } from '@/components/politician-avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,7 +42,7 @@ function WinnerPage() {
 
   return (
     <div className="mx-auto grid max-w-xl gap-6">
-      <h1 className="text-2xl font-semibold">{t('winner.title')}</h1>
+      <PageTitle>{t('winner.title')}</PageTitle>
       {phases.length > 0 ? (
         <Winner />
       ) : (

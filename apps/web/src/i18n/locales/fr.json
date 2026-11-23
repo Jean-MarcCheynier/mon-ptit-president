@@ -67,7 +67,8 @@
     "home": "Accueil",
     "settings": "Paramètres",
     "logout": "Déconnexion",
-    "myPrediction": "Mon prono"
+    "myPrediction": "Mon prono",
+    "logo": "Mon p’tit président, retour à l’accueil"
   },
   "home": {
     "title": "Bienvenue, {{name}} !",

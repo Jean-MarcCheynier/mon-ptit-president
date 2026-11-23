@@ -58,8 +58,8 @@ async function expectNoHorizontalScroll(page: Page) {
 test('phones get a bottom bar instead of the header; desktop keeps the header', async ({
   browser,
 }) => {
-  // One pass per screen size.
-  test.slow();
+  // Four phones and a desktop, each walked through: more than the default 30s on a busy machine.
+  test.setTimeout(60_000);
   const session = await signUp(browser);
 
   for (const screen of PHONES) {
@@ -96,6 +96,16 @@ test('phones get a bottom bar instead of the header; desktop keeps the header', 
       await expect(page).toHaveURL(/\/settings$/);
       await expect(page.getByRole('button', { name: 'Déconnexion' })).toBeVisible();
       await expectNoHorizontalScroll(page);
+
+      // The logo leads the page's title, on its line, and takes the user back home.
+      const logo = page.getByRole('link', { name: 'Mon p’tit président, retour à l’accueil' });
+      const logoBox = await logo.boundingBox();
+      const title = await page.getByRole('heading', { level: 1 }).boundingBox();
+      expect(logoBox && title && logoBox.x + logoBox.width).toBeLessThanOrEqual(title?.x ?? 0);
+      expect(logoBox && title && logoBox.y).toBeLessThan((title?.y ?? 0) + (title?.height ?? 0));
+      expect(logoBox && title && logoBox.y + logoBox.height).toBeGreaterThan(title?.y ?? 0);
+      await logo.click();
+      await expect(page).toHaveURL(/\/$/);
 
       await page.context().close();
     });

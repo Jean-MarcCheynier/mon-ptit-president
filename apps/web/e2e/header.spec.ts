@@ -23,7 +23,7 @@ test('the desktop header lists each phase, greying out those ahead', async ({ pa
   const header = page.getByRole('banner');
   const entries = header.getByRole('navigation').locator('a, button');
   await expect(entries).toHaveText(['Accueil', 'Qualifiés', 'Vainqueur', '1er tour', 'Paramètres']);
-  await expect(header.getByRole('link', { name: 'Accueil' })).toHaveAttribute(
+  await expect(header.getByRole('link', { name: 'Accueil', exact: true })).toHaveAttribute(
     'aria-current',
     'page',
   );
@@ -45,10 +45,19 @@ test('the desktop header lists each phase, greying out those ahead', async ({ pa
   await qualifiers.click();
   await expect(page).toHaveURL(/\/predict$/);
   await expect(qualifiers).toHaveAttribute('aria-current', 'page');
-  await expect(header.getByRole('link', { name: 'Accueil' })).not.toHaveAttribute(
+  await expect(header.getByRole('link', { name: 'Accueil', exact: true })).not.toHaveAttribute(
     'aria-current',
     'page',
   );
+
+  // Top left, ahead of the nav: the logo and the game's name lead back home.
+  const logo = header.getByRole('link', { name: 'Mon p’tit président, retour à l’accueil' });
+  await expect(logo).toHaveText('Mon p’tit président');
+  const logoBox = await logo.boundingBox();
+  const homeBox = await header.getByRole('link', { name: 'Accueil', exact: true }).boundingBox();
+  expect(logoBox && logoBox.x + logoBox.width).toBeLessThanOrEqual(homeBox?.x ?? 0);
+  await logo.click();
+  await expect(page).toHaveURL(/\/$/);
 
   // From the narrowest desktop width, on one line.
   await page.setViewportSize({ width: 640, height: 800 });

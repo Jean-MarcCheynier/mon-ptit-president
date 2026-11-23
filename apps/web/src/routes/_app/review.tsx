@@ -5,6 +5,7 @@ import { CircleCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BallotColumn } from '@/components/ballot-column';
 import { FormAlert } from '@/components/form-alert';
+import { PageTitle } from '@/components/page-title';
 import { Button } from '@/components/ui/button';
 import {
   currentBallotQuery,
@@ -56,7 +57,7 @@ function ReviewPage() {
   return (
     <div className="mx-auto grid max-w-3xl gap-6">
       <div className="grid gap-2">
-        <h1 className="text-2xl font-semibold">{t('review.title')}</h1>
+        <PageTitle>{t('review.title')}</PageTitle>
         <p className="text-muted-foreground">{t('review.description')}</p>
         {ballot ? (
           <p className="text-sm text-muted-foreground">

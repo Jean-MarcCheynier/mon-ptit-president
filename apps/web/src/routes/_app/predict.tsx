@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { BallotColumn } from '@/components/ballot-column';
 import { EditBallotButton } from '@/components/edit-ballot-button';
 import { FormAlert } from '@/components/form-alert';
+import { PageTitle } from '@/components/page-title';
 import { initials } from '@/components/politician-avatar';
 import { ResultsView } from '@/components/results-view';
 import { ScoringRules } from '@/components/scoring-rules';
@@ -57,9 +58,7 @@ function PredictPage() {
       queries: [currentElectionQuery, draftQuery, currentBallotQuery, resultsQuery],
     });
   const locked = usePredictionsLocked(election);
-  const title = (
-    <h1 className="truncate text-2xl font-semibold mobile:text-xl">{t('predict.title')}</h1>
-  );
+  const title = <PageTitle className="truncate mobile:text-xl">{t('predict.title')}</PageTitle>;
   const swiping =
     election && !results.published && !locked && !(ballot && draft.entries.length === 0);
 

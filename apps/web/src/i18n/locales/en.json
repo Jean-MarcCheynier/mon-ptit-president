@@ -67,7 +67,8 @@
     "home": "Home",
     "settings": "Settings",
     "logout": "Sign out",
-    "myPrediction": "My pick"
+    "myPrediction": "My pick",
+    "logo": "Mon p’tit président, back to home"
   },
   "home": {
     "title": "Welcome, {{name}}!",

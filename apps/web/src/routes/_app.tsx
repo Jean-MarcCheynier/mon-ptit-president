@@ -4,8 +4,8 @@ import { createFileRoute, Link, Outlet, redirect, useLocation } from '@tanstack/
 import { House, LogOut, type LucideIcon, Settings, Vote } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AppLogoLink } from '@/components/app-logo-link';
 import { PHASE_COLORS } from '@/components/phase-trail';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { meQuery, useLogout } from '@/lib/auth';
@@ -48,18 +48,19 @@ function AppLayout() {
 
   return (
     // Clipped: a swiped card flies off the screen without making the page scroll sideways.
-    <div className="min-h-svh overflow-x-clip">
+    <div
+      className={cn(
+        'min-h-svh overflow-x-clip',
+        // The presentation fills the screen (inside the body's safe areas), to center itself in it.
+        immersive &&
+          'flex min-h-[calc(100svh-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col',
+      )}
+    >
       <header className="border-b mobile:hidden">
         <div className="mx-auto flex h-14 max-w-4xl items-center gap-4 px-4">
-          <Link to="/" className="shrink-0 font-semibold">
-            {t('app.name')}
-          </Link>
+          {/* Top left, ahead of the nav. Below md, the name's room goes to the phases. */}
+          <AppLogoLink withName className="[&>span]:max-md:hidden" />
           <HeaderNav />
-          {/* Below md, its room goes to the phases. */}
-          <Avatar className="size-8 shrink-0 max-md:hidden">
-            {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt="" /> : null}
-            <AvatarFallback>{user.name.slice(0, 1).toUpperCase()}</AvatarFallback>
-          </Avatar>
           <Button
             variant="ghost"
             size="sm"
@@ -72,13 +73,12 @@ function AppLayout() {
           </Button>
         </div>
       </header>
-      {/* On phones: no header, the bottom bar (and its height) takes over. */}
+      {/* On phones: the bottom bar (and its height) takes over, and the logo leads each page's title. */}
       <main
         className={cn(
-          'mx-auto max-w-4xl px-4 py-8 mobile:pt-4',
-          immersive
-            ? 'mobile:flex mobile:min-h-svh mobile:flex-col mobile:pb-[max(1rem,env(safe-area-inset-bottom))]'
-            : 'mobile:pb-24',
+          'mx-auto max-w-4xl px-4 py-8 mobile:pt-4 mobile:pb-24',
+          // Without the bottom bar, as much room below as above: the page centers on the screen.
+          immersive && 'flex w-full flex-1 flex-col mobile:pb-4',
         )}
       >
         <Outlet />

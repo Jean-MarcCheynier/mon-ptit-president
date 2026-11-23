@@ -4,6 +4,7 @@ import { useReducedMotion } from 'motion/react';
 import { type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormAlert } from '@/components/form-alert';
+import { PageTitle } from '@/components/page-title';
 import { Button } from '@/components/ui/button';
 import {
   Carousel,
@@ -100,10 +101,11 @@ function PresentationPage() {
   };
 
   return (
-    // On phones: the slide centered on the screen, the title above it, the controls below.
-    <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-6 mobile:flex-1 mobile:grid-rows-[1fr_auto_1fr]">
+    // Centered on the screen. On phones, the slide itself is: the title pinned above, the controls
+    // below.
+    <div className="mx-auto my-auto grid w-full max-w-4xl grid-cols-1 gap-6 mobile:my-0 mobile:flex-1 mobile:grid-rows-[1fr_auto_1fr]">
       <div className="flex items-center justify-between gap-3 mobile:self-start">
-        <h1 className="text-2xl font-semibold">{t('presentation.title')}</h1>
+        <PageTitle className="mobile:text-xl">{t('presentation.title')}</PageTitle>
         {last ? null : (
           <Button variant="ghost" onClick={finish} disabled={complete.isPending}>
             {t('presentation.skip')}

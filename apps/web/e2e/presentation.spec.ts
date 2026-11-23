@@ -106,6 +106,22 @@ test('a new version of the presentation is proposed, not imposed', async ({ page
   await expect(page.getByText('La présentation du jeu a changé')).toHaveCount(0);
 });
 
+test('on desktop: the presentation centered on the screen, below the header', async ({ page }) => {
+  const height = 1000;
+  await page.setViewportSize({ width: 1280, height });
+  await register(page);
+  await expect(page.getByRole('heading', { name: 'Présentation du jeu' })).toBeVisible();
+
+  const title = await page.getByRole('heading', { level: 1 }).boundingBox();
+  const progress = await page
+    .getByRole('list', { name: 'Avancement de la présentation' })
+    .boundingBox();
+  const header = await page.getByRole('banner').boundingBox();
+  if (!title || !progress || !header) throw new Error('no presentation');
+  const middle = (title.y + progress.y + progress.height) / 2;
+  expect(Math.abs(middle - (header.y + header.height + height) / 2)).toBeLessThan(8);
+});
+
 test('on a phone: the slide centered between its peeking neighbours, swiped or tapped, without the bottom bar', async ({
   browser,
 }) => {

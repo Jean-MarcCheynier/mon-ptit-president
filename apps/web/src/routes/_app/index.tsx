@@ -9,6 +9,7 @@ import { createFileRoute, Link, redirect } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { ElectionJourney } from '@/components/election-journey';
 import { FormAlert } from '@/components/form-alert';
+import { PageTitle } from '@/components/page-title';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { meQuery } from '@/lib/auth';
@@ -55,7 +56,7 @@ function HomePage() {
   return (
     <div className="grid gap-6">
       <div className="grid gap-2">
-        <h1 className="text-2xl font-semibold">{t('home.title', { name: user?.name })}</h1>
+        <PageTitle>{t('home.title', { name: user?.name })}</PageTitle>
         <p className="text-muted-foreground">{t('home.description')}</p>
       </div>
       {user ? (
