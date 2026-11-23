@@ -108,6 +108,18 @@ export class BallotsService {
   }
 
   /**
+   * Drops the draft, of any phase: the latest validated ballot counts again. Idempotent: without
+   * a draft, a no-op. Waits for a concurrent validation, so a just-validated ballot stays.
+   */
+  async discardDraft(userId: string, phase: Phase): Promise<void> {
+    const electionId = await this.elections.getOpenId(userId, phase);
+    await this.prisma.$transaction(async (tx) => {
+      const ballotId = await lockUserDraft(tx, userId, electionId, phase, 'UPDATE');
+      if (ballotId) await tx.ballot.delete({ where: { id: ballotId } });
+    });
+  }
+
+  /**
    * Freezes the draft into the ballot that counts; lines on politicians who left the pool are
    * dropped. Qualifiers: every candidate must be decided (see `checkQualifiers`). Rounds: every
    * score defaults to 0 %, so a candidate without a line gets one at 0 and the sum is free

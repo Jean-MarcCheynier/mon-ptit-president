@@ -15,6 +15,8 @@ async function signUp(page: Page) {
   await page.goto(await linkFromLatestEmail(email, '/verify-email'));
   await skipPresentation(page);
   await expect(page.getByRole('heading', { name: 'Bienvenue, Swiper !' })).toBeVisible();
+  // The home recalls the next step: the qualifiers, for a new player.
+  await expect(page.getByText('Parie sur les qualifiés !')).toBeVisible();
 }
 
 const progress = (page: Page) => page.getByText(/^\d+ \/ \d+$/);
@@ -150,7 +152,7 @@ test('swipe everything, review, validate, then edit the bet', async ({ page }) =
   // Editing starts from the bet, which stays current until revalidated.
   await page.getByRole('button', { name: 'Modifie ton prono' }).click();
   await expect(page.getByRole('heading', { name: 'Qualifiés (2)' })).toBeVisible();
-  await expect(page.getByText(/^Ton pari reste celui validé le/)).toBeVisible();
+  await expect(page.getByText(/^Ton pronostic reste celui validé le/)).toBeVisible();
   await page
     .getByRole('button', { name: /en qualifié$/ })
     .first()
@@ -164,6 +166,16 @@ test('swipe everything, review, validate, then edit the bet', async ({ page }) =
   await expect(page.getByRole('button', { name: 'Modifie ton prono' })).toBeVisible();
 
   await page.getByRole('banner').getByRole('link', { name: 'Qualifiés' }).click();
+  await expect(page.getByText('Ton pronostic est validé')).toBeVisible();
+
+  // An edit given up: the bet stays the validated one.
+  await page.getByRole('button', { name: 'Modifier' }).click();
+  await page
+    .getByRole('button', { name: /en qualifié$/ })
+    .first()
+    .click();
+  await expect(page.getByRole('heading', { name: 'Qualifiés (4)' })).toBeVisible();
+  await page.getByRole('button', { name: 'Annuler' }).click();
   await expect(page.getByText('Ton pronostic est validé')).toBeVisible();
 
   // After the deadline, the bet is read-only.
@@ -271,7 +283,7 @@ test('before the official list, the scoring is explained but no result is shown'
 }) => {
   await signUp(page);
   await page.getByRole('link', { name: 'Fais ton prono !' }).click();
-  await page.getByText('Comment marquer des points').click();
+  // Open on desktop.
   await expect(page.getByText('Tu es seul contre tous')).toBeVisible();
   await expect(page.getByText('100 points')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Résultats' })).toHaveCount(0);

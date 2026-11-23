@@ -9,21 +9,23 @@ import { createFileRoute, Link, redirect } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { ElectionJourney } from '@/components/election-journey';
 import { FormAlert } from '@/components/form-alert';
-import { PageTitle } from '@/components/page-title';
+import { PageHeader } from '@/components/page-header';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { meQuery } from '@/lib/auth';
 import { currentBallotQuery, draftQuery } from '@/lib/ballot';
 import { currentElectionQuery } from '@/lib/elections';
 import { errorMessage } from '@/lib/errors';
+import { firstRoundDraftQuery } from '@/lib/first-round';
 import { useCompleteOnboarding } from '@/lib/onboarding';
-import { phasesQuery } from '@/lib/phases';
+import { type NextStepHint, nextStepHint, phasesQuery } from '@/lib/phases';
 import { resultsQuery } from '@/lib/results';
+import { winnerDraftQuery } from '@/lib/winner';
 
 /**
- * Home: the election and the user's journey through its phases. It stays up when the prediction
- * API fails: errors are shown in place of the journey. A new player first goes through the
- * presentation.
+ * Home: the user's journey through the election's phases, and what to do next. It stays up when
+ * the prediction API fails: errors are shown in place of the journey. A new player first goes
+ * through the presentation.
  */
 export const Route = createFileRoute('/_app/')({
   beforeLoad: async ({ context }) => {
@@ -38,6 +40,8 @@ export const Route = createFileRoute('/_app/')({
       context.queryClient.query(currentBallotQuery).catch(noop),
       context.queryClient.query(resultsQuery).catch(noop),
       context.queryClient.query(phasesQuery).catch(noop),
+      context.queryClient.query(winnerDraftQuery).catch(noop),
+      context.queryClient.query(firstRoundDraftQuery).catch(noop),
     ]),
   component: HomePage,
 });
@@ -50,15 +54,24 @@ function HomePage() {
   const ballot = useQuery(currentBallotQuery);
   const results = useQuery(resultsQuery);
   const phases = useQuery(phasesQuery);
-  // Without the draft, the bet or the phases, the journey would offer the wrong action.
-  const error = election.error ?? draft.error ?? ballot.error ?? results.error ?? phases.error;
+  const winnerDraft = useQuery(winnerDraftQuery);
+  const firstRoundDraft = useQuery(firstRoundDraftQuery);
+  // Without the drafts, the bet or the phases, the journey would offer the wrong action.
+  const error =
+    election.error ??
+    draft.error ??
+    ballot.error ??
+    results.error ??
+    phases.error ??
+    winnerDraft.error ??
+    firstRoundDraft.error;
+  const nextStep = useNextStepText(
+    election.data && phases.data ? nextStepHint(phases.data, election.data) : null,
+  );
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-2">
-        <PageTitle>{t('home.title', { name: user?.name })}</PageTitle>
-        <p className="text-muted-foreground">{t('home.description')}</p>
-      </div>
+      <PageHeader title={t('home.title', { name: user?.name })} description={nextStep} />
       {user ? (
         <NewPresentation versionSeen={user.onboardingVersionSeen} phases={phases.data} />
       ) : null}
@@ -68,19 +81,40 @@ function HomePage() {
         draft.data &&
         ballot.data !== undefined &&
         results.data &&
-        phases.data ? (
+        phases.data &&
+        winnerDraft.data !== undefined &&
+        firstRoundDraft.data ? (
         <ElectionJourney
           election={election.data}
           phases={phases.data}
           decided={decidedIn(election.data, draft.data)}
           ballot={ballot.data}
           result={results.data.result}
+          drafts={{
+            WINNER: winnerDraft.data !== null,
+            FIRST_ROUND: firstRoundDraft.data.entries.length > 0,
+          }}
         />
       ) : election.data === null ? (
         <p className="text-muted-foreground">{t('election.none')}</p>
       ) : null}
     </div>
   );
+}
+
+/**
+ * The home's description: what to bet on now, or when to come back (see nextStepHint); none at
+ * the journey's end.
+ */
+function useNextStepText(hint: NextStepHint): string | undefined {
+  const { t, i18n } = useTranslation();
+  if (!hint) return undefined;
+  if (hint.kind === 'TODO') return t(`home.nextStep.${hint.phase}`);
+  if (!hint.date) return t('home.nextStep.rendezvousSoon');
+  const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' }).format(
+    new Date(hint.date),
+  );
+  return t('home.nextStep.rendezvous', { date });
 }
 
 /** Draft entries that still match the active pool (withdrawn candidates don't count). */

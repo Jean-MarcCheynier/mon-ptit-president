@@ -174,6 +174,19 @@ describe('Winner predictions (e2e)', () => {
     expect((await agent.get(BALLOT).expect(200)).body.ballot.favoriteId).toBe(favorite('bruno'));
   });
 
+  it('discards a change: the validated choice counts again, idempotently', async () => {
+    const agent = await player();
+    await choose(agent, 'anne').expect(200);
+    await agent.post(VALIDATE).expect(200);
+    await choose(agent, 'bruno').expect(200);
+
+    await agent.delete(DRAFT).expect(204);
+    await agent.delete(DRAFT).expect(204);
+    expect((await agent.get(DRAFT).expect(200)).body).toEqual({ favoriteId: null });
+    expect((await agent.get(BALLOT).expect(200)).body.ballot.favoriteId).toBe(favorite('anne'));
+    expect(await t.prisma.ballot.count({ where: { phase: 'WINNER' } })).toBe(1);
+  });
+
   it('keeps a choice whose favorite dropped out', async () => {
     const agent = await player();
     await choose(agent, 'bruno').expect(200);
@@ -196,7 +209,11 @@ describe('Winner predictions (e2e)', () => {
     await seed(open({ predictionsLockAt: inDays(-1) }));
 
     expect(await phaseStates(agent)).toMatchObject({ WINNER: 'CLOSED' });
-    for (const res of [await choose(agent, 'bruno'), await agent.post(VALIDATE)]) {
+    for (const res of [
+      await choose(agent, 'bruno'),
+      await agent.delete(DRAFT),
+      await agent.post(VALIDATE),
+    ]) {
       expect(res.status).toBe(403);
       expect(res.body.code).toBe(ErrorCode.PREDICTIONS_LOCKED);
     }

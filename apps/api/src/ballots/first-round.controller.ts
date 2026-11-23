@@ -49,6 +49,12 @@ export class FirstRoundController {
     return { entries: (await this.ballots.startDraft(user.id, PHASE)).map(toEntryDto) };
   }
 
+  @Delete('draft')
+  @HttpCode(204)
+  discardDraft(@CurrentUser() user: AuthUser): Promise<void> {
+    return this.ballots.discardDraft(user.id, PHASE);
+  }
+
   @Post('draft/validate')
   @HttpCode(200)
   async validate(@CurrentUser() user: AuthUser): Promise<ValidatedScoresDto> {

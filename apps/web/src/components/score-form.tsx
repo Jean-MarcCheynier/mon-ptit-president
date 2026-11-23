@@ -1,6 +1,8 @@
 import type { ElectionCandidateDto, ScoreEntryDto } from '@presidency-bingo/shared';
+import { CircleCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DraftActions } from '@/components/draft-actions';
 import { PoliticianAvatar } from '@/components/politician-avatar';
 import { ScoreInput } from '@/components/score-input';
 import { Button } from '@/components/ui/button';
@@ -15,6 +17,11 @@ interface ScoreFormProps {
   onSave: (politicianId: string, score: number) => Promise<unknown>;
   onValidate: () => void;
   validating: boolean;
+  /** When the prediction that counts was validated; null if there is none yet. */
+  validatedAt: string | null;
+  /** Gives the draft up, once a prediction was validated. */
+  onCancel: () => void;
+  cancelling: boolean;
 }
 
 const INVALID_ID = 'score-invalid';
@@ -24,7 +31,16 @@ const INVALID_ID = 'score-invalid';
  * the prediction can be validated whatever the total. Each score is saved when its slider is
  * released or its field loses focus; validation first saves any value still unsaved.
  */
-export function ScoreForm({ candidates, entries, onSave, onValidate, validating }: ScoreFormProps) {
+export function ScoreForm({
+  candidates,
+  entries,
+  onSave,
+  onValidate,
+  validating,
+  validatedAt,
+  onCancel,
+  cancelling,
+}: ScoreFormProps) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage;
   const saved = new Map(entries.map((e) => [e.politicianId, e.score]));
@@ -115,9 +131,17 @@ export function ScoreForm({ candidates, entries, onSave, onValidate, validating 
             ? t('firstRound.over', { value: formatScore(-remaining, locale) })
             : t('firstRound.remaining', { value: formatScore(remaining, locale) })}
         </p>
-        <Button type="submit" disabled={invalid || validating}>
-          {t('firstRound.validate')}
-        </Button>
+        <DraftActions
+          validatedAt={validatedAt}
+          onCancel={onCancel}
+          cancelling={cancelling}
+          validate={
+            <Button type="submit" size="lg" disabled={invalid || validating}>
+              <CircleCheck />
+              {t('firstRound.validate')}
+            </Button>
+          }
+        />
       </div>
     </form>
   );

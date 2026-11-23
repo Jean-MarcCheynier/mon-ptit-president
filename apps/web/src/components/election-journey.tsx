@@ -27,33 +27,22 @@ interface ElectionJourneyProps {
   ballot: ValidatedBallotDto | null;
   /** The user's result once the official list is published; null before, or without a bet. */
   result: ResultDto | null;
+  /** Phases after the qualifiers with an edit in progress, to resume. */
+  drafts: { WINNER: boolean; FIRST_ROUND: boolean };
 }
 
-/** The current election, as a section heading, and the user's journey through its phases. */
+/** The user's journey through the current election's phases, and what to do next. */
 export function ElectionJourney({
   election,
   phases,
   decided,
   ballot,
   result,
+  drafts,
 }: ElectionJourneyProps) {
-  const { t, i18n } = useTranslation();
-  const formatDate = (iso: string) =>
-    new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' }).format(new Date(iso));
-
   return (
-    <section aria-labelledby="election-name" className="grid gap-4">
-      <div className="grid gap-1">
-        <h2 id="election-name" className="text-xl font-semibold">
-          {election.name}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {t('election.rounds', {
-            first: formatDate(election.firstRoundAt),
-            second: formatDate(election.secondRoundAt),
-          })}
-        </p>
-      </div>
+    // The election's name no longer shows on the home, but still names the section.
+    <section aria-label={election.name} className="grid gap-4">
       <PhaseTrail
         phases={phases}
         actions={{
@@ -69,8 +58,15 @@ export function ElectionJourney({
               result={result}
             />
           ),
-          WINNER: <WinnerAction phase={phases.find((p) => p.phase === 'WINNER')} />,
-          FIRST_ROUND: <FirstRoundAction phase={phases.find((p) => p.phase === 'FIRST_ROUND')} />,
+          WINNER: (
+            <WinnerAction phase={phases.find((p) => p.phase === 'WINNER')} draft={drafts.WINNER} />
+          ),
+          FIRST_ROUND: (
+            <FirstRoundAction
+              phase={phases.find((p) => p.phase === 'FIRST_ROUND')}
+              draft={drafts.FIRST_ROUND}
+            />
+          ),
         }}
       />
     </section>
@@ -83,7 +79,7 @@ function QualifiersAction({
   decided,
   ballot,
   result,
-}: Omit<ElectionJourneyProps, 'phases'> & { phase: PlayerPhaseDto | undefined }) {
+}: Omit<ElectionJourneyProps, 'phases' | 'drafts'> & { phase: PlayerPhaseDto | undefined }) {
   const { t } = useTranslation();
   const locked = usePredictionsLocked(election);
   // From the bet and the lock, as the qualifiers' own page does.
@@ -156,8 +152,14 @@ function PresentationAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
   );
 }
 
-function WinnerAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
-  const action = phaseAction(usePhaseState(phase));
+interface DraftableActionProps {
+  phase: PlayerPhaseDto | undefined;
+  /** An edit in progress: resume it. */
+  draft: boolean;
+}
+
+function WinnerAction({ phase, draft }: DraftableActionProps) {
+  const action = phaseAction(usePhaseState(phase), { draft });
   const button = usePhaseActionButton(action, phase?.closesAt);
   if (!button) return null;
   return (
@@ -173,8 +175,8 @@ function WinnerAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
   );
 }
 
-function FirstRoundAction({ phase }: { phase: PlayerPhaseDto | undefined }) {
-  const action = phaseAction(usePhaseState(phase));
+function FirstRoundAction({ phase, draft }: DraftableActionProps) {
+  const action = phaseAction(usePhaseState(phase), { draft });
   const button = usePhaseActionButton(action, phase?.closesAt);
   const navigate = useNavigate();
   const startDraft = useStartFirstRoundDraft();

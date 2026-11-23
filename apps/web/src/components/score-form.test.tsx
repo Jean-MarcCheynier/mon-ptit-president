@@ -25,6 +25,9 @@ const setup = (entries = [{ politicianId: 'a', score: 600 }]) => {
       onSave={onSave}
       onValidate={onValidate}
       validating={false}
+      validatedAt={null}
+      onCancel={vi.fn()}
+      cancelling={false}
     />,
   );
   const field = (name: string) => screen.getByRole('textbox', { name: `Score of ${name}` });

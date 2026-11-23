@@ -28,7 +28,7 @@ const TIERS = [
 ] as const;
 
 /** The `mobile:` variant of index.css: on phones, tapping a half of the slide moves. */
-const MOBILE = '(max-width: 639px), (pointer: coarse) and (max-height: 500px)';
+import { MOBILE } from '@/lib/media';
 
 /** How much a neighbouring slide, one step away from the center, shrinks and fades. */
 const NEIGHBOUR_SCALE = 0.08;
