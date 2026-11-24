@@ -27,6 +27,9 @@ CI (`.github/workflows/ci.yml`) runs lint, build, typecheck, unit, e2e and smoke
   descriptions and docs (README, GLOSSARY, ADRs) in French.
 - **Branches / commits**: `feat/<issue>-<slug>`, commits `feat(<issue>-<slug>): <summary>`;
   PRs reference the issue with `Closes #<n>`.
+- **Git flow (light)**: branch off `develop` (default branch) and open PRs against `develop` (squash
+  only). `main` is production: it only receives `develop` → `main` release PRs (merge commit only).
+  No hotfix branches: fix on `develop`, then release. See README, _Workflow Git_.
 - **API imports are ESM**: relative imports end in `.js` (`import { X } from './x.js'`).
 - **Shared validation**: request/response schemas live in `packages/shared` (Zod) and are reused by the
   Nest controllers and the React forms. Add new ones there, not inline in an app.
