@@ -12,6 +12,7 @@ import { FormAlert } from '@/components/form-alert';
 import { PageHeader } from '@/components/page-header';
 import { PageInfo } from '@/components/page-info';
 import { PoliticianAvatar } from '@/components/politician-avatar';
+import { RoundResultsView } from '@/components/round-results-view';
 import { ScoreForm } from '@/components/score-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,7 @@ import {
   firstRoundBallotQuery,
   firstRoundCandidatesQuery,
   firstRoundDraftQuery,
+  firstRoundResultsQuery,
   formatScore,
   useDiscardFirstRoundDraft,
   useSetScore,
@@ -40,6 +42,7 @@ export const Route = createFileRoute('/_app/first-round')({
       context.queryClient.query(firstRoundCandidatesQuery),
       context.queryClient.query(firstRoundDraftQuery),
       context.queryClient.query(firstRoundBallotQuery),
+      context.queryClient.query(firstRoundResultsQuery),
     ]),
   component: FirstRoundPage,
 });
@@ -64,9 +67,16 @@ function FirstRoundPage() {
 
 function FirstRound({ election }: { election: CurrentElectionDto }) {
   const { t, i18n } = useTranslation();
-  const [{ data: pool }, { data: draft }, { data: ballot }, { data: phases }] = useSuspenseQueries({
-    queries: [firstRoundCandidatesQuery, firstRoundDraftQuery, firstRoundBallotQuery, phasesQuery],
-  });
+  const [{ data: pool }, { data: draft }, { data: ballot }, { data: phases }, { data: results }] =
+    useSuspenseQueries({
+      queries: [
+        firstRoundCandidatesQuery,
+        firstRoundDraftQuery,
+        firstRoundBallotQuery,
+        phasesQuery,
+        firstRoundResultsQuery,
+      ],
+    });
   const phase = phases.find((p) => p.phase === 'FIRST_ROUND');
   const state = usePhaseState(phase);
   const ids = new Set(pool.politicianIds);
@@ -91,7 +101,11 @@ function FirstRound({ election }: { election: CurrentElectionDto }) {
             date: formatDateTime(ballot.validatedAt, i18n.resolvedLanguage),
           }),
         )}
-        <ScoresList candidates={candidates} entries={ballot.entries} />
+        {results.result ? (
+          <RoundResultsView result={results.result} final={results.final} />
+        ) : (
+          <ScoresList candidates={candidates} entries={ballot.entries} />
+        )}
       </>
     );
   }

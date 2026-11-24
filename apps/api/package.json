@@ -21,7 +21,8 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx src/seed/run.ts",
     "db:reset": "prisma migrate reset --force && prisma generate && tsx src/seed/run.ts",
-    "db:seed:prod": "node dist/seed/run.js"
+    "db:seed:prod": "node dist/seed/run.js",
+    "db:simulate": "tsx src/seed/simulate.ts"
   },
   "dependencies": {
     "@nestjs/common": "12.2.0",

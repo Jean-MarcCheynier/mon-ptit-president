@@ -1,6 +1,8 @@
 import {
   type CurrentScoresDto,
   ErrorCode,
+  RESULT_SCORE_TOTAL,
+  type RoundResultsDto,
   SCORE_TOTAL,
   type ScoreCandidatesDto,
   type ScoreDraftDto,
@@ -52,6 +54,19 @@ export const firstRoundBallotQuery = queryOptions({
       return (await api<CurrentScoresDto>(`${BASE}/ballot`)).ballot;
     } catch (error) {
       if (noElection(error)) return null;
+      throw error;
+    }
+  },
+});
+
+/** The user's prediction against the results; unpublished while there are none. */
+export const firstRoundResultsQuery = queryOptions({
+  queryKey: ['elections', 'current', 'first-round', 'results'],
+  queryFn: async (): Promise<RoundResultsDto> => {
+    try {
+      return await api<RoundResultsDto>(`${BASE}/results`);
+    } catch (error) {
+      if (noElection(error)) return { published: false, final: false, result: null };
       throw error;
     }
   },
@@ -152,3 +167,18 @@ export function remainingScore(
 ): number {
   return SCORE_TOTAL - qualifiedIds.reduce((sum, id) => sum + (scores[id] ?? 0), 0);
 }
+
+/** A real score, in hundredths of a point, as a percentage with two decimals: "23,15 %". */
+export function formatResultScore(hundredths: number, locale: string | undefined): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'percent',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(hundredths / RESULT_SCORE_TOTAL);
+}
+
+/** A gap, in hundredths of a point, as a number of points with two decimals: "0,25". */
+export const formatGap = (hundredths: number, locale: string | undefined) =>
+  new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
+    hundredths / 100,
+  );

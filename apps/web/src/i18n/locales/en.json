@@ -322,5 +322,17 @@
     "later": "Later",
     "discover": "Discover the game",
     "again": "See the presentation again"
+  },
+  "roundResults": {
+    "title": "Your first-round points",
+    "provisional": "Based on the provisional results from the Ministry of the Interior: your points will follow the official results from the Constitutional Council.",
+    "final": "Based on the official results from the Constitutional Council.",
+    "finalists": "Finalists found: {{count}} / 2, a {{bonus}}-point bonus",
+    "scores": "Your score: {{predicted}} · Actual: {{actual}}",
+    "gap_one": "Gap: {{value}} point",
+    "gap_other": "Gap: {{value}} points",
+    "finalist": "Finalist",
+    "finalistFound": "Finalist, and you saw it coming",
+    "points": "{{value}} pts"
   }
 }

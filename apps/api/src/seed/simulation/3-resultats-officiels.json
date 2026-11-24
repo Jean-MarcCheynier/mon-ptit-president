@@ -1,0 +1,28 @@
+{
+  "$comment": "Simulation, étape 3 : les résultats officiels (Conseil constitutionnel) remplacent les provisoires ; les points se recalculent seuls.",
+  "election": {
+    "predictionsLockAt": "-30d",
+    "officialListPublishedAt": "-20d",
+    "firstRoundClosesAt": "-6d",
+    "firstRoundAt": "-4d",
+    "secondRoundAt": "+10d",
+    "firstRoundResultsAt": "-4d",
+    "firstRoundResultsFinal": true
+  },
+  "othersStatus": "NOT_QUALIFIED",
+  "candidates": {
+    "marine-le-pen": { "status": "QUALIFIED", "firstRoundScore": 31.38 },
+    "jean-luc-melenchon": { "status": "QUALIFIED", "firstRoundScore": 18.71 },
+    "edouard-philippe": { "status": "QUALIFIED", "firstRoundScore": 16.18 },
+    "bruno-retailleau": { "status": "QUALIFIED", "firstRoundScore": 7.86 },
+    "raphael-glucksmann": { "status": "QUALIFIED", "firstRoundScore": 6.41 },
+    "eric-zemmour": { "status": "QUALIFIED", "firstRoundScore": 5.1 },
+    "marine-tondelier": { "status": "QUALIFIED", "firstRoundScore": 4.04 },
+    "fabien-roussel": { "status": "QUALIFIED", "firstRoundScore": 3.1 },
+    "nicolas-dupont-aignan": { "status": "QUALIFIED", "firstRoundScore": 2.47 },
+    "david-lisnard": { "status": "QUALIFIED", "firstRoundScore": 2.3 },
+    "nathalie-arthaud": { "status": "QUALIFIED", "firstRoundScore": 1.24 },
+    "francois-asselineau": { "status": "QUALIFIED", "firstRoundScore": 1.21 },
+    "philippe-de-villiers": { "status": "WITHDRAWN" }
+  }
+}

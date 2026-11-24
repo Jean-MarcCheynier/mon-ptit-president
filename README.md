@@ -166,7 +166,34 @@ pnpm db:migrate                                    # nouvelle migration après m
 pnpm db:reset                                      # base de dev vidée : migrations rejouées, client régénéré, seed (efface tout)
 pnpm --filter @presidency-bingo/api db:studio      # Prisma Studio
 pnpm --filter @presidency-bingo/web dlx shadcn@latest add dialog   # ajouter un composant UI
+pnpm db:simulate <étape>                           # simuler une étape de l'élection en dev (voir ci-dessous)
 ```
+
+## Simuler l'élection en dev
+
+`pnpm db:simulate` (sans argument : liste des étapes) amène la base de dev à une étape de l'élection.
+Chaque étape est un fichier de `apps/api/src/seed/simulation/`, appliqué par-dessus le vrai seed
+(`presidentielle-2027.json`) : il ne liste que ce qui change.
+
+- `election` : les champs de l'élection à remplacer. Dates ISO, ou relatives au lancement
+  (`"+7d"`, `"-2h"`, `"+30m"`) pour que la simulation reste valable quel que soit le jour.
+- `othersStatus` : le statut des candidats non listés (les désistés restent désistés).
+- `candidates` : par slug, `status` et `firstRoundScore` (score réel en %, deux décimales).
+
+Le résultat passe par la validation du seed (qualifiés tous scorés, total à 100 %…). Pour un autre
+scénario, copier un fichier sous un nouveau nom : il apparaît dans la liste.
+
+Parcours type :
+
+1. `pnpm db:simulate reset` (le vrai seed) : jouer les qualifiés et le vainqueur avec un ou plusieurs comptes ;
+2. `pnpm db:simulate 1-liste-officielle` : liste officielle publiée, 1er tour ouvert ; le jouer ;
+3. `pnpm db:simulate 2-resultats-provisoires` : 1er tour clos, points selon les résultats provisoires
+   (avec un qualifié désisté avant le vote) ;
+4. `pnpm db:simulate 3-resultats-officiels` : les officiels remplacent les provisoires ;
+5. `pnpm db:simulate reset` pour revenir au vrai seed. Les pronostics sont gardés d'une étape à l'autre ;
+   `pnpm db:reset` efface tout.
+
+Le script refuse toute base qui n'est pas sur la machine (`localhost`) : jamais en production.
 
 ## Presentation
 

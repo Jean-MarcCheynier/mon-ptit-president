@@ -1,0 +1,28 @@
+{
+  "$comment": "Simulation, étape 1 : liste officielle publiée, qualifiés et vainqueur clos, 1er tour ouvert. Appliquée par-dessus presidentielle-2027.json : seuls les champs ci-dessous changent. Dates ISO ou relatives au lancement (\"+7d\", \"-2h\", \"+30m\"). othersStatus : statut des candidats non listés (sauf les désistés). Philippe de Villiers est qualifié ici, puis se désiste avant le vote à l'étape 2.",
+  "election": {
+    "predictionsLockAt": "-20d",
+    "officialListPublishedAt": "-10d",
+    "firstRoundClosesAt": "+5d",
+    "firstRoundAt": "+7d",
+    "secondRoundAt": "+21d",
+    "firstRoundResultsAt": null,
+    "firstRoundResultsFinal": false
+  },
+  "othersStatus": "NOT_QUALIFIED",
+  "candidates": {
+    "marine-le-pen": { "status": "QUALIFIED" },
+    "jean-luc-melenchon": { "status": "QUALIFIED" },
+    "edouard-philippe": { "status": "QUALIFIED" },
+    "bruno-retailleau": { "status": "QUALIFIED" },
+    "raphael-glucksmann": { "status": "QUALIFIED" },
+    "eric-zemmour": { "status": "QUALIFIED" },
+    "marine-tondelier": { "status": "QUALIFIED" },
+    "fabien-roussel": { "status": "QUALIFIED" },
+    "nicolas-dupont-aignan": { "status": "QUALIFIED" },
+    "david-lisnard": { "status": "QUALIFIED" },
+    "nathalie-arthaud": { "status": "QUALIFIED" },
+    "francois-asselineau": { "status": "QUALIFIED" },
+    "philippe-de-villiers": { "status": "QUALIFIED" }
+  }
+}

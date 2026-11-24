@@ -1,0 +1,28 @@
+{
+  "$comment": "Simulation, étape 2 : 1er tour clos et joué, résultats provisoires (ministère de l'Intérieur) publiés. Scores en % des suffrages exprimés, deux décimales, total à 100 % (± 0,5). Philippe de Villiers s'est désisté avant le vote : sans score, ses lignes de pronostic sont ignorées.",
+  "election": {
+    "predictionsLockAt": "-30d",
+    "officialListPublishedAt": "-20d",
+    "firstRoundClosesAt": "-3d",
+    "firstRoundAt": "-1d",
+    "secondRoundAt": "+13d",
+    "firstRoundResultsAt": "-1d",
+    "firstRoundResultsFinal": false
+  },
+  "othersStatus": "NOT_QUALIFIED",
+  "candidates": {
+    "marine-le-pen": { "status": "QUALIFIED", "firstRoundScore": 31.42 },
+    "jean-luc-melenchon": { "status": "QUALIFIED", "firstRoundScore": 18.65 },
+    "edouard-philippe": { "status": "QUALIFIED", "firstRoundScore": 16.2 },
+    "bruno-retailleau": { "status": "QUALIFIED", "firstRoundScore": 7.85 },
+    "raphael-glucksmann": { "status": "QUALIFIED", "firstRoundScore": 6.4 },
+    "eric-zemmour": { "status": "QUALIFIED", "firstRoundScore": 5.12 },
+    "marine-tondelier": { "status": "QUALIFIED", "firstRoundScore": 4.03 },
+    "fabien-roussel": { "status": "QUALIFIED", "firstRoundScore": 3.11 },
+    "nicolas-dupont-aignan": { "status": "QUALIFIED", "firstRoundScore": 2.47 },
+    "david-lisnard": { "status": "QUALIFIED", "firstRoundScore": 2.3 },
+    "nathalie-arthaud": { "status": "QUALIFIED", "firstRoundScore": 1.25 },
+    "francois-asselineau": { "status": "QUALIFIED", "firstRoundScore": 1.2 },
+    "philippe-de-villiers": { "status": "WITHDRAWN" }
+  }
+}

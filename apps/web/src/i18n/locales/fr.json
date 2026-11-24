@@ -322,5 +322,17 @@
     "later": "Plus tard",
     "discover": "Découvre le jeu",
     "again": "Revoir la présentation"
+  },
+  "roundResults": {
+    "title": "Tes points du 1er tour",
+    "provisional": "Selon les résultats provisoires du ministère de l’Intérieur : tes points s’ajusteront aux résultats officiels du Conseil constitutionnel.",
+    "final": "Selon les résultats officiels du Conseil constitutionnel.",
+    "finalists": "Finalistes trouvés : {{count}} / 2, bonus de {{bonus}} points",
+    "scores": "Ton score : {{predicted}} · Réel : {{actual}}",
+    "gap_one": "Écart : {{value}} point",
+    "gap_other": "Écart : {{value}} points",
+    "finalist": "Finaliste",
+    "finalistFound": "Finaliste, tu l’avais vu",
+    "points": "{{value}} pts"
   }
 }
