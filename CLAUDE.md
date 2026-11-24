@@ -51,6 +51,11 @@ CI (`.github/workflows/ci.yml`) runs lint, build, typecheck, unit, e2e and smoke
 
 Issues live in GitHub Issues for `Jean-MarcCheynier/mon-ptit-president` (via `gh.exe`). See `docs/agents/issue-tracker.md`.
 
+When you start work on an issue, claim it first with `scripts/project/claim.sh <n>` (assignee,
+**In Progress**, Start date). A subagent working on an issue creates its own worktree named after
+its branch, `.claude/worktrees/feat-<n>-<slug>`, instead of using `isolation: "worktree"`. Both are
+detailed in `docs/agents/issue-tracker.md` (_Taking an issue_).
+
 ### Triage labels
 
 Default triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
