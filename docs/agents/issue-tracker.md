@@ -18,6 +18,32 @@ Infer the repo from `git remote -v`; `gh` does this automatically when run insid
 
 File issues only into the user's own repo. Never file into `mattpocock/skills` (the repo these skills come from) unless the user owns it. In a fork, `gh` can default to the upstream parent, so before the first `gh issue create` of a session, check the target with `gh repo view --json nameWithOwner` and confirm it with the user if it is not their repo.
 
+## Taking an issue (agents and humans)
+
+The issues are tracked in the GitHub Project **Mon ptit President** (user project #13). Its Roadmap
+view reads the **Start date** and **End date** fields.
+
+1. **Claim** before any other write (before creating the branch):
+   `scripts/project/claim.sh <n>`. It assigns the issue to you, moves its item to **In Progress**
+   (adding it to the project if needed) and sets **Start date** to today unless it already has one.
+2. **Worktree** (subagents): don't use the Agent tool's `isolation: "worktree"` (it names the
+   worktree `agent-<id>`). The subagent creates its own worktree, named after the branch, which is
+   the PR's branch:
+
+   ```bash
+   git worktree add .claude/worktrees/feat-<n>-<slug> -b feat/<n>-<slug> main
+   cp apps/api/.env .claude/worktrees/feat-<n>-<slug>/apps/api/.env
+   cd .claude/worktrees/feat-<n>-<slug> && pnpm install
+   ```
+
+   If the branch already exists, drop `-b` and pass `feat/<n>-<slug>` instead of `main`.
+3. **End date**: nothing to do. `.github/workflows/project-end-date.yml` sets it when the issue is
+   closed (PR merged with `Closes #<n>`, or by hand) and clears it when the issue is reopened.
+4. **Cleanup** once the PR is merged: `git worktree remove .claude/worktrees/feat-<n>-<slug>`.
+
+The scripts need a `gh` token with the `project` scope (`gh.exe auth refresh -s project`); the
+workflow uses the `PROJECT_TOKEN` secret (classic PAT, scopes `project` and `public_repo`; fine-grained tokens cannot reach a user-owned project).
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_

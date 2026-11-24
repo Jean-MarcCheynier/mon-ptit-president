@@ -1,0 +1,28 @@
+name: Project End date
+
+# Sets the End date of the issue's item in the GitHub Project when the issue is closed
+# (by a merged PR with `Closes #n` or by hand) and clears it when the issue is reopened.
+# The Start date is set by scripts/project/claim.sh when an agent (or you) picks the issue up.
+# Needs the PROJECT_TOKEN secret: a classic PAT with the `project` and `public_repo` scopes.
+
+"on":
+  issues:
+    types: [closed, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: project-end-date-${{ github.event.issue.number }}
+
+jobs:
+  end-date:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update End date
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ACTION: ${{ github.event.action == 'closed' && 'set' || 'clear' }}
+        run: scripts/project/end-date.sh "$ISSUE_NUMBER" "$ACTION"
