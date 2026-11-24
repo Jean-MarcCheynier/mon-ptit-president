@@ -38,6 +38,7 @@ pnpm db:up            # Postgres + Mailpit
 pnpm db:migrate       # applique les migrations Prisma
 pnpm db:seed          # charge l'élection et son pool de candidats (idempotent)
 pnpm dev              # API :3000 + front :5173
+pnpm dev:lan          # idem, accessible depuis un mobile du même Wi-Fi (affiche l'URL)
 ```
 
 | URL                            | Quoi                                                  |

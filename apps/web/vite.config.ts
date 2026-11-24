@@ -10,6 +10,8 @@ export default defineConfig({
   cacheDir: process.env.VITE_CACHE_DIR ?? 'node_modules/.vite',
   server: {
     port: 5173,
+    // Set by `pnpm dev:lan` to listen on every interface.
+    host: process.env.DEV_HOST,
     // Same origin as in production (Caddy): the browser only ever talks to :5173.
     proxy: { '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:3000' },
   },
