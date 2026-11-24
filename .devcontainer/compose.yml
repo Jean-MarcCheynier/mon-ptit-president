@@ -1,0 +1,29 @@
+# Override layered on top of the root docker-compose.yml (Postgres + Mailpit
+# are defined there, once). It only adds the workspace container and makes the
+# services share the Postgres network namespace, so `localhost:5432` /
+# `localhost:1025` work exactly like on the host and the .env files are unchanged.
+services:
+  workspace:
+    build:
+      context: .devcontainer
+      dockerfile: Dockerfile
+    command: sleep infinity
+    network_mode: service:postgres
+    volumes:
+      - .:/workspaces/mon-ptit-president:cached
+      # Claude Code credentials, settings and history survive rebuilds.
+      - claude-config:/home/node/.claude
+    environment:
+      CLAUDE_CONFIG_DIR: /home/node/.claude
+
+  postgres:
+    # No host port: VS Code forwards ports itself, and this avoids clashing
+    # with a local `pnpm db:up` running at the same time.
+    ports: !reset []
+
+  mailpit:
+    network_mode: service:postgres
+    ports: !reset []
+
+volumes:
+  claude-config: {}
