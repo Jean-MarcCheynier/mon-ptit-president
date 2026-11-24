@@ -144,6 +144,18 @@ partagés.
 
 La CI GitHub Actions (`.github/workflows/ci.yml`) exécute tout cela à chaque push et à chaque PR.
 
+## Workflow Git
+
+Git flow allégé, imposé par des rulesets GitHub :
+
+- **`develop`** (branche par défaut) : intégration. Chaque branche (`feat/<issue>-<slug>`, `chore/…`)
+  part de `develop` et y revient par une PR, fusionnée en **squash** (historique linéaire, CI verte,
+  1 review). Une issue se ferme (`Closes #<n>`) dès que sa PR entre dans `develop`.
+- **`main`** : ce qui tourne en production. Elle ne reçoit que des PR de livraison `develop` → `main`,
+  fusionnées en **merge commit** (un squash ferait diverger les deux branches).
+- **Correctif urgent** : pas de branche `hotfix/*`. On corrige sur `develop` par une PR normale, puis
+  on livre aussitôt `develop` → `main`.
+
 ## Production
 
 Trois conteneurs : **Caddy** (sert le front, gère le HTTPS automatique et proxifie `/api`) → **API** → **Postgres**.

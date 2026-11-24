@@ -31,12 +31,14 @@ view reads the **Start date** and **End date** fields.
    the PR's branch:
 
    ```bash
-   git worktree add .claude/worktrees/feat-<n>-<slug> -b feat/<n>-<slug> main
+   git worktree add .claude/worktrees/feat-<n>-<slug> -b feat/<n>-<slug> origin/develop
    cp apps/api/.env .claude/worktrees/feat-<n>-<slug>/apps/api/.env
    cd .claude/worktrees/feat-<n>-<slug> && pnpm install
    ```
 
-   If the branch already exists, drop `-b` and pass `feat/<n>-<slug>` instead of `main`.
+   If the branch already exists, drop `-b` and pass `feat/<n>-<slug>` instead of `origin/develop`.
+   Fetch `develop` first (see _Environment (WSL)_) so the branch starts from its latest state.
+   The PR targets `develop` (the default branch).
 3. **End date**: nothing to do. `.github/workflows/project-end-date.yml` sets it when the issue is
    closed (PR merged with `Closes #<n>`, or by hand) and clears it when the issue is reopened.
 4. **Cleanup** once the PR is merged: `git worktree remove .claude/worktrees/feat-<n>-<slug>`.
@@ -79,4 +81,4 @@ Used by `/wayfinder`. The **map** is a single issue with **child** issues as tic
 
 - `gh` is not on the WSL `PATH`: call the Windows binary `gh.exe` (same arguments).
 - `git fetch` / `git pull` over SSH fail from WSL (no key). Fetch over HTTPS with `gh.exe` as the credential helper:
-  `git -c credential.helper= -c credential.helper='!gh.exe auth git-credential' fetch https://github.com/Jean-MarcCheynier/mon-ptit-president.git main:refs/remotes/origin/main`
+  `git -c credential.helper= -c credential.helper='!gh.exe auth git-credential' fetch https://github.com/Jean-MarcCheynier/mon-ptit-president.git develop:refs/remotes/origin/develop main:refs/remotes/origin/main`
